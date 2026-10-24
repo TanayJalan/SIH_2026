@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+:root {
+  color-scheme: light;
+
+  /* Core palette */
+  --ink: #12284c;
+  --ink-700: #354764;
+  --ink-500: #5a6b86;
+  --ink-300: #a7b0c0;
+  --ink-100: #e6e9f0;
+  --paper: #f6f7f9;
+  --surface: #ffffff;
+  --line: #e3e7ee;
+
+  /* Saffron is reserved for primary actions. */
+  --saffron: #e8891c;
+  --saffron-hover: #f29b3a;
+  --saffron-strong: #94520a;
+  --saffron-50: #fff6ea;
+  --saffron-100: #fde8cf;
+  --saffron-200: #f9cfa0;
+  --saffron-300: #f5b36b;
+  --saffron-400: #f29b3a;
+  --saffron-500: #e8891c;
+  --saffron-600: #c9740f;
+  --saffron-700: #94520a;
+
+  /* Status: base mark, soft surface and AA-safe text. */
+  --ok: #1f8a5b;
+  --ok-soft: #e8f4ee;
+  --ok-strong: #14633f;
+  --ok-band: rgb(31 138 91 / 0.24);
+
+  --watch: #c99a00;
+  --watch-soft: #fff5d1;
+  --watch-strong: #6b5400;
+  --watch-band: rgb(201 154 0 / 0.28);
+
+  --breach: #c8352f;
+  --breach-soft: #fbeae8;
+  --breach-strong: #9d241f;
+  --breach-band: rgb(200 53 47 / 0.24);
+
+  --info: #2f6fde;
+  --info-soft: #e9f0fc;
+  --info-strong: #1e4fa5;
+  --info-band: rgb(47 111 222 / 0.22);
+
+  --neutral: #5a6b86;
+  --neutral-soft: #eff2f6;
+  --neutral-strong: #3c4a63;
+
+  /* Shared primitives */
+  --overlay: rgb(18 40 76 / 0.48);
+  --focus: #2f6fde;
+  --radius-input: 4px;
+  --radius-panel: 8px;
+  --radius-pill: 999px;
+  --shadow-popover: 0 12px 32px rgb(18 40 76 / 0.16),
+    0 2px 6px rgb(18 40 76 / 0.08);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Source Serif 4", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--saffron-100);
+    color: var(--ink);
+  }
+}
+
+.login-grid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M0 0H48M0 0V48' fill='none' stroke='%2312284c' stroke-opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

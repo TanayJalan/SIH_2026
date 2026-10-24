@@ -1,0 +1,1437 @@
+const configuredBaseUrl = import.meta.env.VITE_API_URL;
+export const API_BASE_URL = (configuredBaseUrl ?? "http://localhost:8000").replace(/\/$/, "");
+
+export type Role =
+  | "INSTITUTION_ADMIN"
+  | "SCRUTINY_OFFICER"
+  | "INSPECTION_COMMITTEE"
+  | "REGIONAL_HEAD"
+  | "SUPER_ADMIN";
+
+export type ApplicationType = "NEW" | "EXTENSION" | "INTAKE_CHANGE";
+
+export type ApplicationStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "DOCUMENT_VERIFICATION"
+  | "SCRUTINY"
+  | "DEFICIENCY_RAISED"
+  | "DEFICIENCY_RESPONDED"
+  | "INSPECTION_SCHEDULED"
+  | "INSPECTION_DONE"
+  | "COMMITTEE_REVIEW"
+  | "APPROVED"
+  | "CONDITIONALLY_APPROVED"
+  | "REJECTED";
+
+export type WorkflowStage =
+  | "APPLICATION"
+  | "DOCUMENT_VERIFICATION"
+  | "SCRUTINY"
+  | "DEFICIENCY"
+  | "INSPECTION"
+  | "COMMITTEE_REVIEW"
+  | "DECISION"
+  | "COMPLETED";
+
+export type WorkflowAction =
+  | "submit"
+  | "auto_assign"
+  | "verify_documents"
+  | "start_scrutiny"
+  | "raise_deficiency"
+  | "respond_deficiency"
+  | "close_deficiency"
+  | "schedule_inspection"
+  | "submit_inspection_report"
+  | "send_to_committee"
+  | "approve"
+  | "conditionally_approve"
+  | "reject"
+  | "withdraw";
+
+export interface InstitutionSummary {
+  id: string;
+  name: string;
+  state: string;
+  region: string;
+}
+
+export interface OfficerSummary {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+}
+
+export type DecisionOutcome =
+  | "APPROVED"
+  | "CONDITIONALLY_APPROVED"
+  | "REJECTED";
+
+export interface ApplicationDecision {
+  outcome: DecisionOutcome;
+  decided_by: string;
+  decided_by_name: string;
+  decided_at: string;
+  comment: string | null;
+  conditions: string | null;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  institution_id: string | null;
+  institution: InstitutionSummary | null;
+  region: string | null;
+  is_active: boolean;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: "bearer";
+  expires_in: number;
+  user: UserProfile;
+}
+
+export interface PublicDemoAccount {
+  role: Role;
+  label: string;
+  email: string;
+  password: string;
+}
+
+export interface PublicStats {
+  applications_in_progress: number;
+  average_days_to_decision: number | null;
+  institutions_needing_attention: number;
+  demo_mode: boolean;
+  demo_accounts: PublicDemoAccount[];
+  as_of: string;
+}
+
+export interface ApplicationRecord {
+  id: string;
+  reference: string | null;
+  institution_id: string;
+  institution: InstitutionSummary;
+  application_type: ApplicationType;
+  academic_year: string;
+  status: ApplicationStatus;
+  current_stage: WorkflowStage;
+  assigned_officer_id: string | null;
+  submitted_at: string | null;
+  stage_entered_at: string | null;
+  sla_due_at: string | null;
+  is_withdrawn: boolean;
+  is_escalated: boolean;
+  risk_score: string | number | null;
+  compliance_score: string | number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InstitutionProfileSection {
+  head_name?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pin_code?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website?: string | null;
+}
+
+export interface InfrastructureSection {
+  land_area?: number | null;
+  built_up_area?: number | null;
+  labs?: number | null;
+  library?: number | null;
+  hostel?: number | null;
+}
+
+export interface FacultySection {
+  total?: number | null;
+  professors?: number | null;
+  associate_professors?: number | null;
+  assistant_professors?: number | null;
+  student_faculty_ratio?: number | null;
+  phd_faculty_ratio?: number | null;
+}
+
+export interface FinanceSection {
+  tuition_fee?: number | null;
+  development_fee?: number | null;
+  other_fees?: number | null;
+  balance?: number | null;
+}
+
+export type NaacGrade =
+  | "A++"
+  | "A+"
+  | "A"
+  | "B++"
+  | "B+"
+  | "B"
+  | "C"
+  | "NOT_ACCREDITED";
+
+export type NbaStatus = "ACCREDITED" | "NOT_ACCREDITED" | "APPLIED";
+
+export interface AccreditationSection {
+  naac_grade?: NaacGrade | null;
+  nba_status?: NbaStatus | null;
+  last_validated_on?: string | null;
+}
+
+export interface ApplicationData {
+  institution_profile?: InstitutionProfileSection | null;
+  infrastructure?: InfrastructureSection | null;
+  faculty?: FacultySection | null;
+  finance?: FinanceSection | null;
+  accreditation?: AccreditationSection | null;
+  mandatory_disclosure_url?: string | null;
+}
+
+export interface ApplicationProgram {
+  id: string;
+  application_id: string;
+  program_name: string;
+  level: string;
+  intake: number;
+  faculty_count: number;
+  lab_count: number;
+}
+
+export interface ApplicationDetail extends ApplicationRecord {
+  data: ApplicationData;
+  programs: ApplicationProgram[];
+  assigned_officer: OfficerSummary | null;
+  decision: ApplicationDecision | null;
+}
+
+export interface ApplicationProgramInput {
+  program_name: string;
+  level: string;
+  intake: number;
+  faculty_count: number;
+  lab_count: number;
+}
+
+export type DocumentVerificationStatus =
+  | "PENDING"
+  | "VERIFIED"
+  | "FLAGGED"
+  | "REJECTED";
+
+export interface DocumentRecord {
+  id: string;
+  application_id: string;
+  doc_type: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  version: number;
+  verification_status: DocumentVerificationStatus;
+  verification_reason: string | null;
+  uploaded_by: string;
+  created_at: string;
+  download_url: string;
+}
+
+export interface ChecklistDocument {
+  doc_type: string;
+  label: string;
+  mandatory: boolean;
+  uploaded: boolean;
+  document_id: string | null;
+  filename: string | null;
+  content_type: string | null;
+  size_bytes: number | null;
+  version: number | null;
+  verification_status: DocumentVerificationStatus | null;
+  verification_reason: string | null;
+  uploaded_at: string | null;
+  download_url: string | null;
+}
+
+export interface DocumentChecklist {
+  application_id: string;
+  documents: ChecklistDocument[];
+  required_count: number;
+  uploaded_count: number;
+  percentage: number;
+}
+
+export interface ChecklistSection {
+  key: string;
+  label: string;
+  complete: boolean;
+  missing_fields: string[];
+}
+
+export interface MissingItem {
+  code: string;
+  section: string;
+  message: string;
+}
+
+export interface ApplicationChecklist {
+  application_id: string;
+  sections: ChecklistSection[];
+  documents: ChecklistDocument[];
+  required_items: number;
+  completed_items: number;
+  percentage: number;
+  can_submit: boolean;
+  missing: MissingItem[];
+}
+
+export type ComplianceRuleStatus = "PASS" | "FAIL" | "NOT_ASSESSED";
+export type ComplianceOutcome = "PASS" | "ATTENTION" | "INCOMPLETE";
+
+export interface ComplianceRulePreview {
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  severity: Severity;
+  metric_key: string;
+  operator: string;
+  threshold: number;
+  unit: string | null;
+  observed_value: number | null;
+  status: ComplianceRuleStatus;
+  message: string;
+}
+
+export interface CompliancePreview {
+  application_id: string;
+  evaluated_at: string;
+  rules: ComplianceRulePreview[];
+  passed_count: number;
+  failed_count: number;
+  not_assessed_count: number;
+  assessed_count: number;
+  score: number;
+  outcome: ComplianceOutcome;
+  status: ComplianceHealth;
+}
+
+export type ComplianceHealth = "GREEN" | "AMBER" | "RED";
+export type RuleOperator =
+  | "<"
+  | "<="
+  | ">="
+  | ">"
+  | "="
+  | "=="
+  | "!="
+  | "BETWEEN"
+  | "EXISTS";
+
+export interface ComplianceRule {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  metric_key: string;
+  operator: RuleOperator;
+  threshold: number;
+  threshold_max: number | null;
+  severity: Severity;
+  applies_to: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComplianceRulePage {
+  items: ComplianceRule[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ComplianceRuleInput {
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  metric_key: string;
+  operator: RuleOperator;
+  threshold: number;
+  threshold_max: number | null;
+  severity: Severity;
+  applies_to: string;
+  is_active: boolean;
+}
+
+export interface ComplianceMetric {
+  key: string;
+  label: string;
+  unit: string | null;
+}
+
+export interface RuleImpactInstitution {
+  institution_id: string;
+  institution_name: string;
+  region: string;
+  current_status: ComplianceHealth;
+  projected_status: ComplianceHealth;
+}
+
+export interface ComplianceRuleImpact {
+  red_flips: number;
+  amber_flips: number;
+  improved: number;
+  unchanged: number;
+  affected: RuleImpactInstitution[];
+  message: string;
+}
+
+export interface ComplianceMonitorItem {
+  institution_id: string;
+  institution_name: string;
+  region: string;
+  state: string;
+  latest_score: number | null;
+  latest_status: ComplianceHealth | null;
+  latest_failed_count: number | null;
+  latest_missing_count: number | null;
+  latest_evaluated_at: string | null;
+  latest_trigger: string | null;
+  application_id: string | null;
+  application_reference: string | null;
+}
+
+export interface ComplianceMonitorPage {
+  items: ComplianceMonitorItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ComplianceTrendPoint {
+  snapshot_id: string;
+  score: number;
+  status: ComplianceHealth;
+  failed_count: number;
+  missing_count: number;
+  trigger: string;
+  evaluated_at: string;
+  application_id: string | null;
+}
+
+export interface ComplianceInstitutionTrend {
+  institution_id: string;
+  institution_name: string;
+  region: string;
+  points: ComplianceTrendPoint[];
+}
+
+export interface SeverityWeights {
+  CRITICAL: number;
+  HIGH: number;
+  MEDIUM: number;
+  LOW: number;
+}
+
+export interface RagBreakpoints {
+  red_below: number;
+  amber_below: number;
+}
+
+export interface ComplianceConfig {
+  severity_weights: SeverityWeights;
+  rag_breakpoints: RagBreakpoints;
+  updated_at: string | null;
+}
+
+export interface ComplianceConfigUpdate {
+  severity_weights?: SeverityWeights;
+  rag_breakpoints?: RagBreakpoints;
+}
+
+export interface ComplianceMonitorRun {
+  evaluated: number;
+  red: number;
+  amber: number;
+  green: number;
+  message: string;
+}
+
+export interface ApplicationSubmission {
+  application: ApplicationDetail;
+  submitted_at: string;
+  sla_due_at: string;
+  message: string;
+}
+
+export type DeficiencyStatus = "OPEN" | "RESPONDED" | "CLOSED";
+export type InspectionStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
+export type InspectionRecommendation =
+  | "APPROVE"
+  | "CONDITIONAL_APPROVE"
+  | "REJECT";
+
+export type AllowedActionRequirement =
+  | "none"
+  | "deficiencies"
+  | "responses"
+  | "deficiency_id"
+  | "inspection_schedule"
+  | "inspection_report"
+  | "conditions";
+
+export interface AllowedAction {
+  action: WorkflowAction;
+  label: string;
+  description: string;
+  requires: AllowedActionRequirement;
+  tone: "primary" | "secondary" | "danger";
+}
+
+export interface AllowedActionsResponse {
+  application_id: string;
+  status: ApplicationStatus;
+  current_stage: WorkflowStage;
+  is_withdrawn: boolean;
+  actions: AllowedAction[];
+}
+
+export interface WorkflowEventRecord {
+  id: string;
+  application_id: string;
+  from_status: ApplicationStatus | null;
+  to_status: ApplicationStatus;
+  action: WorkflowAction | null;
+  actor_id: string | null;
+  actor_name: string | null;
+  comment: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface WorkflowTimeline {
+  application_id: string;
+  status: ApplicationStatus;
+  current_stage: WorkflowStage;
+  stage_entered_at: string | null;
+  sla_due_at: string | null;
+  is_withdrawn: boolean;
+  is_escalated: boolean;
+  events: WorkflowEventRecord[];
+}
+
+export interface DeficiencyRecord {
+  id: string;
+  application_id: string;
+  category: string;
+  description: string;
+  status: DeficiencyStatus;
+  due_date: string;
+  raised_by: string;
+  raised_by_name: string | null;
+  response_text: string | null;
+  response_document_id: string | null;
+  response_document_filename: string | null;
+  responded_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+}
+
+export interface InspectionReport {
+  infrastructure_ok: boolean;
+  faculty_verified: boolean;
+  lab_verified: boolean;
+  observations: string;
+  recommendation: InspectionRecommendation;
+}
+
+export interface InspectionRecord {
+  id: string;
+  application_id: string;
+  committee_id: string;
+  committee_name: string | null;
+  scheduled_on: string;
+  status: InspectionStatus;
+  report: InspectionReport | null;
+  recommendation: string | null;
+  created_at: string;
+}
+
+export interface CommitteeMember {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  region: string | null;
+}
+
+export interface DeficiencyInput {
+  category: string;
+  description: string;
+  due_date: string;
+}
+
+export interface DeficiencyResponseInput {
+  deficiency_id: string;
+  response_text: string;
+  document_id?: string;
+}
+
+export interface WorkflowActionPayload {
+  comment?: string;
+  officer_id?: string;
+  deficiencies?: DeficiencyInput[];
+  responses?: DeficiencyResponseInput[];
+  deficiency_id?: string;
+  committee_id?: string;
+  scheduled_on?: string;
+  report?: InspectionReport;
+  conditions?: string;
+}
+
+export interface WorkflowActionResult {
+  application: ApplicationDetail;
+  events: WorkflowEventRecord[];
+  message: string;
+}
+
+export interface ApplicationQuery {
+  page?: number;
+  pageSize?: number;
+  overdue?: boolean;
+  institutionId?: string;
+  assignedToMe?: boolean;
+  sort?: "recent" | "due";
+}
+
+export interface SearchApplicationResult {
+  id: string;
+  reference: string | null;
+  institution_name: string;
+  status: ApplicationStatus;
+  academic_year: string;
+}
+
+export interface SearchInstitutionResult {
+  id: string;
+  name: string;
+  state: string;
+  region: string;
+}
+
+export interface SearchPageResult {
+  label: string;
+  path: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  applications: SearchApplicationResult[];
+  institutions: SearchInstitutionResult[];
+  pages: SearchPageResult[];
+}
+
+export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AlertChannel = "IN_APP" | "EMAIL" | "SMS";
+export type AlertStatus = "PENDING" | "SENT" | "READ" | "ACKED";
+export type AlertTrigger =
+  | "DEADLINE_APPROACHING"
+  | "SLA_BREACHED"
+  | "DEFICIENCY_DUE"
+  | "DEFICIENCY_OVERDUE"
+  | "DOCUMENT_EXPIRING"
+  | "COMPLIANCE_RED"
+  | "APPLICATION_STATUS_CHANGED"
+  | "INSPECTION_SCHEDULED";
+
+export interface AlertRecord {
+  id: string;
+  application_id: string | null;
+  rule_id: string | null;
+  parent_alert_id: string | null;
+  type: string;
+  severity: Severity;
+  title: string;
+  message: string;
+  channel: AlertChannel;
+  status: AlertStatus;
+  escalation_level: number;
+  sent_at: string | null;
+  acknowledged_at: string | null;
+  acknowledged_by_id: string | null;
+  created_at: string;
+}
+
+export interface AlertQuery {
+  page?: number;
+  pageSize?: number;
+  unread?: boolean;
+  status?: AlertStatus;
+  severity?: Severity;
+  type?: string;
+  applicationId?: string;
+}
+
+export interface AlertSummary {
+  total: number;
+  unread: number;
+  acknowledged: number;
+  by_severity: Record<Severity, number>;
+  unread_by_severity: Record<Severity, number>;
+}
+
+export interface AlertRule {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  trigger_type: AlertTrigger;
+  days_before: number;
+  severity: Severity;
+  channel_list: AlertChannel[];
+  template: string;
+  escalation_role: Role;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AlertRulePage {
+  items: AlertRule[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AlertRuleInput {
+  code: string;
+  name: string;
+  description: string;
+  trigger_type: AlertTrigger;
+  days_before: number;
+  severity: Severity;
+  channel_list: AlertChannel[];
+  template: string;
+  escalation_role: Role;
+  is_active: boolean;
+}
+
+export interface AlertScanSummary {
+  alerts_created: number;
+  escalations: number;
+  notifications_sent: number;
+  scanned_through: string;
+}
+
+export interface TimeSimulation {
+  enabled: boolean;
+  simulated_now: string;
+  real_now: string;
+  offset_days: number;
+  scan: AlertScanSummary | null;
+}
+
+export interface TimeSimulationUpdate {
+  days?: number;
+  reset?: boolean;
+}
+
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface AuditActor {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+}
+
+export interface AuditLogRecord {
+  id: string;
+  actor_id: string | null;
+  actor: AuditActor | null;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  ip: string | null;
+  created_at: string;
+}
+
+export interface AuditLogQuery {
+  page?: number;
+  pageSize?: number;
+  entityType?: string;
+  entityId?: string;
+  actorId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly detail: unknown;
+  readonly missing: MissingItem[] | null;
+
+  constructor(status: number, message: string, detail?: unknown, missing?: MissingItem[] | null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.detail = detail ?? null;
+    this.missing = missing ?? null;
+  }
+}
+
+type QueryValue = string | number | null | undefined;
+
+function withQuery(path: string, params: Record<string, QueryValue>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== null && value !== undefined && value !== "") {
+      search.set(key, String(value));
+    }
+  }
+  const query = search.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function readErrorDetail(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null || !("detail" in payload)) {
+    return null;
+  }
+  const detail = (payload as { detail: unknown }).detail;
+  if (typeof detail === "string") {
+    return detail;
+  }
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => {
+        if (typeof item === "object" && item !== null && "msg" in item) {
+          return String((item as { msg: unknown }).msg);
+        }
+        return null;
+      })
+      .filter((item): item is string => item !== null);
+    return messages.length > 0 ? messages.join("; ") : null;
+  }
+  if (
+    typeof detail === "object" &&
+    detail !== null &&
+    "message" in detail &&
+    typeof (detail as { message: unknown }).message === "string"
+  ) {
+    return (detail as { message: string }).message;
+  }
+  return null;
+}
+
+function readMissingItems(payload: unknown): MissingItem[] | null {
+  if (typeof payload !== "object" || payload === null || !("detail" in payload)) {
+    return null;
+  }
+  const detail = (payload as { detail: unknown }).detail;
+  if (
+    typeof detail !== "object" ||
+    detail === null ||
+    !("missing" in detail) ||
+    !Array.isArray((detail as { missing: unknown }).missing)
+  ) {
+    return null;
+  }
+  return (detail as { missing: MissingItem[] }).missing;
+}
+
+function buildApiError(status: number, payload: unknown): ApiError {
+  return new ApiError(
+    status,
+    readErrorDetail(payload) ?? `Request failed with status ${status}`,
+    payload,
+    readMissingItems(payload),
+  );
+}
+
+interface RequestOptions {
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  token?: string | null;
+  body?: unknown;
+}
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const headers = new Headers({ Accept: "application/json" });
+  if (options.token) {
+    headers.set("Authorization", `Bearer ${options.token}`);
+  }
+  if (options.body !== undefined) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    });
+  } catch {
+    throw new ApiError(0, "The API is unreachable. Check that the backend is running.");
+  }
+
+  const contentType = response.headers.get("content-type");
+  const payload: unknown =
+    response.status === 204
+      ? null
+      : contentType?.includes("application/json")
+        ? await response.json()
+        : null;
+
+  if (!response.ok) {
+    if (response.status === 401 && options.token && path !== "/auth/me") {
+      window.dispatchEvent(new Event("aicte:unauthorized"));
+    }
+    throw buildApiError(response.status, payload);
+  }
+
+  return payload as T;
+}
+
+export function login(email: string, password: string): Promise<LoginResponse> {
+  return request<LoginResponse>("/auth/login", {
+    method: "POST",
+    body: { email, password },
+  });
+}
+
+export function getPublicStats(): Promise<PublicStats> {
+  return request<PublicStats>("/public/stats");
+}
+
+export function getMe(token: string): Promise<UserProfile> {
+  return request<UserProfile>("/auth/me", { token });
+}
+
+export function getApplications(
+  token: string,
+  query: ApplicationQuery = {},
+): Promise<Page<ApplicationRecord>> {
+  return request<Page<ApplicationRecord>>(
+    withQuery("/applications", {
+      page: query.page ?? 1,
+      page_size: query.pageSize ?? 10,
+      overdue: query.overdue ? "true" : undefined,
+      institution_id: query.institutionId,
+      assigned_to_me: query.assignedToMe ? "true" : undefined,
+      sort: query.sort,
+    }),
+    { token },
+  );
+}
+
+export function getApplication(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>(`/applications/${applicationId}`, { token });
+}
+
+export interface ApplicationCreateInput {
+  application_type: ApplicationType;
+  academic_year: string;
+}
+
+export function createApplication(
+  token: string,
+  input: ApplicationCreateInput,
+): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>("/applications", {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+export function updateApplicationData(
+  token: string,
+  applicationId: string,
+  data: ApplicationData,
+): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>(`/applications/${applicationId}`, {
+    method: "PATCH",
+    token,
+    body: { data },
+  });
+}
+
+export function deleteApplication(token: string, applicationId: string): Promise<void> {
+  return request<void>(`/applications/${applicationId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export function getApplicationChecklist(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationChecklist> {
+  return request<ApplicationChecklist>(`/applications/${applicationId}/checklist`, { token });
+}
+
+export function getDocumentChecklist(
+  token: string,
+  applicationId: string,
+): Promise<DocumentChecklist> {
+  return request<DocumentChecklist>(
+    `/applications/${applicationId}/documents/checklist`,
+    { token },
+  );
+}
+
+export function listApplicationDocuments(
+  token: string,
+  applicationId: string,
+): Promise<DocumentRecord[]> {
+  return request<DocumentRecord[]>(`/applications/${applicationId}/documents`, { token });
+}
+
+export function getCompliancePreview(
+  token: string,
+  applicationId: string,
+  data: ApplicationData,
+): Promise<CompliancePreview> {
+  return request<CompliancePreview>(`/applications/${applicationId}/compliance/preview`, {
+    method: "POST",
+    token,
+    body: { data },
+  });
+}
+
+export function getApplicationCompliance(
+  token: string,
+  applicationId: string,
+): Promise<CompliancePreview> {
+  return request<CompliancePreview>(`/applications/${applicationId}/compliance`, {
+    token,
+  });
+}
+
+export function listComplianceRules(
+  token: string,
+  options: { includeInactive?: boolean; page?: number; pageSize?: number } = {},
+): Promise<ComplianceRulePage> {
+  const params = new URLSearchParams({
+    include_inactive: String(options.includeInactive ?? true),
+    page: String(options.page ?? 1),
+    page_size: String(options.pageSize ?? 100),
+  });
+  return request<ComplianceRulePage>(`/compliance/rules?${params.toString()}`, { token });
+}
+
+export function createComplianceRule(
+  token: string,
+  input: ComplianceRuleInput,
+): Promise<ComplianceRule> {
+  return request<ComplianceRule>("/compliance/rules", {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+export function updateComplianceRule(
+  token: string,
+  ruleId: string,
+  input: Partial<ComplianceRuleInput>,
+): Promise<ComplianceRule> {
+  return request<ComplianceRule>(`/compliance/rules/${ruleId}`, {
+    method: "PATCH",
+    token,
+    body: input,
+  });
+}
+
+export function previewComplianceRuleImpact(
+  token: string,
+  input: { ruleId: string | null; proposed: ComplianceRuleInput },
+): Promise<ComplianceRuleImpact> {
+  return request<ComplianceRuleImpact>("/compliance/rules/impact", {
+    method: "POST",
+    token,
+    body: { rule_id: input.ruleId, proposed: input.proposed },
+  });
+}
+
+export function listComplianceMetrics(token: string): Promise<{ items: ComplianceMetric[] }> {
+  return request<{ items: ComplianceMetric[] }>("/compliance/metrics", { token });
+}
+
+export function getComplianceMonitor(
+  token: string,
+  options: { page?: number; pageSize?: number } = {},
+): Promise<ComplianceMonitorPage> {
+  const params = new URLSearchParams({
+    page: String(options.page ?? 1),
+    page_size: String(options.pageSize ?? 100),
+  });
+  return request<ComplianceMonitorPage>(`/compliance/monitor?${params.toString()}`, {
+    token,
+  });
+}
+
+export function getInstitutionComplianceTrend(
+  token: string,
+  institutionId: string,
+  limit = 50,
+): Promise<ComplianceInstitutionTrend> {
+  return request<ComplianceInstitutionTrend>(
+    `/compliance/institutions/${institutionId}/trend?limit=${limit}`,
+    { token },
+  );
+}
+
+export function getComplianceConfig(token: string): Promise<ComplianceConfig> {
+  return request<ComplianceConfig>("/compliance/config", { token });
+}
+
+export function updateComplianceConfig(
+  token: string,
+  input: ComplianceConfigUpdate,
+): Promise<ComplianceConfig> {
+  return request<ComplianceConfig>("/compliance/config", {
+    method: "PUT",
+    token,
+    body: input,
+  });
+}
+
+export function runComplianceMonitor(token: string): Promise<ComplianceMonitorRun> {
+  return request<ComplianceMonitorRun>("/compliance/monitor/run", {
+    method: "POST",
+    token,
+  });
+}
+
+export function addProgram(
+  token: string,
+  applicationId: string,
+  input: ApplicationProgramInput,
+): Promise<ApplicationProgram> {
+  return request<ApplicationProgram>(`/applications/${applicationId}/programs`, {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+export function updateProgram(
+  token: string,
+  applicationId: string,
+  programId: string,
+  input: Partial<ApplicationProgramInput>,
+): Promise<ApplicationProgram> {
+  return request<ApplicationProgram>(
+    `/applications/${applicationId}/programs/${programId}`,
+    { method: "PATCH", token, body: input },
+  );
+}
+
+export function deleteProgram(
+  token: string,
+  applicationId: string,
+  programId: string,
+): Promise<void> {
+  return request<void>(`/applications/${applicationId}/programs/${programId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export function submitApplication(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationSubmission> {
+  return request<ApplicationSubmission>(`/applications/${applicationId}/submit`, {
+    method: "POST",
+    token,
+  });
+}
+
+export function getAllowedActions(
+  token: string,
+  applicationId: string,
+): Promise<AllowedActionsResponse> {
+  return request<AllowedActionsResponse>(
+    `/applications/${applicationId}/allowed-actions`,
+    { token },
+  );
+}
+
+export function getWorkflowTimeline(
+  token: string,
+  applicationId: string,
+): Promise<WorkflowTimeline> {
+  return request<WorkflowTimeline>(`/applications/${applicationId}/timeline`, {
+    token,
+  });
+}
+
+export function performWorkflowAction(
+  token: string,
+  applicationId: string,
+  action: WorkflowAction,
+  payload: WorkflowActionPayload = {},
+): Promise<WorkflowActionResult> {
+  return request<WorkflowActionResult>(
+    `/applications/${applicationId}/actions/${action}`,
+    { method: "POST", token, body: payload },
+  );
+}
+
+export function listDeficiencies(
+  token: string,
+  applicationId: string,
+): Promise<DeficiencyRecord[]> {
+  return request<DeficiencyRecord[]>(
+    `/applications/${applicationId}/deficiencies`,
+    { token },
+  );
+}
+
+export function listInspections(
+  token: string,
+  applicationId: string,
+): Promise<InspectionRecord[]> {
+  return request<InspectionRecord[]>(
+    `/applications/${applicationId}/inspections`,
+    { token },
+  );
+}
+
+export function listCommitteeMembers(
+  token: string,
+  applicationId: string,
+): Promise<CommitteeMember[]> {
+  return request<CommitteeMember[]>(
+    `/applications/${applicationId}/committee-members`,
+    { token },
+  );
+}
+
+export function uploadApplicationDocument(
+  token: string,
+  applicationId: string,
+  docType: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<DocumentRecord> {
+  return new Promise<DocumentRecord>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE_URL}/applications/${applicationId}/documents`);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    xhr.onerror = () => {
+      reject(new ApiError(0, "The API is unreachable. Check that the backend is running."));
+    };
+    xhr.onload = () => {
+      let payload: unknown = null;
+      if (xhr.responseText) {
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {
+          payload = null;
+        }
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(payload as DocumentRecord);
+        return;
+      }
+      reject(buildApiError(xhr.status, payload));
+    };
+
+    const formData = new FormData();
+    formData.append("doc_type", docType);
+    formData.append("file", file);
+    xhr.send(formData);
+  });
+}
+
+export async function downloadApplicationDocument(
+  token: string,
+  document: DocumentRecord | ChecklistDocument,
+): Promise<void> {
+  const url = document.download_url;
+  if (!url) {
+    throw new ApiError(404, "Document is not available");
+  }
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    throw buildApiError(response.status, payload);
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+  link.href = objectUrl;
+  link.download = document.filename ?? "document";
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}
+
+export function search(
+  token: string,
+  query: string,
+): Promise<SearchResponse> {
+  return request<SearchResponse>(
+    withQuery("/search", { q: query }),
+    { token },
+  );
+}
+
+export function getAlerts(
+  token: string,
+  query: AlertQuery = {},
+): Promise<Page<AlertRecord>> {
+  return request<Page<AlertRecord>>(
+    withQuery("/alerts", {
+      page: query.page ?? 1,
+      page_size: query.pageSize ?? 20,
+      unread: query.unread ? "true" : undefined,
+      status: query.status,
+      severity: query.severity,
+      type: query.type,
+      application_id: query.applicationId,
+    }),
+    { token },
+  );
+}
+
+export function getAlertSummary(token: string): Promise<AlertSummary> {
+  return request<AlertSummary>("/alerts/summary", { token });
+}
+
+export function acknowledgeAlert(
+  token: string,
+  alertId: string,
+): Promise<AlertRecord> {
+  return request<AlertRecord>(`/alerts/${alertId}/ack`, {
+    method: "POST",
+    token,
+  });
+}
+
+export function listAlertRules(
+  token: string,
+  options: {
+    includeInactive?: boolean;
+    triggerType?: AlertTrigger;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<AlertRulePage> {
+  return request<AlertRulePage>(
+    withQuery("/alert-rules", {
+      include_inactive: String(options.includeInactive ?? true),
+      trigger_type: options.triggerType,
+      page: options.page ?? 1,
+      page_size: options.pageSize ?? 100,
+    }),
+    { token },
+  );
+}
+
+export function createAlertRule(
+  token: string,
+  input: AlertRuleInput,
+): Promise<AlertRule> {
+  return request<AlertRule>("/alert-rules", {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+export function updateAlertRule(
+  token: string,
+  ruleId: string,
+  input: Partial<AlertRuleInput>,
+): Promise<AlertRule> {
+  return request<AlertRule>(`/alert-rules/${ruleId}`, {
+    method: "PATCH",
+    token,
+    body: input,
+  });
+}
+
+export function deleteAlertRule(token: string, ruleId: string): Promise<void> {
+  return request<void>(`/alert-rules/${ruleId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export function getTimeSimulation(
+  token: string,
+  days?: number,
+): Promise<TimeSimulation> {
+  return request<TimeSimulation>(
+    withQuery("/dev/simulate-time", { days }),
+    { token },
+  );
+}
+
+export function updateTimeSimulation(
+  token: string,
+  update: TimeSimulationUpdate,
+): Promise<TimeSimulation> {
+  return request<TimeSimulation>("/dev/simulate-time", {
+    method: "POST",
+    token,
+    body: update,
+  });
+}
+
+export function getAuditLogs(
+  token: string,
+  query: AuditLogQuery,
+): Promise<Page<AuditLogRecord>> {
+  return request<Page<AuditLogRecord>>(
+    withQuery("/audit-logs", {
+      page: query.page ?? 1,
+      page_size: query.pageSize ?? 20,
+      entity_type: query.entityType,
+      entity_id: query.entityId,
+      actor_id: query.actorId,
+      start_date: query.startDate,
+      end_date: query.endDate,
+    }),
+    { token },
+  );
+}

@@ -1,0 +1,53 @@
+# Environments and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Uploads / generated files
+backend/uploads/
+*.log
+coverage/
+*.tsbuildinfo
+
+# Local Playwright MCP artifacts and verification screenshots
+.playwright-mcp/
+verification/
+/approved-final.png
+/casefile-approved-final.png
+/casefile-deficiency-blocked.png
+
+# Local databases and dumps
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# Local secrets and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Docker volumes are managed by compose; nothing to ignore here.
