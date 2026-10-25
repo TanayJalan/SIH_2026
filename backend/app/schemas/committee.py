@@ -53,7 +53,7 @@ class CommitteeSelectionOut(BaseModel):
     seats: list[SeatSelectionOut]
     co_opted: SeatSelectionOut | None = None
     quorum_required: int
-    quorum_description: str
+    quorum_description: str = ""
     quorum_met: bool
     warnings: list[str]
     status: str

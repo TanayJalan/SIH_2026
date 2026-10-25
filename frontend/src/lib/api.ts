@@ -1487,3 +1487,111 @@ export function getAuditLogs(
     { token },
   );
 }
+
+export type CommitteeType =
+  | "SCRUTINY"
+  | "RE_SCRUTINY"
+  | "EVC"
+  | "SHC"
+  | "SAC"
+  | "SCSC"
+  | "EC"
+  | "COUNCIL";
+
+export interface SeatSelectionOut {
+  expert_id: string;
+  expert_name: string;
+  seat_label: string;
+  seat_role: string;
+  reasons: string[];
+}
+
+export interface CommitteeSelectionOut {
+  committee_id: string;
+  committee_type: string;
+  selection_seed: string;
+  seats: SeatSelectionOut[];
+  co_opted?: SeatSelectionOut | null;
+  quorum_required: number;
+  quorum_description: string;
+  quorum_met: boolean;
+  warnings: string[];
+  status: string;
+  mode: string;
+  scheduled_at?: string | null;
+  selected_at?: string | null;
+}
+
+export interface CommitteeSelectRequest {
+  application_id?: string;
+  complaint_id?: string;
+  committee_type: string;
+  include_co_opt?: boolean;
+  selection_seed?: string;
+  mode?: "ONLINE" | "HYBRID" | "PHYSICAL";
+  scheduled_at?: string;
+}
+
+export interface QuorumCheckOut {
+  committee_type: string;
+  present_count: number;
+  quorum_required: number;
+  quorum_description: string;
+  quorum_met: boolean;
+  apH_clause: string;
+}
+
+export interface ExpertPoolOut {
+  id: string;
+  name: string;
+  designation: string;
+  institution_name?: string | null;
+  state: string;
+  aicte_region: string;
+  email?: string | null;
+  seat_tags: string[];
+  years_experience: number;
+  is_retired_hc_judge: boolean;
+  recent_assignment_count: number;
+  is_active: boolean;
+  is_fictional: boolean;
+}
+
+export function getCommitteesForApplication(
+  token: string,
+  applicationId: string,
+): Promise<CommitteeSelectionOut[]> {
+  return request<CommitteeSelectionOut[]>(`/committees/application/${applicationId}`, { token });
+}
+
+export function selectCommittee(
+  token: string,
+  payload: CommitteeSelectRequest,
+): Promise<CommitteeSelectionOut> {
+  return request<CommitteeSelectionOut>("/committees/select", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export function checkQuorum(
+  token: string,
+  committeeType: string,
+  presentCount: number,
+): Promise<QuorumCheckOut> {
+  return request<QuorumCheckOut>(
+    withQuery(`/committees/quorum/${committeeType}`, { present_count: presentCount }),
+    { token },
+  );
+}
+
+export function listExpertPool(
+  token: string,
+  activeOnly: boolean = true,
+): Promise<ExpertPoolOut[]> {
+  return request<ExpertPoolOut[]>(
+    withQuery("/expert-pool", { active_only: activeOnly ? 1 : 0 }),
+    { token },
+  );
+}

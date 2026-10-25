@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import PageHeader from "../components/PageHeader";
+import CaseCommittees from "../components/casefile/CaseCommittees";
 import CaseCompliance from "../components/casefile/CaseCompliance";
 import CaseDeficiencies from "../components/casefile/CaseDeficiencies";
 import CaseDocuments from "../components/casefile/CaseDocuments";
@@ -41,6 +42,7 @@ const TABS = [
   { value: "compliance", label: "Compliance" },
   { value: "deficiencies", label: "Deficiencies" },
   { value: "inspection", label: "Inspection" },
+  { value: "committees", label: "Committees" },
   { value: "timeline", label: "Timeline" },
 ];
 
@@ -244,6 +246,18 @@ export default function ApplicationDetailPage() {
                   applicationId={application.id}
                   token={token ?? ""}
                   canSchedule={regionalRole}
+                />
+              </TabsContent>
+
+              <TabsContent value="committees">
+                <CaseCommittees
+                  applicationId={application.id}
+                  token={token ?? ""}
+                  canSelect={
+                    regionalRole ||
+                    user.role === "REGULATION_BUREAU_OFFICER" ||
+                    user.role === "SUPER_ADMIN"
+                  }
                 />
               </TabsContent>
 

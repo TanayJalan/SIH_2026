@@ -42,6 +42,7 @@ def ensure_reference_config() -> None:
         _ensure_baseline_snapshots,
         _ensure_compliance_config,
         _ensure_compliance_rules,
+        _ensure_expert_pool,
         _ensure_sla_configs,
     )
 
@@ -53,6 +54,7 @@ def ensure_reference_config() -> None:
         _ensure_compliance_config(db, audit)
         _ensure_aph_reference_data(db, audit)
         _ensure_baseline_snapshots(db)
+        _ensure_expert_pool(db, audit)
         db.commit()
 
 
