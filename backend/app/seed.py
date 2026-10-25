@@ -35,6 +35,7 @@ from app.models import (
     ComplianceRule,
     ComplianceSnapshot,
     DecisionType,
+    ExpertPool,
     FeeSchedule,
     FeeUnit,
     Inspection,
