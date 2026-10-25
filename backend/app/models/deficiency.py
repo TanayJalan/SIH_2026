@@ -53,6 +53,7 @@ class Deficiency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         PG_UUID(as_uuid=True),
         ForeignKey("documents.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

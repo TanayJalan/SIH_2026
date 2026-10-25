@@ -87,7 +87,9 @@ const CHANNEL_LABELS: Record<AlertChannel, string> = {
 const CHANNELS: AlertChannel[] = ["IN_APP", "EMAIL", "SMS"];
 
 const ESCALATION_ROLES: { value: Role; label: string }[] = [
-  { value: "REGIONAL_HEAD", label: "Regional head" },
+  { value: "REGIONAL_OFFICER", label: "Regional Officer" },
+  { value: "REGULATION_BUREAU_OFFICER", label: "Regulation Bureau officer" },
+  { value: "EXECUTIVE_COMMITTEE_MEMBER", label: "Executive Committee member" },
   { value: "SUPER_ADMIN", label: "Super administrator" },
 ];
 
@@ -118,7 +120,7 @@ function emptyForm(): RuleFormState {
     channel_list: ["IN_APP", "EMAIL"],
     template:
       "The {stage} stage for {institution} (application {application_reference}) is due on {due_date}. {days_remaining} day(s) remain.",
-    escalation_role: "REGIONAL_HEAD",
+    escalation_role: "REGIONAL_OFFICER",
     is_active: true,
   };
 }

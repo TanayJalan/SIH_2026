@@ -10,8 +10,10 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import (
+    ApplicationCategory,
     ApplicationStatus,
-    ApplicationType,
+    ApplicationTrack,
+    DecisionType,
     DocumentVerificationStatus,
     Role,
     WorkflowStage,
@@ -40,16 +42,28 @@ class ApplicationRead(BaseModel):
     reference: str | None
     institution_id: uuid.UUID
     institution: InstitutionSummary
-    application_type: ApplicationType
+    track: ApplicationTrack
+    application_type: str
+    category: ApplicationCategory
+    portal_application_no: str | None = None
     academic_year: str
     status: ApplicationStatus
     current_stage: WorkflowStage
     assigned_officer_id: uuid.UUID | None
     submitted_at: datetime | None
+    locked_at: datetime | None = None
     stage_entered_at: datetime | None
     sla_due_at: datetime | None
     is_withdrawn: bool
     is_escalated: bool
+    reopen_count: int = 0
+    late_submission: bool = False
+    ter_amount_paise: int | None = None
+    ter_paid_at: datetime | None = None
+    ter_receipt_no: str | None = None
+    decision_type: DecisionType | None = None
+    decision_uploaded_at: datetime | None = None
+    appeal_deadline: datetime | None = None
     risk_score: Decimal | None
     compliance_score: Decimal | None
     created_at: datetime
@@ -67,17 +81,17 @@ class ApplicationPage(BaseModel):
 
 
 class ApplicationCreate(BaseModel):
-    """Fields accepted when an institution starts a draft."""
+    """Fields accepted when an institution starts a draft.
 
-    application_type: ApplicationType
+    ``application_type`` is an APH code from Table 2.3. The authoritative
+    routing table (``application_type_routes``) is checked by the workspace
+    service, so an administrator can add a type without a code change.
+    """
+
+    application_type: str = Field(min_length=1, max_length=64)
     academic_year: str = Field(pattern=r"^\d{4}-\d{2}$")
-
-    @field_validator("application_type")
-    @classmethod
-    def _validate_supported_flow(cls, value: ApplicationType) -> ApplicationType:
-        if value not in {ApplicationType.NEW, ApplicationType.EXTENSION}:
-            raise ValueError("Only NEW and EXTENSION applications are supported")
-        return value
+    track: ApplicationTrack | None = None
+    category: ApplicationCategory | None = None
 
     @field_validator("academic_year")
     @classmethod

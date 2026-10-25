@@ -52,6 +52,8 @@ def _rule(
         threshold_max=Decimal(threshold_max) if threshold_max else None,
         severity=severity,
         applies_to="ALL",
+        apH_clause="DEMO",
+        needs_verification=True,
         is_active=True,
     )
 
@@ -181,6 +183,12 @@ def test_safe_operator_evaluation_and_between_bounds() -> None:
     assert between_pass.status == "PASS"
     assert "expected between 10" in between_pass.message
     assert "20 students/faculty" in between_pass.message
+    assert between_pass.evidence["observed_value"] == 14.0
+    assert between_pass.explanation["criteria"] == "Test-only rule."
+    assert between_pass.explanation["status"] == "PASS"
+    assert between_pass.explanation["passed"] is True
+    assert between_pass.explanation["apH_clause"] == "DEMO"
+    assert between_pass.explanation["needs_verification"] is True
 
     between_fail = _evaluate_rule(
         _rule(
@@ -206,6 +214,8 @@ def test_missing_metric_is_flagged_not_crashed() -> None:
     )
     assert unknown.status == "NOT_ASSESSED"
     assert unknown.message.startswith("Data missing: ")
+    assert unknown.explanation["passed"] is None
+    assert unknown.explanation["status"] == "NOT_ASSESSED"
     known = _evaluate_rule(
         _rule(metric_key="infrastructure.labs", operator=">=", threshold="10"), None
     )
@@ -261,7 +271,7 @@ def test_equality_operator_aliases_work() -> None:
 def _application_with_levels(*levels: str) -> Application:
     application = Application(
         institution_id=uuid.uuid4(),
-        application_type=ApplicationType.NEW,
+        application_type=ApplicationType.NEW_INSTITUTION,
         academic_year="2026-27",
         status=ApplicationStatus.SUBMITTED,
         current_stage=WorkflowStage.SCRUTINY,
@@ -291,11 +301,11 @@ def test_rule_scope_matches_application_type_and_programme_level() -> None:
     assert _applies_to_application(rule, ug_application) is True
     assert _applies_to_application(rule, pg_application) is False
 
-    rule.applies_to = "PG,EXTENSION"
+    rule.applies_to = "PG,EOA_SELF_DISCLOSURE"
     assert _applies_to_application(rule, pg_application) is True
     assert _applies_to_application(rule, ug_application) is False
 
-    rule.applies_to = "NEW"
+    rule.applies_to = "NEW_INSTITUTION"
     assert _applies_to_application(rule, ug_application) is True
 
     rule.applies_to = "ALL"

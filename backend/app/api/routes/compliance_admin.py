@@ -42,14 +42,14 @@ router = APIRouter(prefix="/compliance", tags=["compliance-admin"])
 
 ComplianceAdminUser = Annotated[
     User,
-    Depends(require_roles(Role.SUPER_ADMIN, Role.REGIONAL_HEAD)),
+    Depends(require_roles(Role.SUPER_ADMIN, Role.REGIONAL_OFFICER)),
 ]
 
 
 def _scoped_institutions(user: User, db: DbSession) -> list[Institution]:
     """Institutions inside the viewer's scope (regional heads see their region)."""
     query = select(Institution).order_by(Institution.name)
-    if user.role == Role.REGIONAL_HEAD and user.region:
+    if user.role == Role.REGIONAL_OFFICER and user.region:
         query = query.where(Institution.region == user.region)
     return list(db.scalars(query).all())
 
@@ -154,6 +154,8 @@ def create_rule(
         threshold_max=str(payload.threshold_max) if payload.threshold_max is not None else None,
         severity=payload.severity,
         applies_to=payload.applies_to,
+        apH_clause=payload.apH_clause,
+        needs_verification=payload.needs_verification,
         is_active=payload.is_active,
     )
     db.add(rule)
@@ -492,7 +494,7 @@ def institution_trend(
             detail="Institution not found",
         )
     if (
-        current_user.role == Role.REGIONAL_HEAD
+        current_user.role == Role.REGIONAL_OFFICER
         and current_user.region
         and institution.region != current_user.region
     ):

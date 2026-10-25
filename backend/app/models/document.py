@@ -6,6 +6,7 @@ import uuid
 from datetime import date
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     ForeignKey,
@@ -48,6 +49,16 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
     doc_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    doc_code: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    """APH document code from the Annexure-1/2 checklist."""
+    signed_with_dsc: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    """All uploads must be digitally signed; no DSC means no submission (APH 1.4.3)."""
+    valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
+    """Certificate validity used by the document-expiry alerts."""
+    affidavit_no: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    """Affidavit or format number, for example Affidavit 2 or Format 3."""
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     content_type: Mapped[str] = mapped_column(
         String(100), nullable=False, default="application/octet-stream",

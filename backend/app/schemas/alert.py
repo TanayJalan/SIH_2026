@@ -10,7 +10,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.models.enums import (
     AlertChannel,
     AlertStatus,
-    AlertTrigger,
     Role,
     Severity,
 )
@@ -64,17 +63,28 @@ class AlertRuleBase(BaseModel):
     code: str = Field(min_length=2, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
     name: str = Field(min_length=1, max_length=255)
     description: str = Field(default="", max_length=2000)
-    trigger_type: AlertTrigger
+    trigger_type: str = Field(
+        min_length=2, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$"
+    )
     days_before: int = Field(default=0, ge=0, le=365)
     severity: Severity
     channel_list: list[AlertChannel] = Field(min_length=1, max_length=3)
     template: str = Field(min_length=1, max_length=8000)
-    escalation_role: Role = Role.REGIONAL_HEAD
+    escalation_role: Role = Role.REGIONAL_OFFICER
+    apH_clause: str = Field(default="DEMO", max_length=64)
+    """APH clause backing the alert; ``DEMO`` marks illustrative configuration."""
+    needs_verification: bool = True
+    """True while the clause or trigger threshold still needs verification."""
     is_active: bool = True
 
     @field_validator("code")
     @classmethod
     def _normalise_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @field_validator("trigger_type")
+    @classmethod
+    def _normalise_trigger_type(cls, value: str) -> str:
         return value.strip().upper()
 
     @field_validator("channel_list")
@@ -104,17 +114,29 @@ class AlertRuleUpdate(BaseModel):
     )
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
-    trigger_type: AlertTrigger | None = None
+    trigger_type: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=64,
+        pattern=r"^[A-Z0-9][A-Z0-9_-]*$",
+    )
     days_before: int | None = Field(default=None, ge=0, le=365)
     severity: Severity | None = None
     channel_list: list[AlertChannel] | None = Field(default=None, min_length=1, max_length=3)
     template: str | None = Field(default=None, min_length=1, max_length=8000)
     escalation_role: Role | None = None
+    apH_clause: str | None = Field(default=None, max_length=64)
+    needs_verification: bool | None = None
     is_active: bool | None = None
 
     @field_validator("code")
     @classmethod
     def _normalise_code(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value is not None else None
+
+    @field_validator("trigger_type")
+    @classmethod
+    def _normalise_trigger_type(cls, value: str | None) -> str | None:
         return value.strip().upper() if value is not None else None
 
     @field_validator("channel_list")
@@ -148,6 +170,8 @@ class AlertRuleRead(BaseModel):
     channel_list: list[AlertChannel]
     template: str
     escalation_role: Role
+    apH_clause: str
+    needs_verification: bool
     is_active: bool
     created_at: datetime
     updated_at: datetime

@@ -1,0 +1,22 @@
+[
+  {
+    "academic_year": "2026-27",
+    "category": "CAT1_CUTOFF",
+    "opens_on": "2026-03-01",
+    "cutoff_on": "2026-04-30",
+    "apH_clause": "APH 1.2",
+    "needs_verification": true,
+    "is_demo": true,
+    "note": "DEMO ONLY. The handbook does not publish cut-off dates; replace with the AICTE Public Notice for the academic year."
+  },
+  {
+    "academic_year": "2026-27",
+    "category": "CAT2_YEAR_ROUND",
+    "opens_on": "2026-03-01",
+    "cutoff_on": "2027-03-31",
+    "apH_clause": "APH Table 2.2",
+    "needs_verification": true,
+    "is_demo": true,
+    "note": "DEMO ONLY. Category 2 types are processed year-round; the end date is illustrative and must be replaced with the Public Notice."
+  }
+]

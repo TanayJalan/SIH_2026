@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import CheckConstraint, Integer
+from sqlalchemy import Boolean, CheckConstraint, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -31,3 +31,11 @@ class SLAConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     escalate_to_role: Mapped[Role] = mapped_column(
         enum_type(Role, "user_role", length=32), nullable=False
     )
+    apH_clause: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="DEMO", server_default="DEMO"
+    )
+    """APH clause for the processing limit, or ``DEMO`` for illustrative SLA values."""
+    needs_verification: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    """SLA durations are project settings, so they stay flagged for review."""

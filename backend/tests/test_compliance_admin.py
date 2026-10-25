@@ -34,6 +34,8 @@ def admin_rule(test_data: TestData) -> Generator[dict[str, Any], None, None]:
             threshold=500,
             severity=Severity.HIGH,
             applies_to="ALL",
+            apH_clause="DEMO",
+            needs_verification=True,
             is_active=True,
         )
         db.add(rule)
@@ -247,7 +249,10 @@ def test_institution_trend_returns_snapshot_history(
         api_client, test_data.users["super"], test_data.password
     )
     monitor = api_client.get("/compliance/monitor", headers=headers)
-    institution_id = monitor.json()["items"][0]["institution_id"]
+    items = monitor.json()["items"]
+    institution_id = next(
+        item["institution_id"] for item in items if item["latest_status"] is not None
+    )
     trend = api_client.get(
         f"/compliance/institutions/{institution_id}/trend", headers=headers
     )

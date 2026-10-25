@@ -3,12 +3,50 @@ export const API_BASE_URL = (configuredBaseUrl ?? "http://localhost:8000").repla
 
 export type Role =
   | "INSTITUTION_ADMIN"
-  | "SCRUTINY_OFFICER"
-  | "INSPECTION_COMMITTEE"
-  | "REGIONAL_HEAD"
+  | "REGULATION_BUREAU_OFFICER"
+  | "SCRUTINY_COMMITTEE_MEMBER"
+  | "EVC_MEMBER"
+  | "REGIONAL_OFFICER"
+  | "SHC_MEMBER"
+  | "SAC_MEMBER"
+  | "EXECUTIVE_COMMITTEE_MEMBER"
+  | "COMPLAINT_SCRUTINY_MEMBER"
   | "SUPER_ADMIN";
 
-export type ApplicationType = "NEW" | "EXTENSION" | "INTAKE_CHANGE";
+export type ApplicationType =
+  | "NEW_INSTITUTION"
+  | "NEW_INSTITUTION_OTHER_REGULATOR"
+  | "CLOSURE_AND_NEW_INSTITUTION"
+  | "UNIVERSITY"
+  | "EOA_SELF_DISCLOSURE"
+  | "NRI_SEATS"
+  | "DIPLOMA_DEGREE_CONVERSION"
+  | "CHANGE_OF_NAME"
+  | "NEW_PROGRAMME"
+  | "MERGER_OF_INSTITUTIONS"
+  | "EOA_AFTER_BREAK"
+  | "SUPERNUMERARY_FN_OCI"
+  | "INCREASE_INTAKE"
+  | "INTEGRATED_DUAL_DEGREE"
+  | "OFF_CAMPUS"
+  | "FPM"
+  | "COURSE_RENAME_MERGE_REDUCTION"
+  | "COLLABORATION_TWINNING"
+  | "CHANGE_OF_SITE"
+  | "CLOSURE_OF_INSTITUTION"
+  | "WOMEN_COED_CONVERSION"
+  | "CLOSURE_OF_PROGRAMME"
+  | "CHANGE_IN_BANK_DETAILS"
+  | "CHANGE_OF_TRUST_NAME"
+  | "EXTENDED_EOA"
+  | "DEEMED_UNIVERSITY_CONVERSION"
+  | "ODL_ONLINE";
+
+export type ApplicationTrack = "NEW_INSTITUTION" | "EXISTING" | "UNIVERSITY" | "ODL";
+
+export type ApplicationCategory = "CAT1_CUTOFF" | "CAT2_YEAR_ROUND";
+
+export type DecisionType = "LOA" | "EOA" | "LOD" | "LOR";
 
 export type ApplicationStatus =
   | "DRAFT"
@@ -117,7 +155,10 @@ export interface ApplicationRecord {
   reference: string | null;
   institution_id: string;
   institution: InstitutionSummary;
+  track: ApplicationTrack;
   application_type: ApplicationType;
+  category: ApplicationCategory;
+  portal_application_no: string | null;
   academic_year: string;
   status: ApplicationStatus;
   current_stage: WorkflowStage;
@@ -127,6 +168,15 @@ export interface ApplicationRecord {
   sla_due_at: string | null;
   is_withdrawn: boolean;
   is_escalated: boolean;
+  locked_at: string | null;
+  reopen_count: number;
+  late_submission: boolean;
+  ter_amount_paise: number | null;
+  ter_paid_at: string | null;
+  ter_receipt_no: string | null;
+  decision_type: DecisionType | null;
+  decision_uploaded_at: string | null;
+  appeal_deadline: string | null;
   risk_score: string | number | null;
   compliance_score: string | number | null;
   created_at: string;
@@ -950,6 +1000,8 @@ export function getApplication(
 export interface ApplicationCreateInput {
   application_type: ApplicationType;
   academic_year: string;
+  track?: ApplicationTrack;
+  category?: ApplicationCategory;
 }
 
 export function createApplication(

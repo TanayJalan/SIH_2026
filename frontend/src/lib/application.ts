@@ -2,6 +2,7 @@ import type {
   AccreditationSection,
   ApplicationData,
   ApplicationProgramInput,
+  ApplicationType,
   FacultySection,
   FinanceSection,
   InfrastructureSection,
@@ -86,6 +87,57 @@ export const NBA_OPTIONS: { value: NbaStatus; label: string }[] = [
   { value: "ACCREDITED", label: "Accredited" },
   { value: "APPLIED", label: "Application submitted" },
   { value: "NOT_ACCREDITED", label: "Not accredited" },
+];
+
+export const APPLICATION_TYPE_OPTIONS: { value: ApplicationType; label: string }[] = [
+  { value: "NEW_INSTITUTION", label: "New technical institution (Chapter I)" },
+  {
+    value: "NEW_INSTITUTION_OTHER_REGULATOR",
+    label: "Institution approved by another regulator, first AICTE approval",
+  },
+  {
+    value: "CLOSURE_AND_NEW_INSTITUTION",
+    label: "Closure plus new institution in the same premises",
+  },
+  { value: "UNIVERSITY", label: "University (Chapter IV)" },
+  { value: "EOA_SELF_DISCLOSURE", label: "Extension of approval based on self-disclosure" },
+  { value: "NRI_SEATS", label: "Introduction or continuation of NRI seats" },
+  {
+    value: "DIPLOMA_DEGREE_CONVERSION",
+    label: "Conversion of diploma level into degree level and vice versa",
+  },
+  { value: "CHANGE_OF_NAME", label: "Change of institution, affiliating body or type name" },
+  { value: "NEW_PROGRAMME", label: "Start a new programme or level in an existing institution" },
+  {
+    value: "MERGER_OF_INSTITUTIONS",
+    label: "Merger of institutions under the same or a different trust",
+  },
+  { value: "EOA_AFTER_BREAK", label: "EoA after a break, restoration of intake or hibernation" },
+  { value: "SUPERNUMERARY_FN_OCI", label: "Supernumerary seats for FN, OCI and Gulf children" },
+  { value: "INCREASE_INTAKE", label: "Increase in intake or additional course" },
+  { value: "INTEGRATED_DUAL_DEGREE", label: "Integrated or dual degree course" },
+  { value: "OFF_CAMPUS", label: "Off-campus institution" },
+  { value: "FPM", label: "Fellow Programme in Management" },
+  {
+    value: "COURSE_RENAME_MERGE_REDUCTION",
+    label: "Change of course name, merger of courses or reduction in intake",
+  },
+  { value: "COLLABORATION_TWINNING", label: "Collaboration and twinning programme" },
+  { value: "CHANGE_OF_SITE", label: "Change of site or location" },
+  { value: "CLOSURE_OF_INSTITUTION", label: "Closure of institution" },
+  {
+    value: "WOMEN_COED_CONVERSION",
+    label: "Conversion of a women's institution into co-ed and vice versa",
+  },
+  { value: "CLOSURE_OF_PROGRAMME", label: "Closure of a programme or course" },
+  { value: "CHANGE_IN_BANK_DETAILS", label: "Change in bank details" },
+  {
+    value: "CHANGE_OF_TRUST_NAME",
+    label: "Change of trust, society or company name or address",
+  },
+  { value: "EXTENDED_EOA", label: "Extended EoA" },
+  { value: "DEEMED_UNIVERSITY_CONVERSION", label: "Institution converted to a deemed university" },
+  { value: "ODL_ONLINE", label: "ODL and online courses" },
 ];
 
 export const PROGRAM_LEVEL_OPTIONS = [

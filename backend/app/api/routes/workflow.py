@@ -44,7 +44,13 @@ router = APIRouter(prefix="/applications", tags=["workflow"])
 
 SchedulerUser = Annotated[
     User,
-    Depends(require_roles(Role.SCRUTINY_OFFICER, Role.REGIONAL_HEAD, Role.SUPER_ADMIN)),
+    Depends(
+        require_roles(
+            Role.SCRUTINY_COMMITTEE_MEMBER,
+            Role.REGIONAL_OFFICER,
+            Role.REGULATION_BUREAU_OFFICER,
+        )
+    ),
 ]
 
 
@@ -301,7 +307,7 @@ def list_committee_members(
     members = db.scalars(
         select(User)
         .where(
-            User.role == Role.INSPECTION_COMMITTEE,
+            User.role == Role.EVC_MEMBER,
             User.is_active.is_(True),
             User.region == application.institution.region,
         )

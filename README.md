@@ -8,6 +8,10 @@ institutions and continuously monitors compliance against configurable norms. Th
 > clearly fictional. Compliance thresholds and SLA values are **illustrative** and must remain
 > editable by administrators. They must be verified against the current AICTE Approval Process
 > Handbook before any real use.
+>
+> The APH 2024-27 schema and role retrofit is documented in `docs/er-diagram.md`. Domain points
+> that still need a handbook check or an administrative decision are tracked in
+> `docs/OPEN_QUESTIONS.md`.
 
 ## Status
 
@@ -30,7 +34,7 @@ Implemented:
   keyboard shortcuts, an unread-count notification bell and a filterable alert inbox
 - A database-driven alert and escalation engine with eight trigger types, in-app/email/mock-SMS
   delivery, template rendering, dedupe keys and a 15-minute APScheduler scan
-- Officer → Regional Head → Super Admin escalation with severity raising, application escalation
+- Officer → Regional Officer → Super Admin escalation with severity raising, application escalation
   state, workflow events and acknowledge-to-stop semantics
 - Alert inbox filters and acknowledgement, plus a `/alert-rules` admin screen for `SUPER_ADMIN`
 - A single workflow state machine for submission, document verification, scrutiny, deficiency
@@ -39,7 +43,7 @@ Implemented:
   0–100 scores, per-rule explanations, missing-data handling and RED/AMBER/GREEN status
 - Continuous compliance monitoring: nightly APScheduler evaluation, re-evaluation on application
   writes and an on-demand admin run, with append-only institution snapshots for trend charts
-- Compliance admin APIs and a `/compliance` screen for `SUPER_ADMIN` and `REGIONAL_HEAD`:
+- Compliance admin APIs and a `/compliance` screen for `SUPER_ADMIN` and `REGIONAL_OFFICER`:
   rule list/add/edit/activate, threshold impact preview, editable severity weights and RAG bounds
 - A compliance tab on the application detail page with rule-by-rule pass/fail, severity badges,
   score gauge and human-readable explanations
@@ -111,20 +115,27 @@ Migrations run automatically when the backend container starts.
 make seed
 ```
 
-The seed is idempotent. It creates two fictional institutions, one account per role, three
-applications (including one decided case for the public average) and one inspection with audit
-records. It also installs the illustrative required-document rules, SLA configuration and 15
-compliance rules, plus default severity weights and RED/AMBER/GREEN breakpoints. Change both seed
-passwords before sharing any environment.
+The seed is idempotent. It creates two fictional institutions with APH institution profiles, one
+account per APH role, five applications (including decided cases for the public average) and one
+inspection with audit records. It also loads the APH application-type routing table, fee schedule,
+required-document checklist, committee compositions, demo public notices and academic calendar
+events, plus the illustrative SLA configuration, 15 compliance rules, alert rules and default
+severity weights and RED/AMBER/GREEN breakpoints. Change both seed passwords before sharing any
+environment.
 
-| Role                    | Email                         |
-| ----------------------- | ----------------------------- |
-| `SUPER_ADMIN`           | `admin@example.edu`           |
-| `INSTITUTION_ADMIN`     | `institution@example.edu`     |
-| `SCRUTINY_OFFICER`      | `scrutiny@example.edu`        |
-| `INSPECTION_COMMITTEE`  | `inspection@example.edu`      |
-| `REGIONAL_HEAD`         | `regional@example.edu`        |
+| Role | Email |
+| ---- | ----- |
+| `SUPER_ADMIN` | `admin@example.edu` |
+| `INSTITUTION_ADMIN` | `institution@example.edu` |
 | `INSTITUTION_ADMIN` (South) | `institution.south@example.edu` |
+| `REGULATION_BUREAU_OFFICER` | `regulation@example.edu` |
+| `SCRUTINY_COMMITTEE_MEMBER` | `scrutiny@example.edu` |
+| `EVC_MEMBER` | `inspection@example.edu` |
+| `REGIONAL_OFFICER` | `regional@example.edu` |
+| `SHC_MEMBER` | `shc@example.edu` |
+| `SAC_MEMBER` | `sac@example.edu` |
+| `EXECUTIVE_COMMITTEE_MEMBER` | `ec@example.edu` |
+| `COMPLAINT_SCRUTINY_MEMBER` | `complaints@example.edu` |
 
 - `admin@example.edu` uses `SEED_ADMIN_PASSWORD` (default `ChangeMe123!`).
 - All other demo accounts use `SEED_DEMO_PASSWORD` (default `ChangeMe123!`).
@@ -133,19 +144,21 @@ With `DEMO_MODE=true` (the Compose development default), the login screen lists 
 and fills the email and password when an entry is selected. No demo accounts are exposed when demo
 mode is off.
 
-The West demo application (`DEMO-WEST-2026-001`) is assigned to the scrutiny officer and has an
-inspection assigned to the committee member. The South application
+The West demo application (`DEMO-WEST-2026-001`) is assigned to the Scrutiny Committee member and
+has an inspection assigned to the EVC member. The South application
 (`DEMO-SOUTH-2026-001`) is used to demonstrate cross-tenant denial. The approved
 `DEMO-WEST-2026-002` case supplies the public average-days-to-decision figure. The open applications
 receive illustrative SLA due dates so the overdue filter and demo clock can be exercised; these
 dates are demo scaffolding, not AICTE policy.
 
-The seeded document rules are illustrative: `NEW` and `EXTENSION` require an affiliation
-certificate, building-plan approval, faculty details, financial statement, land ownership document
-and mandatory disclosure document; the NAAC/NBA certificate is optional. The application-stage SLA
-is seeded as 30 days with escalation after 20 days. These are prototype values, not AICTE policy,
-and can be edited directly in the `required_documents` and `sla_configs` tables until an admin
-configuration screen is built.
+The seeded document rules are illustrative: `NEW_INSTITUTION` and `EOA_SELF_DISCLOSURE` require
+an affiliation certificate, building-plan approval, faculty details, financial statement, land
+ownership document and mandatory disclosure document; the NAAC/NBA certificate is optional. APH
+document codes and clause references are stored on each requirement. The application-stage SLA is
+seeded as 30 days with escalation after 20 days. These are prototype values, not AICTE policy, and
+can be edited directly in the `required_documents` and `sla_configs` tables until an admin
+configuration screen is built. Every SLA row carries `apH_clause = 'DEMO'` and
+`needs_verification = true` until a real processing calendar is supplied.
 
 No alert rows are seeded. The alert-rule catalogue is seeded as editable configuration, including
 T-7/T-3/T-1 deadlines, SLA breach, deficiency due/overdue, document expiry at 30/15 days,
@@ -179,9 +192,14 @@ All roles require a Bearer token from `POST /auth/login`.
 | Role | Scope |
 | ---- | ----- |
 | `INSTITUTION_ADMIN` | Applications and institution data for their own institution only |
-| `SCRUTINY_OFFICER` | Applications assigned to them or from institutions in their region |
-| `INSPECTION_COMMITTEE` | Applications with an inspection assigned to them |
-| `REGIONAL_HEAD` | Applications, audit records and compliance monitoring/rules for their region |
+| `REGULATION_BUREAU_OFFICER` | Applications across regions, scrutiny/process actions and audit records |
+| `SCRUTINY_COMMITTEE_MEMBER` | Applications assigned to them or from institutions in their region |
+| `EVC_MEMBER` | Applications with an Expert Visit Committee inspection assigned to them |
+| `REGIONAL_OFFICER` | Applications, audit records and compliance monitoring/rules for their region |
+| `SHC_MEMBER` | Cases referred to the Standing Hearing Committee |
+| `SAC_MEMBER` | Appeals referred to the Standing Appellate Committee |
+| `EXECUTIVE_COMMITTEE_MEMBER` | Cases referred to the Executive Committee for decision |
+| `COMPLAINT_SCRUTINY_MEMBER` | Complaints referred to the Standing Complaint Scrutiny Committee |
 | `SUPER_ADMIN` | All applications, audit records and compliance monitoring/rules |
 
 The frontend filters the sidebar by role, but the API performs the authoritative checks. Direct
@@ -233,7 +251,7 @@ Set a strong `SECRET_KEY` in `.env` outside local development. The default value
   for another user's alert. Acknowledgement stops the escalation chain.
 - `GET|POST|PATCH|DELETE /alert-rules` — `SUPER_ADMIN` CRUD for database-configured alert rules.
   Every write is audited with a before/after snapshot.
-- `GET /audit-logs` — restricted to `SUPER_ADMIN` and `REGIONAL_HEAD`, with:
+- `GET /audit-logs` — restricted to `SUPER_ADMIN`, `REGIONAL_OFFICER` and `REGULATION_BUREAU_OFFICER`, with:
   - `entity_type`, `entity_id`
   - `actor_id`
   - `start_date`, `end_date` (inclusive UTC dates)
@@ -250,7 +268,9 @@ application access rules. Every write is audited.
 
 ### Drafts and sections
 
-- `POST /applications` — body `{ "application_type": "NEW|EXTENSION", "academic_year": "2026-27" }`.
+- `POST /applications` — body `{ "application_type": "<APH type>", "academic_year": "2026-27" }`.
+  The type must exist in the seeded `application_type_routes` table; `track` and `category` are
+  derived from that route unless supplied.
   Creates a `DRAFT` for the signed-in institution and returns the full detail payload.
 - `PATCH /applications/{id}` — body `{ "data": { ... } }`. Merges the supplied sections into the
   draft's JSONB `data`; omitted sections stay unchanged.
@@ -327,7 +347,7 @@ Submitted applications are read-only in the institution workspace.
 ## Compliance engine
 
 Compliance norms are stored as rows in `compliance_rules`; no threshold, weight or status band is
-hard-coded in the evaluator. `SUPER_ADMIN` and `REGIONAL_HEAD` manage them at `/compliance`
+hard-coded in the evaluator. `SUPER_ADMIN` and `REGIONAL_OFFICER` manage them at `/compliance`
 (**Monitoring**, **Rules** and **Scoring** tabs). Every rule and configuration edit is written to
 the audit log.
 
@@ -344,9 +364,9 @@ retained for compatibility. Operators are implemented as a safe comparison map
 (`backend/app/services/compliance.py`); no `eval()` is used. `BETWEEN` is inclusive and requires an
 upper bound.
 
-`applies_to` is a comma-separated scope list. It accepts application types (`NEW`, `EXTENSION`,
-`INTAKE_CHANGE`), programme levels (`UG`, `PG`) or `ALL`. A level-scoped rule runs only when the
-application includes a programme at that level.
+`applies_to` is a comma-separated scope list. It accepts APH application types (for example
+`NEW_INSTITUTION`, `EOA_SELF_DISCLOSURE`, `INCREASE_INTAKE`), programme levels (`UG`, `PG`) or
+`ALL`. A level-scoped rule runs only when the application includes a programme at that level.
 
 Severity is `CRITICAL`, `HIGH`, `MEDIUM` or `LOW` and determines the rule's score weight. The default
 weights are 25, 15, 8 and 4 respectively; the default status bands are RED below 70 and AMBER below
@@ -394,12 +414,12 @@ and counted separately.
   now**. The job runs at 02:00 UTC by default; set `COMPLIANCE_MONITOR_HOUR` (0–23) or
   `COMPLIANCE_MONITOR_ENABLED=false` in the backend environment to change or disable it.
 - When an institution becomes RED, the monitor creates an in-app alert addressed to the relevant
-  regional head or super administrator.
+  Regional Officer or super administrator.
 
 ### Compliance APIs
 
-All endpoints require `SUPER_ADMIN` or `REGIONAL_HEAD`; regional heads only see institutions in
-their region.
+All endpoints require `SUPER_ADMIN` or `REGIONAL_OFFICER`; Regional Officers only see institutions
+in their region.
 
 - `GET /compliance/rules` — paginated rule catalogue, including inactive rules with
   `include_inactive=true`.
@@ -464,9 +484,9 @@ replaying a simulated day twice, therefore cannot duplicate an alert.
 
 ### Escalation chain
 
-1. The first alert goes to the configured recipient (for most rules, the regional head).
+1. The first alert goes to the configured recipient (for most rules, the Regional Officer).
 2. If the in-app alert is still unacknowledged after the SLA's `escalation_after_days`, or the
-   stage SLA is already breached, it escalates one step: officer → `REGIONAL_HEAD` → `SUPER_ADMIN`.
+   stage SLA is already breached, it escalates one step: officer → `REGIONAL_OFFICER` → `SUPER_ADMIN`.
 3. Each escalation creates a new alert with severity raised one level (`LOW → MEDIUM → HIGH →
    CRITICAL`), links it to its parent, and records a `WorkflowEvent(action="escalate")`.
 4. The application keeps its workflow status and gains `is_escalated=true`, shown as an
@@ -482,10 +502,10 @@ inspected with `?channel=EMAIL` or `?channel=SMS`.
 The seed includes a fictional pending case, `DEMO-WEST-2026-003`, due in seven days. With
 `DEBUG=true`:
 
-1. Sign in as the scrutiny officer or regional head and open **Demo time** in the top bar.
+1. Sign in as the Scrutiny Committee member or Regional Officer and open **Demo time** in the top bar.
 2. Choose **Advance 7 days**. The backend walks the simulated clock forward one day at a time and
    scans after each step, producing the T-3/T-1 deadline alerts and then the SLA breach.
-3. Choose **Advance 1 day** to cross the escalation window. A `REGIONAL_HEAD` escalation alert
+3. Choose **Advance 1 day** to cross the escalation window. A `REGIONAL_OFFICER` escalation alert
    appears with raised severity, and the demo case shows the **Escalated** badge.
 4. Open **Alerts** to filter by severity/status, read the chain and acknowledge an alert. The bell
    in the top bar shows the unread count and the latest alerts. Mailpit at
@@ -524,7 +544,7 @@ The frontend provides:
 - A top-bar notification bell with a polling unread count and a recent-alerts dropdown.
 - An alert-rule admin page at `/alert-rules` for `SUPER_ADMIN`: trigger filter, activate/deactivate,
   create/edit dialog, template and channel configuration, and delete confirmation.
-- A compliance admin page at `/compliance` for `SUPER_ADMIN` and `REGIONAL_HEAD` with monitoring
+- A compliance admin page at `/compliance` for `SUPER_ADMIN` and `REGIONAL_OFFICER` with monitoring
   status, institution trend chart, rule catalogue/editor, impact preview and scoring configuration.
 - A compliance tab on the application detail page with the score gauge and rule-by-rule outcomes.
 - An institution application workspace at `/applications/new` and
@@ -551,10 +571,10 @@ navigation sequences are:
 | -------- | ----------- |
 | `g d` | Overview |
 | `g a` | Role-specific applications list |
-| `g c` | Compliance (Super Admin and Regional Head only) |
+| `g c` | Compliance (Super Admin and Regional Officer only) |
 | `g l` | Alerts |
 | `g r` | Alert rules (Super Admin only) |
-| `g u` | Audit logs (Super Admin and Regional Head only) |
+| `g u` | Audit logs (Super Admin, Regional Officer and Regulation Bureau only) |
 | `g p` | Profile |
 
 The palette searches application references, application ID fragments, institution names and

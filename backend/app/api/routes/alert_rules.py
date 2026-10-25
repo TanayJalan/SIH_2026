@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 
 from app.api.dependencies import AuditDep, DbSession, require_roles
 from app.models.alert import AlertRule
-from app.models.enums import AlertTrigger, Role
+from app.models.enums import Role
 from app.models.user import User
 from app.schemas.alert import (
     AlertRuleCreate,
@@ -19,6 +19,10 @@ from app.schemas.alert import (
     AlertRuleUpdate,
 )
 from app.schemas.common import ErrorResponse
+from app.services.alert_triggers import (
+    UnknownAlertTriggerError,
+    validate_trigger,
+)
 
 router = APIRouter(prefix="/alert-rules", tags=["alert-rules"])
 
@@ -37,6 +41,8 @@ def _snapshot(rule: AlertRule) -> dict[str, object]:
         "channel_list": list(rule.channel_list),
         "template": rule.template,
         "escalation_role": rule.escalation_role.value,
+        "apH_clause": rule.apH_clause,
+        "needs_verification": rule.needs_verification,
         "is_active": rule.is_active,
     }
 
@@ -49,6 +55,18 @@ def _readable_rule(db: DbSession, rule_id: uuid.UUID) -> AlertRule:
             detail="Alert rule not found",
         )
     return rule
+
+
+def _validated_trigger(db: DbSession, code: str) -> str:
+    """Return the catalogue code, or raise 422 for an unknown trigger."""
+    normalised = code.strip().upper()
+    try:
+        return validate_trigger(db, normalised).code
+    except UnknownAlertTriggerError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
 
 
 def _ensure_unique(
@@ -89,7 +107,7 @@ def list_rules(
     _current_user: AlertAdminUser,
     db: DbSession,
     include_inactive: bool = True,
-    trigger_type: Annotated[AlertTrigger | None, Query()] = None,
+    trigger_type: Annotated[str | None, Query(min_length=2, max_length=64)] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> AlertRulePage:
@@ -98,7 +116,9 @@ def list_rules(
     if not include_inactive:
         query = query.where(AlertRule.is_active.is_(True))
     if trigger_type is not None:
-        query = query.where(AlertRule.trigger_type == trigger_type.value)
+        query = query.where(
+            AlertRule.trigger_type == _validated_trigger(db, trigger_type)
+        )
 
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     items = db.scalars(
@@ -150,22 +170,25 @@ def create_rule(
     request: Request,
 ) -> AlertRule:
     """Create a rule with audit logging."""
+    trigger_type = _validated_trigger(db, payload.trigger_type)
     _ensure_unique(
         db,
         code=payload.code,
-        trigger_type=payload.trigger_type.value,
+        trigger_type=trigger_type,
         days_before=payload.days_before,
     )
     rule = AlertRule(
         code=payload.code,
         name=payload.name,
         description=payload.description,
-        trigger_type=payload.trigger_type.value,
+        trigger_type=trigger_type,
         days_before=payload.days_before,
         severity=payload.severity,
         channel_list=[channel.value for channel in payload.channel_list],
         template=payload.template,
         escalation_role=payload.escalation_role,
+        apH_clause=payload.apH_clause,
+        needs_verification=payload.needs_verification,
         is_active=payload.is_active,
     )
     db.add(rule)
@@ -207,8 +230,11 @@ def update_rule(
     before = _snapshot(rule)
     applied: dict[str, object] = {}
 
+    if payload.trigger_type is not None:
+        _validated_trigger(db, payload.trigger_type)
+
     for key, value in payload.model_dump(exclude_unset=True).items():
-        if key in {"trigger_type", "escalation_role"}:
+        if key == "escalation_role":
             new_value = value.value
         elif key == "channel_list":
             new_value = [channel.value for channel in value]

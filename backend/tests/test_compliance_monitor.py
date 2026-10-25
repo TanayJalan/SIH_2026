@@ -21,9 +21,13 @@ from app.models.compliance import (
     ComplianceSnapshot,
 )
 from app.models.enums import (
+    ApplicationCategory,
     ApplicationStatus,
+    ApplicationTrack,
     ApplicationType,
     ComplianceHealth,
+    InstitutionClass,
+    InstitutionRegion,
     Role,
     Severity,
     WorkflowStage,
@@ -34,6 +38,7 @@ from app.services.compliance import (
     evaluate_application,
     run_nightly_evaluation,
 )
+from tests.support import TestData
 
 GOOD_DATA: dict[str, Any] = {
     "infrastructure": {
@@ -88,8 +93,6 @@ BAD_DATA: dict[str, Any] = {
 
 TEST_AICTE_ID = "TEST-COMP-INST-1"
 TEST_RULE_CODE = "TEST-ENGINE-RULE"
-_REGIONAL_HEAD_REGION = "West"
-"""Matches the seeded regional head so red-flip alerts reach that role."""
 
 
 def _delete_monitored_data(db: Session, aicte_id: str) -> None:
@@ -134,7 +137,9 @@ def _delete_monitored_data(db: Session, aicte_id: str) -> None:
 
 
 @pytest.fixture
-def monitored_institution() -> Generator[dict[str, Any], None, None]:
+def monitored_institution(
+    test_data: TestData,
+) -> Generator[dict[str, Any], None, None]:
     """Create a fictional institution with one application, cleaned up after."""
     cleanup_alert_message = f"Test Compliance Institute ({TEST_AICTE_ID})"
     with SessionLocal() as db:
@@ -143,9 +148,13 @@ def monitored_institution() -> Generator[dict[str, Any], None, None]:
         institution = Institution(
             name=cleanup_alert_message,
             aicte_id=TEST_AICTE_ID,
+            pid=f"TEST-PID-{TEST_AICTE_ID}",
             state="Test State",
-            region=_REGIONAL_HEAD_REGION,
+            region=test_data.users["regional"].region,
+            aicte_region=InstitutionRegion.WESTERN,
+            institution_class=InstitutionClass.OTHER,
             type="Engineering",
+            institution_type="Engineering",
             established_year=2001,
             naac_grade=None,
             nba_status=None,
@@ -154,7 +163,9 @@ def monitored_institution() -> Generator[dict[str, Any], None, None]:
         db.flush()
         application = Application(
             institution_id=institution.id,
-            application_type=ApplicationType.NEW,
+            track=ApplicationTrack.NEW_INSTITUTION,
+            application_type=ApplicationType.NEW_INSTITUTION,
+            category=ApplicationCategory.CAT1_CUTOFF,
             academic_year="2026-27",
             status=ApplicationStatus.APPROVED,
             current_stage=WorkflowStage.COMPLETED,
@@ -218,6 +229,11 @@ def test_evaluate_application_persists_results_score_and_snapshot(
         assessed = [result for result in results if result.status != "NOT_ASSESSED"]
         assert assessed
         assert all(result.message for result in assessed)
+        assert all(result.explanation["criteria"] for result in assessed)
+        assert all(result.explanation["apH_clause"] for result in assessed)
+        assert all(result.explanation["status"] == result.status for result in assessed)
+        assert all(result.evidence["metric_key"] for result in assessed)
+        assert missing[0].explanation["passed"] is None
         assert {result.status for result in assessed} <= {"PASS", "FAIL"}
         snapshot = cast(
             ComplianceSnapshot | None,
@@ -270,7 +286,7 @@ def test_red_flip_creates_alerts_for_regional_heads_and_admins(
             ).all()
         )
     assert Role.SUPER_ADMIN in recipient_roles
-    assert Role.REGIONAL_HEAD in recipient_roles
+    assert Role.REGIONAL_OFFICER in recipient_roles
     assert alerts[0].severity == Severity.CRITICAL
 
 
@@ -310,6 +326,8 @@ def test_rule_edit_changes_result_without_code_change(
             threshold=Decimal("500"),
             severity=Severity.HIGH,
             applies_to="ALL",
+            apH_clause="DEMO",
+            needs_verification=True,
             is_active=True,
         )
         db.add(rule)

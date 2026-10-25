@@ -63,6 +63,8 @@ def rule_snapshot(rule: ComplianceRule) -> dict[str, object]:
         ),
         "severity": rule.severity.value,
         "applies_to": rule.applies_to,
+        "apH_clause": rule.apH_clause,
+        "needs_verification": rule.needs_verification,
         "is_active": rule.is_active,
     }
 
@@ -247,6 +249,8 @@ def _projected_status(
             ),
             severity=proposed.severity,
             applies_to=proposed.applies_to,
+            apH_clause=proposed.apH_clause,
+            needs_verification=proposed.needs_verification,
             is_active=True,
         )
         if _applies_to_application(replacement, application):

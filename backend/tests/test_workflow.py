@@ -14,7 +14,9 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models import (
     Application,
+    ApplicationCategory,
     ApplicationStatus,
+    ApplicationTrack,
     ApplicationType,
     Role,
     SLAConfig,
@@ -85,7 +87,9 @@ def _seed_application(
     now = datetime.now(UTC)
     application = Application(
         institution_id=test_data.institutions["west"],
-        application_type=ApplicationType.NEW,
+        track=ApplicationTrack.NEW_INSTITUTION,
+        application_type=ApplicationType.NEW_INSTITUTION,
+        category=ApplicationCategory.CAT1_CUTOFF,
         academic_year="2026-27",
         status=status,
         current_stage=stage,
@@ -111,7 +115,7 @@ def extra_officer(test_data: TestData):
             name=f"Extra Scrutiny Officer {suffix} (Test)",
             email=f"extra.officer.{suffix}@example.edu",
             password_hash=hash_password(test_data.password),
-            role=Role.SCRUTINY_OFFICER,
+            role=Role.SCRUTINY_COMMITTEE_MEMBER,
             institution_id=test_data.institutions["west"],
             region=test_data.users["scrutiny"].region,
             is_active=True,
@@ -153,6 +157,8 @@ def test_application_travels_from_submission_to_approval_with_full_timeline(
     institution_headers = _headers(api_client, test_data, "institution_admin_west")
     inspection_headers = _headers(api_client, test_data, "inspection")
     regional_headers = _headers(api_client, test_data, "regional")
+    regulation_headers = _headers(api_client, test_data, "regulation")
+    ec_headers = _headers(api_client, test_data, "ec")
 
     allowed = api_client.get(
         f"/applications/{application_id}/allowed-actions",
@@ -222,7 +228,7 @@ def test_application_travels_from_submission_to_approval_with_full_timeline(
     scheduled_on = (datetime.now(UTC) + timedelta(days=3)).isoformat()
     schedule = api_client.post(
         f"/applications/{application_id}/actions/schedule_inspection",
-        headers=scrutiny_headers,
+        headers=regional_headers,
         json={
             "committee_id": str(test_data.users["inspection"].id),
             "scheduled_on": scheduled_on,
@@ -249,14 +255,14 @@ def test_application_travels_from_submission_to_approval_with_full_timeline(
 
     to_committee = api_client.post(
         f"/applications/{application_id}/actions/send_to_committee",
-        headers=regional_headers,
+        headers=regulation_headers,
     )
     assert to_committee.status_code == 200, to_committee.text
     assert to_committee.json()["application"]["status"] == "COMMITTEE_REVIEW"
 
     approved = api_client.post(
         f"/applications/{application_id}/actions/approve",
-        headers=regional_headers,
+        headers=ec_headers,
         json={"comment": "Approved after demo committee review."},
     )
     assert approved.status_code == 200, approved.text
@@ -509,7 +515,7 @@ def test_decision_actions_cover_conditional_approval_and_rejection(
     test_data: TestData,
     workspace_applications: list[uuid.UUID],
 ) -> None:
-    regional_headers = _headers(api_client, test_data, "regional")
+    ec_headers = _headers(api_client, test_data, "ec")
 
     with SessionLocal() as db:
         conditional_id = _seed_application(
@@ -522,14 +528,14 @@ def test_decision_actions_cover_conditional_approval_and_rejection(
 
     missing_conditions = api_client.post(
         f"/applications/{conditional_id}/actions/conditionally_approve",
-        headers=regional_headers,
+        headers=ec_headers,
         json={"comment": "Subject to conditions."},
     )
     assert missing_conditions.status_code == 422
 
     conditional = api_client.post(
         f"/applications/{conditional_id}/actions/conditionally_approve",
-        headers=regional_headers,
+        headers=ec_headers,
         json={
             "comment": "Approved for one year.",
             "conditions": "Submit the revised faculty list within 30 days.",
@@ -554,7 +560,7 @@ def test_decision_actions_cover_conditional_approval_and_rejection(
 
     rejected = api_client.post(
         f"/applications/{rejected_id}/actions/reject",
-        headers=regional_headers,
+        headers=ec_headers,
         json={"comment": "Illustrative rejection reason."},
     )
     assert rejected.status_code == 200, rejected.text

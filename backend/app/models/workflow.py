@@ -46,6 +46,8 @@ class WorkflowEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     action: Mapped[str | None] = mapped_column(String(64), nullable=True)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
+    """APH clause that authorised the transition, copied from the transition table."""
 
     application: Mapped[Application] = relationship(back_populates="workflow_events")
     actor: Mapped[User | None] = relationship(back_populates="workflow_events")

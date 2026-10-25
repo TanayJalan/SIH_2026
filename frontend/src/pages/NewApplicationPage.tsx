@@ -7,24 +7,20 @@ import { useAuth } from "../auth/AuthContext";
 import Breadcrumbs from "../components/Breadcrumbs";
 import PageHeader from "../components/PageHeader";
 import { Button, Input, Select, useToast } from "../components/ui";
-import { currentAcademicYear } from "../lib/application";
+import { currentAcademicYear, APPLICATION_TYPE_OPTIONS } from "../lib/application";
 import {
   ApiError,
   createApplication,
   type ApplicationType,
 } from "../lib/api";
 
-const APPLICATION_TYPE_OPTIONS = [
-  { value: "NEW", label: "New approval" },
-  { value: "EXTENSION", label: "Extension of approval" },
-];
-
 export default function NewApplicationPage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [applicationType, setApplicationType] = useState<ApplicationType>("NEW");
+  const [applicationType, setApplicationType] =
+    useState<ApplicationType>("NEW_INSTITUTION");
   const [academicYear, setAcademicYear] = useState(currentAcademicYear);
   const [error, setError] = useState<string | null>(null);
 

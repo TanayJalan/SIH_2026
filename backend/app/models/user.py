@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from app.models.alert import Alert
     from app.models.application import Application
     from app.models.audit import AuditLog
+    from app.models.decision import CouncilRatification, DecisionLetter
     from app.models.deficiency import Deficiency
     from app.models.document import Document
     from app.models.inspection import Inspection
@@ -58,3 +59,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="recipient", foreign_keys="Alert.recipient_user_id"
     )
     audit_logs: Mapped[list[AuditLog]] = relationship(back_populates="actor")
+    ratified_decisions: Mapped[list[CouncilRatification]] = relationship(
+        back_populates="ratified_by_user",
+        foreign_keys="CouncilRatification.ratified_by",
+    )
+    acknowledged_letters: Mapped[list[DecisionLetter]] = relationship(
+        back_populates="acknowledged_by_user",
+        foreign_keys="DecisionLetter.acknowledged_by",
+    )

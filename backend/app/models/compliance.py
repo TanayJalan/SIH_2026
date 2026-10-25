@@ -63,9 +63,19 @@ class ComplianceRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         enum_type(Severity, "severity", length=16), nullable=False, index=True
     )
     applies_to: Mapped[str] = mapped_column(String(64), nullable=False)
+    applies_to_family: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    """Programme family the rule applies to; ``None`` means every family."""
+    applies_to_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """Level the rule applies to; ``None`` means every level."""
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default=text("true")
     )
+    apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
+    # APH clause this rule comes from, for example "APH 6.14a".
+    needs_verification: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    # Set when the clause could not be found in APH_SPEC; see OPEN_QUESTIONS.md.
 
     results: Mapped[list[ComplianceResult]] = relationship(back_populates="rule")
 
@@ -111,6 +121,14 @@ class ComplianceResult(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     """Human-readable explanation captured at evaluation time."""
+    evidence: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    """The values the decision was based on, for example observed and threshold."""
+    explanation: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    """Structured explanation: criteria, values, pass/fail and APH clause."""
     passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
     evaluated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), index=True
@@ -127,7 +145,7 @@ class ComplianceConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "compliance_config"
     __table_args__ = (
         CheckConstraint(
-            "key IN ('severity_weights', 'rag_breakpoints')",
+            "key IN ('severity_weights', 'rag_breakpoints', 'committee_compositions')",
             name="compliance_config_key_allowed",
         ),
     )

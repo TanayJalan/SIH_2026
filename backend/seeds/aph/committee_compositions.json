@@ -1,0 +1,191 @@
+{
+  "SCRUTINY": {
+    "label": "Scrutiny Committee",
+    "members": [
+      {
+        "seat": "ACADEMICIAN",
+        "role": "Professor/Associate Professor of IIT/IIM/NIT/Govt institution",
+        "count": 1
+      },
+      {
+        "seat": "ADVOCATE",
+        "role": "Advocate registered with a Bar Council",
+        "count": 1
+      },
+      {
+        "seat": "ARCHITECT",
+        "role": "Architect or Professor/Associate Professor of Civil/Structural",
+        "count": 1
+      }
+    ],
+    "chapter_ii_members": [
+      {
+        "seat": "ACADEMICIAN",
+        "role": "Professor/Associate Professor of IIT/IIM/NIT/Govt institution",
+        "count": 2
+      }
+    ],
+    "quorum": 2,
+    "co_opt": "State/UT/affiliating-university representative not below Associate Professor",
+    "apH_clause": "APH Annexure-16 16.3-16.4",
+    "needs_verification": false
+  },
+  "RE_SCRUTINY": {
+    "label": "Re-Scrutiny Committee",
+    "members": [
+      {
+        "seat": "ACADEMICIAN",
+        "role": "Professor/Associate Professor of IIT/IIM/NIT/Govt institution",
+        "count": 1
+      },
+      {
+        "seat": "ADVOCATE",
+        "role": "Advocate registered with a Bar Council",
+        "count": 1
+      },
+      {
+        "seat": "ARCHITECT",
+        "role": "Architect or Professor/Associate Professor of Civil/Structural",
+        "count": 1
+      }
+    ],
+    "quorum": 2,
+    "scope": "Verifies only the deficiencies listed by the earlier committee",
+    "apH_clause": "APH Annexure-16 16.3-16.4",
+    "needs_verification": false
+  },
+  "EVC": {
+    "label": "Expert Visit Committee",
+    "members": [
+      {
+        "seat": "CHAIR",
+        "role": "Academician not below Professor from the EC-approved panel",
+        "count": 1
+      },
+      {
+        "seat": "EXPERT",
+        "role": "Expert not below Associate Professor or industry expert with 5+ years",
+        "count": 1
+      },
+      {
+        "seat": "ARCHITECT",
+        "role": "Architect, CPWD/NBCC/DRDO/CSIR expert, or Professor of Civil/Planning",
+        "count": 1
+      }
+    ],
+    "quorum": 3,
+    "co_opt": "State/UT/affiliating-university representative not below Associate Professor",
+    "apH_clause": "APH Annexure-16 16.5",
+    "needs_verification": false
+  },
+  "SHC": {
+    "label": "Standing Hearing Committee",
+    "members": [
+      {
+        "seat": "CHAIR",
+        "role": "Retired High Court judge, educationist not below VC, or Director of IIT/NIT/IIM",
+        "count": 1
+      },
+      {
+        "seat": "EXPERT",
+        "role": "Expert not below Associate Professor",
+        "count": 1
+      },
+      {
+        "seat": "OFFICER",
+        "role": "Officer not below Deputy Director of Revenue, architect, or land/revenue expert",
+        "count": 1
+      }
+    ],
+    "quorum": 2,
+    "apH_clause": "APH Annexure-16 16.6",
+    "needs_verification": false
+  },
+  "SAC": {
+    "label": "Standing Appellate Committee",
+    "members": [
+      {
+        "seat": "CHAIR",
+        "role": "Retired High Court judge, educationist not below VC, or Director of IIT/NIT/IIM",
+        "count": 1
+      },
+      {
+        "seat": "EXPERT",
+        "role": "Expert not below Associate Professor",
+        "count": 1
+      },
+      {
+        "seat": "OFFICER",
+        "role": "Officer not below Deputy Director of Revenue, architect, or land/revenue expert",
+        "count": 1
+      }
+    ],
+    "quorum": 2,
+    "apH_clause": "APH Annexure-16 16.6",
+    "needs_verification": false
+  },
+  "SCSC": {
+    "label": "Standing Complaint Scrutiny Committee",
+    "members": [
+      {
+        "seat": "CHAIR",
+        "role": "Retired High Court judge",
+        "count": 1
+      },
+      {
+        "seat": "EXPERT",
+        "role": "Expert not below Associate Professor",
+        "count": 2
+      },
+      {
+        "seat": "ARCHITECT",
+        "role": "Architect or Professor of Civil",
+        "count": 1
+      },
+      {
+        "seat": "OFFICER",
+        "role": "DTE or Registrar",
+        "count": 1
+      }
+    ],
+    "quorum": 2,
+    "apH_clause": "APH Annexure-16 16.7",
+    "needs_verification": false
+  },
+  "EC": {
+    "label": "Executive Committee",
+    "members": [
+      {
+        "seat": "CHAIR",
+        "role": "Chairman",
+        "count": 1
+      },
+      {
+        "seat": "VICE_CHAIR",
+        "role": "Vice-Chairman",
+        "count": 1
+      },
+      {
+        "seat": "MEMBER",
+        "role": "Secretary, Ministry of Education and other members",
+        "count": 1
+      }
+    ],
+    "quorum": "one third",
+    "apH_clause": "APH Annexure-16 16.2",
+    "needs_verification": false
+  },
+  "COUNCIL": {
+    "label": "Council",
+    "members": [
+      {
+        "seat": "MEMBER",
+        "role": "Council members",
+        "count": 51
+      }
+    ],
+    "quorum": null,
+    "apH_clause": "APH Annexure-16 16.1",
+    "needs_verification": false
+  }
+}

@@ -14,7 +14,7 @@ from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.main import create_app
-from app.models.alert import Alert, AlertRule
+from app.models.alert import Alert, AlertRule, AlertTriggerCatalogue
 from app.models.application import Application
 from app.models.audit import AuditLog
 from app.models.deficiency import Deficiency
@@ -39,6 +39,7 @@ from app.services.alert_engine import (
     NotificationService,
     render_template,
 )
+from app.services.alert_triggers import rules_for_handler
 from tests.support import TestData, TestUser, auth_headers
 
 
@@ -124,7 +125,7 @@ def _make_application(
     now = datetime.now(UTC)
     application = Application(
         institution_id=test_data.institutions["west"],
-        application_type=ApplicationType.NEW,
+        application_type=ApplicationType.NEW_INSTITUTION,
         academic_year="2026-27",
         status=status,
         current_stage=stage,
@@ -466,6 +467,7 @@ def test_workflow_notifier_creates_status_and_inspection_alerts_once(
             action="submit",
             comment="Fictional submission",
             details={},
+            apH_clause="APH 1.4.3",
             created_at=clock.now(),
         )
         inspection = Inspection(
@@ -484,6 +486,7 @@ def test_workflow_notifier_creates_status_and_inspection_alerts_once(
             action="schedule_inspection",
             comment="Fictional inspection",
             details={"inspection_id": str(inspection.id)},
+            apH_clause="APH 1.8a",
             created_at=clock.now(),
         )
         db.add(inspection_event)
@@ -669,7 +672,7 @@ def test_alert_rule_admin_crud_and_role_guard(
         "severity": "MEDIUM",
         "channel_list": ["IN_APP", "EMAIL"],
         "template": "Fictional {institution} expires on {due_date}.",
-        "escalation_role": "REGIONAL_HEAD",
+        "escalation_role": "REGIONAL_OFFICER",
         "is_active": True,
     }
     super_headers = auth_headers(api_client, test_data.users["super"], test_data.password)
@@ -807,4 +810,120 @@ def test_debug_time_replays_deadline_breach_and_escalation(
                 application = db.get(Application, escalated_id)
                 if application is not None:
                     application.is_escalated = False
+            db.commit()
+
+
+def test_existing_alert_rules_resolve_through_trigger_catalogue() -> None:
+    """The eight legacy trigger codes keep their handler after the CHECK is removed."""
+    expected = {
+        "DEADLINE_APPROACHING",
+        "SLA_BREACHED",
+        "DEFICIENCY_DUE",
+        "DEFICIENCY_OVERDUE",
+        "DOCUMENT_EXPIRING",
+        "COMPLIANCE_RED",
+        "APPLICATION_STATUS_CHANGED",
+        "INSPECTION_SCHEDULED",
+    }
+    with SessionLocal() as db:
+        catalogue = {
+            row.code: row
+            for row in db.scalars(select(AlertTriggerCatalogue)).all()
+        }
+        assert expected <= set(catalogue)
+        for code in expected:
+            assert catalogue[code].handler_key == code
+            assert rules_for_handler(db, code), f"no active rule for {code}"
+
+
+def test_new_catalogue_trigger_can_back_a_rule_without_migration(
+    api_client: TestClient,
+    test_data: TestData,
+) -> None:
+    """A data-only trigger code can drive an existing engine handler."""
+    suffix = uuid.uuid4().hex[:8].upper()
+    trigger_code = f"TEST-TRIGGER-{suffix}"
+    rule_code = f"TEST-CATALOGUE-RULE-{suffix}"
+    payload = {
+        "code": rule_code,
+        "name": "Fictional catalogue-driven rule",
+        "description": "Created by the alert engine test suite.",
+        "trigger_type": trigger_code,
+        "days_before": 0,
+        "severity": "LOW",
+        "channel_list": ["IN_APP"],
+        "template": "Fictional catalogue trigger for {institution}.",
+        "escalation_role": "REGIONAL_OFFICER",
+        "is_active": True,
+    }
+    headers = auth_headers(api_client, test_data.users["super"], test_data.password)
+    try:
+        with SessionLocal() as db:
+            db.add(
+                AlertTriggerCatalogue(
+                    code=trigger_code,
+                    handler_key="APPLICATION_STATUS_CHANGED",
+                    description="Test-only trigger.",
+                    apH_clause="APH 1.4.3",
+                )
+            )
+            db.commit()
+
+        created = api_client.post("/alert-rules", json=payload, headers=headers)
+        assert created.status_code == 201, created.text
+        assert created.json()["trigger_type"] == trigger_code
+
+        with SessionLocal() as db:
+            rules = rules_for_handler(db, "APPLICATION_STATUS_CHANGED")
+            assert any(rule.code == rule_code for rule in rules)
+    finally:
+        with SessionLocal() as db:
+            db.execute(delete(AlertRule).where(AlertRule.code == rule_code))
+            db.execute(
+                delete(AlertTriggerCatalogue).where(
+                    AlertTriggerCatalogue.code == trigger_code
+                )
+            )
+            db.commit()
+
+
+def test_unknown_alert_trigger_is_rejected(
+    api_client: TestClient,
+    test_data: TestData,
+) -> None:
+    """Creating or editing a rule with an uncatalogued trigger returns 422."""
+    suffix = uuid.uuid4().hex[:8].upper()
+    rule_code = f"TEST-UNKNOWN-TRIGGER-{suffix}"
+    headers = auth_headers(api_client, test_data.users["super"], test_data.password)
+    payload = {
+        "code": rule_code,
+        "name": "Fictional unknown trigger rule",
+        "description": "Created by the alert engine test suite.",
+        "trigger_type": "NOT_A_REAL_TRIGGER",
+        "days_before": 0,
+        "severity": "LOW",
+        "channel_list": ["IN_APP"],
+        "template": "Fictional unknown trigger for {institution}.",
+        "escalation_role": "REGIONAL_OFFICER",
+        "is_active": True,
+    }
+    try:
+        rejected = api_client.post("/alert-rules", json=payload, headers=headers)
+        assert rejected.status_code == 422
+        assert "alert_trigger_catalogue" in rejected.json()["detail"]
+
+        payload["trigger_type"] = "DOCUMENT_EXPIRING"
+        created = api_client.post("/alert-rules", json=payload, headers=headers)
+        assert created.status_code == 201, created.text
+        rule_id = created.json()["id"]
+
+        updated = api_client.patch(
+            f"/alert-rules/{rule_id}",
+            json={"trigger_type": "NOT_A_REAL_TRIGGER"},
+            headers=headers,
+        )
+        assert updated.status_code == 422
+    finally:
+        with SessionLocal() as db:
+            db.execute(delete(AlertRule).where(AlertRule.code == rule_code))
             db.commit()

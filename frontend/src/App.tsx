@@ -48,7 +48,7 @@ export default function App() {
           <Route
             path="compliance"
             element={
-              <RequireRoles roles={["SUPER_ADMIN", "REGIONAL_HEAD"]}>
+              <RequireRoles roles={["SUPER_ADMIN", "REGIONAL_OFFICER"]}>
                 <ComplianceAdminPage />
               </RequireRoles>
             }

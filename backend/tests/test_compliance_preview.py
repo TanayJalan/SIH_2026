@@ -81,6 +81,8 @@ def preview_rules() -> Generator[None, None, None]:
                     threshold=Decimal("1000"),
                     severity=Severity.HIGH,
                     applies_to="ALL",
+                    apH_clause="DEMO",
+                    needs_verification=True,
                     is_active=True,
                 ),
                 ComplianceRule(
@@ -93,6 +95,8 @@ def preview_rules() -> Generator[None, None, None]:
                     threshold=Decimal("20"),
                     severity=Severity.HIGH,
                     applies_to="ALL",
+                    apH_clause="DEMO",
+                    needs_verification=True,
                     is_active=True,
                 ),
                 ComplianceRule(
@@ -105,6 +109,8 @@ def preview_rules() -> Generator[None, None, None]:
                     threshold=Decimal("30"),
                     severity=Severity.MEDIUM,
                     applies_to="ALL",
+                    apH_clause="DEMO",
+                    needs_verification=True,
                     is_active=True,
                 ),
             ]
@@ -142,7 +148,7 @@ def _headers(
 def _create_draft(client: TestClient, headers: dict[str, str]) -> str:
     response = client.post(
         "/applications",
-        json={"application_type": "NEW", "academic_year": "2026-27"},
+        json={"application_type": "NEW_INSTITUTION", "academic_year": "2026-27"},
         headers=headers,
     )
     assert response.status_code == 201, response.text
@@ -220,7 +226,7 @@ def test_compliance_preview_evaluates_unsaved_values_without_persisting(
     with SessionLocal() as db:
         application = db.get(Application, uuid.UUID(application_id))
         assert application is not None
-        assert application.application_type == ApplicationType.NEW
+        assert application.application_type == ApplicationType.NEW_INSTITUTION
 
 
 def test_compliance_preview_rejects_cross_tenant_access(

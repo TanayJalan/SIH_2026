@@ -46,7 +46,18 @@ from app.models.institution import Institution
 from app.models.sla import SLAConfig
 from app.models.user import User
 from app.models.workflow import WorkflowEvent
+from app.services.alert_triggers import first_rule_for_handler, rules_for_handler
 from app.services.audit import AuditService
+
+_ESCALATION_ROLES = frozenset(
+    {
+        Role.REGIONAL_OFFICER,
+        Role.REGULATION_BUREAU_OFFICER,
+        Role.EXECUTIVE_COMMITTEE_MEMBER,
+        Role.SUPER_ADMIN,
+    }
+)
+"""Roles an alert rule may escalate to; the process chain is RB/RO → EC → Council."""
 
 logger = logging.getLogger("app.alerts")
 
@@ -329,16 +340,12 @@ class AlertEngine:
         return self._now_override or self._clock.now()
 
     def _rules(self, trigger: AlertTrigger) -> list[AlertRule]:
-        return list(
-            self._db.scalars(
-                select(AlertRule)
-                .where(
-                    AlertRule.trigger_type == trigger.value,
-                    AlertRule.is_active.is_(True),
-                )
-                .order_by(AlertRule.days_before.desc(), AlertRule.code.asc())
-            ).all()
-        )
+        """Return active rules mapped to the handler for ``trigger``.
+
+        The catalogue join lets several statutory trigger codes share one
+        engine handler without a code change.
+        """
+        return rules_for_handler(self._db, trigger.value)
 
     def _rule_channels(self, rule: AlertRule | None) -> list[AlertChannel]:
         channels: list[AlertChannel] = []
@@ -380,7 +387,9 @@ class AlertEngine:
             resolved_message = render_template(rule.template, context)
         resolved_message = resolved_message or title
         resolved_type = type_override or (
-            trigger.value if trigger is not None else (rule.trigger_type if rule else "ALERT")
+            rule.trigger_type
+            if rule is not None
+            else (trigger.value if trigger is not None else "ALERT")
         )
         selected_channels = list(channels or self._rule_channels(rule))
         if new := [channel for channel in selected_channels if channel not in CHANNEL_ORDER]:
@@ -718,7 +727,7 @@ class AlertEngine:
                     Alert.escalation_level == 0,
                     Alert.channel == AlertChannel.IN_APP,
                     Alert.status != AlertStatus.ACKED,
-                    User.role.not_in((Role.REGIONAL_HEAD, Role.SUPER_ADMIN)),
+                    User.role.not_in((Role.REGIONAL_OFFICER, Role.SUPER_ADMIN)),
                 )
                 .order_by(Alert.created_at.asc())
             ).all()
@@ -886,6 +895,7 @@ class AlertEngine:
             actor_id=None,
             action="escalate",
             comment=f"Alert escalated to the {_humanise(target_role.value)}",
+            apH_clause="DEMO",
             details={
                 "alert_id": str(escalation[0].id),
                 "source_alert_id": str(source.id),
@@ -913,9 +923,9 @@ class AlertEngine:
 
     def _first_escalation_role(self, source: Alert) -> Role:
         rule = self._db.get(AlertRule, source.rule_id) if source.rule_id else None
-        role = rule.escalation_role if rule is not None else Role.REGIONAL_HEAD
-        if role not in {Role.REGIONAL_HEAD, Role.SUPER_ADMIN}:
-            role = Role.REGIONAL_HEAD
+        role = rule.escalation_role if rule is not None else Role.REGIONAL_OFFICER
+        if role not in _ESCALATION_ROLES:
+            role = Role.REGIONAL_OFFICER
         if source.recipient is not None and source.recipient.role == role:
             role = Role.SUPER_ADMIN
         return role
@@ -953,7 +963,7 @@ class AlertEngine:
         admin = self._institution_admin(application)
         if admin:
             return [admin]
-        regional = self._users_for_role(application, Role.REGIONAL_HEAD)
+        regional = self._users_for_role(application, Role.REGIONAL_OFFICER)
         if regional:
             return regional[:1]
         return self._users_for_role(application, Role.SUPER_ADMIN)[:1]
@@ -977,7 +987,7 @@ class AlertEngine:
 
     def _users_for_role(self, application: Application, role: Role) -> list[User]:
         query = select(User).where(User.role == role, User.is_active.is_(True))
-        if role == Role.REGIONAL_HEAD:
+        if role in {Role.REGIONAL_OFFICER, Role.REGULATION_BUREAU_OFFICER}:
             region = application.institution.region
             if region is not None:
                 query = query.where(User.region == region)
@@ -1038,13 +1048,13 @@ class AlertEngine:
 def _compliance_recipients(
     db: Session, institution: Institution | None
 ) -> list[User]:
-    """Regional heads for the institution plus every active super admin."""
+    """Regional officers for the institution plus every active super admin."""
     recipients: list[User] = []
     if institution is not None and institution.region:
         recipients.extend(
             db.scalars(
                 select(User).where(
-                    User.role == Role.REGIONAL_HEAD,
+                    User.role == Role.REGIONAL_OFFICER,
                     User.region == institution.region,
                     User.is_active.is_(True),
                 )
@@ -1078,12 +1088,7 @@ def create_compliance_red_alerts(
     """
     if institution is None:
         return 0
-    rule = db.scalar(
-        select(AlertRule).where(
-            AlertRule.trigger_type == AlertTrigger.COMPLIANCE_RED.value,
-            AlertRule.is_active.is_(True),
-        )
-    )
+    rule = first_rule_for_handler(db, AlertTrigger.COMPLIANCE_RED.value)
     if rule is None:
         logger.warning("No active COMPLIANCE_RED alert rule is configured.")
         return 0

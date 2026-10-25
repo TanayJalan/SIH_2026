@@ -28,9 +28,30 @@ _DECIDED_STATUSES = (
 )
 _DEMO_ACCOUNT_SPECS = (
     (Role.INSTITUTION_ADMIN, "Institution administrator", "institution@example.edu"),
-    (Role.SCRUTINY_OFFICER, "Scrutiny officer", "scrutiny@example.edu"),
-    (Role.INSPECTION_COMMITTEE, "Inspection committee", "inspection@example.edu"),
-    (Role.REGIONAL_HEAD, "Regional head", "regional@example.edu"),
+    (
+        Role.REGULATION_BUREAU_OFFICER,
+        "Regulation Bureau officer",
+        "regulation@example.edu",
+    ),
+    (
+        Role.SCRUTINY_COMMITTEE_MEMBER,
+        "Scrutiny Committee member",
+        "scrutiny@example.edu",
+    ),
+    (Role.EVC_MEMBER, "Expert Visit Committee member", "inspection@example.edu"),
+    (Role.REGIONAL_OFFICER, "Regional Officer", "regional@example.edu"),
+    (Role.SHC_MEMBER, "Standing Hearing Committee member", "shc@example.edu"),
+    (Role.SAC_MEMBER, "Standing Appellate Committee member", "sac@example.edu"),
+    (
+        Role.EXECUTIVE_COMMITTEE_MEMBER,
+        "Executive Committee member",
+        "ec@example.edu",
+    ),
+    (
+        Role.COMPLAINT_SCRUTINY_MEMBER,
+        "Standing Complaint Scrutiny Committee member",
+        "complaints@example.edu",
+    ),
     (Role.SUPER_ADMIN, "Super administrator", ""),
 )
 

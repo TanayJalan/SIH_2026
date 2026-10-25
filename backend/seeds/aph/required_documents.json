@@ -1,0 +1,3106 @@
+[
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "BUILDING_PLAN_APPROVAL",
+    "doc_type": "ARCHITECT_CERTIFIED_BUILDING_PLAN",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "BANK_MANAGER_CERTIFICATE",
+    "doc_type": "BANK_MANAGER_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Certificate 3"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "APPLICATION_HARD_COPY",
+    "doc_type": "APPLICATION_HARD_COPY",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "TRUST_REGISTRATION",
+    "doc_type": "TRUST_REGISTRATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "BOG_COMPOSITION",
+    "doc_type": "BOG_COMPOSITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-17"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "SECTION_8_MOA",
+    "doc_type": "SECTION_8_MOA",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH 1.3.4"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "LAND_OWNERSHIP_DOCUMENT",
+    "doc_type": "LAND_OWNERSHIP_DOCUMENT",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'OWNED'",
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "LAND_LEASE_DEED",
+    "doc_type": "LAND_LEASE_DEED",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH 6.17a"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "JOINT_AFFIDAVIT_7",
+    "doc_type": "JOINT_AFFIDAVIT_7",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH Affidavit 7"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "WORKING_CAPITAL_PROOF",
+    "doc_type": "WORKING_CAPITAL_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Table 1.2"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "AUDITED_ACCOUNTS_3Y",
+    "doc_type": "AUDITED_ACCOUNTS_3Y",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "MINORITY_CERTIFICATE",
+    "doc_type": "MINORITY_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "DETAILED_PROJECT_REPORT",
+    "doc_type": "DETAILED_PROJECT_REPORT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "NO_HT_LINE_UNDERTAKING",
+    "doc_type": "NO_HT_LINE_UNDERTAKING",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "FINANCIAL_STATEMENT",
+    "doc_type": "FINANCIAL_STATEMENT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "NEW_INSTITUTION",
+    "doc_code": "NAAC_NBA_CERTIFICATE",
+    "doc_type": "NAAC_NBA_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "BUILDING_PLAN_APPROVAL",
+    "doc_type": "ARCHITECT_CERTIFIED_BUILDING_PLAN",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "BANK_MANAGER_CERTIFICATE",
+    "doc_type": "BANK_MANAGER_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Certificate 3"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "APPLICATION_HARD_COPY",
+    "doc_type": "APPLICATION_HARD_COPY",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "TRUST_REGISTRATION",
+    "doc_type": "TRUST_REGISTRATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "BOG_COMPOSITION",
+    "doc_type": "BOG_COMPOSITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-17"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "SECTION_8_MOA",
+    "doc_type": "SECTION_8_MOA",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH 1.3.4"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "LAND_OWNERSHIP_DOCUMENT",
+    "doc_type": "LAND_OWNERSHIP_DOCUMENT",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'OWNED'",
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "LAND_LEASE_DEED",
+    "doc_type": "LAND_LEASE_DEED",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH 6.17a"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "JOINT_AFFIDAVIT_7",
+    "doc_type": "JOINT_AFFIDAVIT_7",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH Affidavit 7"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "WORKING_CAPITAL_PROOF",
+    "doc_type": "WORKING_CAPITAL_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Table 1.2"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "AUDITED_ACCOUNTS_3Y",
+    "doc_type": "AUDITED_ACCOUNTS_3Y",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "MINORITY_CERTIFICATE",
+    "doc_type": "MINORITY_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "DETAILED_PROJECT_REPORT",
+    "doc_type": "DETAILED_PROJECT_REPORT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "NO_HT_LINE_UNDERTAKING",
+    "doc_type": "NO_HT_LINE_UNDERTAKING",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "FINANCIAL_STATEMENT",
+    "doc_type": "FINANCIAL_STATEMENT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "NEW_INSTITUTION_OTHER_REGULATOR",
+    "doc_code": "NAAC_NBA_CERTIFICATE",
+    "doc_type": "NAAC_NBA_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "BUILDING_PLAN_APPROVAL",
+    "doc_type": "ARCHITECT_CERTIFIED_BUILDING_PLAN",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "BANK_MANAGER_CERTIFICATE",
+    "doc_type": "BANK_MANAGER_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Certificate 3"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "APPLICATION_HARD_COPY",
+    "doc_type": "APPLICATION_HARD_COPY",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "TRUST_REGISTRATION",
+    "doc_type": "TRUST_REGISTRATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "BOG_COMPOSITION",
+    "doc_type": "BOG_COMPOSITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-17"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "SECTION_8_MOA",
+    "doc_type": "SECTION_8_MOA",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH 1.3.4"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "LAND_OWNERSHIP_DOCUMENT",
+    "doc_type": "LAND_OWNERSHIP_DOCUMENT",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'OWNED'",
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "LAND_LEASE_DEED",
+    "doc_type": "LAND_LEASE_DEED",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH 6.17a"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "JOINT_AFFIDAVIT_7",
+    "doc_type": "JOINT_AFFIDAVIT_7",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH Affidavit 7"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "WORKING_CAPITAL_PROOF",
+    "doc_type": "WORKING_CAPITAL_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Table 1.2"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "AUDITED_ACCOUNTS_3Y",
+    "doc_type": "AUDITED_ACCOUNTS_3Y",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "MINORITY_CERTIFICATE",
+    "doc_type": "MINORITY_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "DETAILED_PROJECT_REPORT",
+    "doc_type": "DETAILED_PROJECT_REPORT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "NO_HT_LINE_UNDERTAKING",
+    "doc_type": "NO_HT_LINE_UNDERTAKING",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "FINANCIAL_STATEMENT",
+    "doc_type": "FINANCIAL_STATEMENT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CLOSURE_AND_NEW_INSTITUTION",
+    "doc_code": "NAAC_NBA_CERTIFICATE",
+    "doc_type": "NAAC_NBA_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "BUILDING_PLAN_APPROVAL",
+    "doc_type": "ARCHITECT_CERTIFIED_BUILDING_PLAN",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "BANK_MANAGER_CERTIFICATE",
+    "doc_type": "BANK_MANAGER_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Certificate 3"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "APPLICATION_HARD_COPY",
+    "doc_type": "APPLICATION_HARD_COPY",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "TRUST_REGISTRATION",
+    "doc_type": "TRUST_REGISTRATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "BOG_COMPOSITION",
+    "doc_type": "BOG_COMPOSITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-17"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "SECTION_8_MOA",
+    "doc_type": "SECTION_8_MOA",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH 1.3.4"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "LAND_OWNERSHIP_DOCUMENT",
+    "doc_type": "LAND_OWNERSHIP_DOCUMENT",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'OWNED'",
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "LAND_LEASE_DEED",
+    "doc_type": "LAND_LEASE_DEED",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH 6.17a"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "JOINT_AFFIDAVIT_7",
+    "doc_type": "JOINT_AFFIDAVIT_7",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'LEASED'",
+    "apH_clause": "APH Affidavit 7"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "WORKING_CAPITAL_PROOF",
+    "doc_type": "WORKING_CAPITAL_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Table 1.2"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "AUDITED_ACCOUNTS_3Y",
+    "doc_type": "AUDITED_ACCOUNTS_3Y",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "MINORITY_CERTIFICATE",
+    "doc_type": "MINORITY_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "DETAILED_PROJECT_REPORT",
+    "doc_type": "DETAILED_PROJECT_REPORT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "NO_HT_LINE_UNDERTAKING",
+    "doc_type": "NO_HT_LINE_UNDERTAKING",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "FINANCIAL_STATEMENT",
+    "doc_type": "FINANCIAL_STATEMENT",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "NAAC_NBA_CERTIFICATE",
+    "doc_type": "NAAC_NBA_CERTIFICATE",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "UGC_NOTIFICATION",
+    "doc_type": "UGC_NOTIFICATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 4.7.1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "NAAC_CERTIFICATE",
+    "doc_type": "NAAC_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 4.7.1"
+  },
+  {
+    "application_type": "UNIVERSITY",
+    "doc_code": "AFFIDAVIT_5",
+    "doc_type": "AFFIDAVIT_5",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 5"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "EOA_SELF_DISCLOSURE",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "NRI_SEATS",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.8a"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.14"
+  },
+  {
+    "application_type": "DIPLOMA_DEGREE_CONVERSION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.14"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 2"
+  },
+  {
+    "application_type": "CHANGE_OF_NAME",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.19"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 2"
+  },
+  {
+    "application_type": "NEW_PROGRAMME",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 2"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "MERGER_OF_INSTITUTIONS",
+    "doc_code": "LEGAL_MERGER_DOCUMENTS",
+    "doc_type": "LEGAL_MERGER_DOCUMENTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.13"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "EOA_AFTER_BREAK",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "HOSTEL_DETAILS",
+    "doc_type": "HOSTEL_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.9"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "INTERNATIONAL_AFFAIRS_OFFICE",
+    "doc_type": "INTERNATIONAL_AFFAIRS_OFFICE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.9"
+  },
+  {
+    "application_type": "SUPERNUMERARY_FN_OCI",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.9"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "AFFIDAVIT_8",
+    "doc_type": "AFFIDAVIT_8",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 8"
+  },
+  {
+    "application_type": "INCREASE_INTAKE",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.6"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "AFFIDAVIT_8",
+    "doc_type": "AFFIDAVIT_8",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.10"
+  },
+  {
+    "application_type": "INTEGRATED_DUAL_DEGREE",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.10"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "OFF_CAMPUS",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "AFFIDAVIT_8",
+    "doc_type": "AFFIDAVIT_8",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.12"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "PHD_FACULTY_PROOF",
+    "doc_type": "PHD_FACULTY_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.12"
+  },
+  {
+    "application_type": "FPM",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.12"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.18"
+  },
+  {
+    "application_type": "COURSE_RENAME_MERGE_REDUCTION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.18"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "FOREIGN_RECOGNITION_LETTER",
+    "doc_type": "FOREIGN_RECOGNITION_LETTER",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Chapter III"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "MOU",
+    "doc_type": "MOU",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Chapter III"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "AFFIDAVIT_11",
+    "doc_type": "AFFIDAVIT_11",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 11"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "NBA_NIRF_CERTIFICATE",
+    "doc_type": "NBA_NIRF_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Chapter III"
+  },
+  {
+    "application_type": "COLLABORATION_TWINNING",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Chapter III"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 2"
+  },
+  {
+    "application_type": "CHANGE_OF_SITE",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "NOC_ALTERNATIVE_ARRANGEMENTS",
+    "doc_type": "NOC_ALTERNATIVE_ARRANGEMENTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "SALARY_SHEET",
+    "doc_type": "SALARY_SHEET",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "FSR_DETAILS",
+    "doc_type": "FSR_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "RPGF_FDR_DETAILS",
+    "doc_type": "RPGF_FDR_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "STUDENT_STATUS",
+    "doc_type": "STUDENT_STATUS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "FACULTY_STATUS",
+    "doc_type": "FACULTY_STATUS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "AFFIDAVIT_4",
+    "doc_type": "AFFIDAVIT_4",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 4"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "LITIGATION_DECLARATION",
+    "doc_type": "LITIGATION_DECLARATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "CLOSURE_OF_INSTITUTION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.21"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 2"
+  },
+  {
+    "application_type": "WOMEN_COED_CONVERSION",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Format 3"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "AFFILIATING_BODY_NOC_FORMAT_2",
+    "doc_type": "AFFILIATING_BODY_NOC",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.18"
+  },
+  {
+    "application_type": "CLOSURE_OF_PROGRAMME",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.18"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "AFFIDAVIT_9",
+    "doc_type": "AFFIDAVIT_9",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 9"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2 2.12"
+  },
+  {
+    "application_type": "CHANGE_IN_BANK_DETAILS",
+    "doc_code": "BANK_MERGER_NOC",
+    "doc_type": "BANK_MERGER_NOC",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2 2.12"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "REGISTRAR_APPROVAL",
+    "doc_type": "REGISTRAR_APPROVAL",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.20"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "AFFIDAVIT_10",
+    "doc_type": "AFFIDAVIT_10",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 10"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "TRUST_REGISTRATION",
+    "doc_type": "TRUST_REGISTRATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.20"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "BOG_COMPOSITION",
+    "doc_type": "BOG_COMPOSITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-17"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "SECTION_8_MOA",
+    "doc_type": "SECTION_8_MOA",
+    "mandatory": false,
+    "condition_expr": null,
+    "apH_clause": "APH 1.3.4"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "LAND_OWNERSHIP_DOCUMENT",
+    "doc_type": "LAND_OWNERSHIP_DOCUMENT",
+    "mandatory": true,
+    "condition_expr": "land_ownership == 'OWNED'",
+    "apH_clause": "APH 2.20"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "WORKING_CAPITAL_PROOF",
+    "doc_type": "WORKING_CAPITAL_PROOF",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.20"
+  },
+  {
+    "application_type": "CHANGE_OF_TRUST_NAME",
+    "doc_code": "TRUST_RESOLUTION_FORMAT_3",
+    "doc_type": "TRUST_RESOLUTION_FORMAT_3",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.20"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "NAAC_CERTIFICATE",
+    "doc_type": "NAAC_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.1a"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "UGC_NOTIFICATION",
+    "doc_type": "UGC_NOTIFICATION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 2.1a"
+  },
+  {
+    "application_type": "EXTENDED_EOA",
+    "doc_code": "AFFIDAVIT_5",
+    "doc_type": "AFFIDAVIT_5",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 5"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "DEEMED_UNIVERSITY_CONVERSION",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "AFFIDAVIT_2",
+    "doc_type": "AFFIDAVIT_2",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "TER_RECEIPT",
+    "doc_type": "TER_RECEIPT",
+    "mandatory": true,
+    "condition_expr": "no_ter == false",
+    "apH_clause": "APH 8"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "OCCUPANCY_CERTIFICATE",
+    "doc_type": "OCCUPANCY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": "building_age_years >= 30",
+    "apH_clause": "APH 6.17h"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "SATELLITE_MAP",
+    "doc_type": "SATELLITE_MAP",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+    "doc_type": "AUDITED_ACCOUNTS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "AFFILIATION_CERTIFICATE",
+    "doc_type": "AFFILIATION_CERTIFICATE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-2.1"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "FACULTY_DETAILS",
+    "doc_type": "FACULTY_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-5"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "MANDATORY_DISCLOSURE",
+    "doc_type": "MANDATORY_DISCLOSURE",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Annexure-18"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "AFFIDAVIT_13",
+    "doc_type": "AFFIDAVIT_13",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Affidavit 13"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "UGC_RECOGNITION",
+    "doc_type": "UGC_RECOGNITION",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH 5.3.8"
+  },
+  {
+    "application_type": "ODL_ONLINE",
+    "doc_code": "LSC_DETAILS",
+    "doc_type": "LSC_DETAILS",
+    "mandatory": true,
+    "condition_expr": null,
+    "apH_clause": "APH Table 5.2"
+  }
+]

@@ -170,8 +170,9 @@ export default function ApplicationDetailPage() {
     reasons: failedRules.map((rule) => `${rule.name}: ${rule.message}`),
   };
 
-  const officerRole = user.role === "SCRUTINY_OFFICER" || user.role === "SUPER_ADMIN";
-  const regionalRole = user.role === "REGIONAL_HEAD" || user.role === "SUPER_ADMIN";
+  const officerRole =
+    user.role === "SCRUTINY_COMMITTEE_MEMBER" || user.role === "SUPER_ADMIN";
+  const regionalRole = user.role === "REGIONAL_OFFICER" || user.role === "SUPER_ADMIN";
   const institutionRole = user.role === "INSTITUTION_ADMIN";
 
   return (
@@ -242,7 +243,7 @@ export default function ApplicationDetailPage() {
                 <CaseInspection
                   applicationId={application.id}
                   token={token ?? ""}
-                  canSchedule={officerRole || regionalRole}
+                  canSchedule={regionalRole}
                 />
               </TabsContent>
 

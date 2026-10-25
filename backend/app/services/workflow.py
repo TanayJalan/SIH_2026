@@ -43,6 +43,7 @@ from app.models.workflow import WorkflowEvent
 from app.schemas.workflow import WorkflowActionRequest
 from app.services import alerts
 from app.services.audit import AuditService
+from app.services.portal_number import next_portal_application_no
 
 logger = logging.getLogger("app.workflow")
 
@@ -141,8 +142,11 @@ class Transition:
     stage: WorkflowStage | None
     label: str
     description: str
+    apH_clause: str
     requires: ActionRequirement = "none"
     tone: ActionTone = "secondary"
+    needs_verification: bool = False
+    """True when APH_SPEC does not clearly support this transition."""
 
 
 def _statuses(*values: ApplicationStatus) -> frozenset[ApplicationStatus]:
@@ -157,27 +161,32 @@ TRANSITIONS: tuple[Transition, ...] = (
         roles=frozenset({Role.INSTITUTION_ADMIN}),
         stage=WorkflowStage.APPLICATION,
         label="Submit application",
-        description="Send the completed application into the approval pipeline.",
+        description=(
+            "Send the completed, paid and DSC-signed application into the approval pipeline."
+        ),
+        apH_clause="APH 1.4.3",
         tone="primary",
     ),
     Transition(
         action=WorkflowAction.AUTO_ASSIGN,
         from_statuses=_statuses(ApplicationStatus.SUBMITTED),
         to_status=ApplicationStatus.DOCUMENT_VERIFICATION,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.REGULATION_BUREAU_OFFICER}),
         stage=WorkflowStage.DOCUMENT_VERIFICATION,
-        label="Assign scrutiny officer",
-        description="Assign the least-loaded officer in the institution's region.",
+        label="Assign scrutiny committee",
+        description="Regulation Bureau assigns the least-loaded scrutiny member in the region.",
+        apH_clause="APH 1.8a",
         tone="primary",
     ),
     Transition(
         action=WorkflowAction.VERIFY_DOCUMENTS,
         from_statuses=_statuses(ApplicationStatus.DOCUMENT_VERIFICATION),
         to_status=ApplicationStatus.SCRUTINY,
-        roles=frozenset({Role.SCRUTINY_OFFICER, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.SCRUTINY_COMMITTEE_MEMBER}),
         stage=WorkflowStage.SCRUTINY,
         label="Verify documents and start scrutiny",
-        description="Confirm the uploaded documents and open the scrutiny stage.",
+        description="Scrutiny Committee verifies the authenticity of the uploaded documents.",
+        apH_clause="APH 1.8",
         tone="primary",
     ),
     Transition(
@@ -187,20 +196,22 @@ TRANSITIONS: tuple[Transition, ...] = (
             ApplicationStatus.DOCUMENT_VERIFICATION,
         ),
         to_status=ApplicationStatus.SCRUTINY,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.REGULATION_BUREAU_OFFICER}),
         stage=WorkflowStage.SCRUTINY,
         label="Start scrutiny",
-        description="Regional override to open scrutiny and ensure an officer is assigned.",
+        description="Regulation Bureau opens scrutiny and ensures a committee member is assigned.",
+        apH_clause="APH 1.8",
         tone="secondary",
     ),
     Transition(
         action=WorkflowAction.RAISE_DEFICIENCY,
         from_statuses=_statuses(ApplicationStatus.SCRUTINY),
         to_status=ApplicationStatus.DEFICIENCY_RAISED,
-        roles=frozenset({Role.SCRUTINY_OFFICER, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.SCRUTINY_COMMITTEE_MEMBER}),
         stage=WorkflowStage.DEFICIENCY,
         label="Raise deficiency",
-        description="Record one or more gaps and pause the application for a response.",
+        description="Record the Deficiency Report items and pause the application for a response.",
+        apH_clause="APH 2.3.3b",
         requires="deficiencies",
         tone="primary",
     ),
@@ -211,7 +222,8 @@ TRANSITIONS: tuple[Transition, ...] = (
         roles=frozenset({Role.INSTITUTION_ADMIN}),
         stage=WorkflowStage.DEFICIENCY,
         label="Respond to deficiencies",
-        description="Answer every open deficiency with text and optional supporting file metadata.",
+        description="Answer every open deficiency item with text and supporting evidence.",
+        apH_clause="APH 2.4",
         requires="responses",
         tone="primary",
     ),
@@ -219,10 +231,11 @@ TRANSITIONS: tuple[Transition, ...] = (
         action=WorkflowAction.CLOSE_DEFICIENCY,
         from_statuses=_statuses(ApplicationStatus.DEFICIENCY_RESPONDED),
         to_status=ApplicationStatus.SCRUTINY,
-        roles=frozenset({Role.SCRUTINY_OFFICER, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.SCRUTINY_COMMITTEE_MEMBER}),
         stage=WorkflowStage.SCRUTINY,
-        label="Close deficiency",
-        description="Accept a response; the application returns to scrutiny once all are closed.",
+        label="Close deficiency (Re-Scrutiny)",
+        description="Re-Scrutiny verifies only the listed deficiencies before the file moves on.",
+        apH_clause="APH 1.8",
         requires="deficiency_id",
         tone="primary",
     ),
@@ -230,10 +243,11 @@ TRANSITIONS: tuple[Transition, ...] = (
         action=WorkflowAction.SCHEDULE_INSPECTION,
         from_statuses=_statuses(ApplicationStatus.SCRUTINY),
         to_status=ApplicationStatus.INSPECTION_SCHEDULED,
-        roles=frozenset({Role.SCRUTINY_OFFICER, Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.REGIONAL_OFFICER, Role.REGULATION_BUREAU_OFFICER}),
         stage=WorkflowStage.INSPECTION,
-        label="Schedule inspection",
-        description="Assign an inspection committee member and visit date.",
+        label="Schedule Expert Visit Committee",
+        description="The Regional Officer constitutes the EVC and records the visit date.",
+        apH_clause="APH 1.9a",
         requires="inspection_schedule",
         tone="primary",
     ),
@@ -241,10 +255,11 @@ TRANSITIONS: tuple[Transition, ...] = (
         action=WorkflowAction.SUBMIT_INSPECTION_REPORT,
         from_statuses=_statuses(ApplicationStatus.INSPECTION_SCHEDULED),
         to_status=ApplicationStatus.INSPECTION_DONE,
-        roles=frozenset({Role.INSPECTION_COMMITTEE, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.EVC_MEMBER}),
         stage=WorkflowStage.INSPECTION,
-        label="Submit inspection report",
+        label="Submit EVC report",
         description="Record infrastructure, faculty and laboratory findings with a recommendation.",
+        apH_clause="APH 1.9",
         requires="inspection_report",
         tone="primary",
     ),
@@ -252,30 +267,34 @@ TRANSITIONS: tuple[Transition, ...] = (
         action=WorkflowAction.SEND_TO_COMMITTEE,
         from_statuses=_statuses(ApplicationStatus.INSPECTION_DONE),
         to_status=ApplicationStatus.COMMITTEE_REVIEW,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.REGULATION_BUREAU_OFFICER}),
         stage=WorkflowStage.COMMITTEE_REVIEW,
-        label="Send to committee review",
-        description="Move the completed inspection file into the decision stage.",
+        label="Place observations before the EC",
+        description="Regulation Bureau places its observations before the Executive Committee.",
+        apH_clause="APH 1.10",
         tone="primary",
     ),
     Transition(
         action=WorkflowAction.APPROVE,
         from_statuses=_statuses(ApplicationStatus.COMMITTEE_REVIEW),
         to_status=ApplicationStatus.APPROVED,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.EXECUTIVE_COMMITTEE_MEMBER}),
         stage=WorkflowStage.COMPLETED,
-        label="Approve",
-        description="Record a final approval for this application.",
+        label="Approve (LoA)",
+        description="The Executive Committee records an approval; the Council ratifies it.",
+        apH_clause="APH 1.10a",
         tone="primary",
     ),
     Transition(
         action=WorkflowAction.CONDITIONALLY_APPROVE,
         from_statuses=_statuses(ApplicationStatus.COMMITTEE_REVIEW),
         to_status=ApplicationStatus.CONDITIONALLY_APPROVED,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.EXECUTIVE_COMMITTEE_MEMBER}),
         stage=WorkflowStage.COMPLETED,
         label="Conditionally approve",
         description="Approve with written conditions the institution must satisfy.",
+        apH_clause="APH 4.9c",
+        needs_verification=True,
         requires="conditions",
         tone="secondary",
     ),
@@ -283,10 +302,11 @@ TRANSITIONS: tuple[Transition, ...] = (
         action=WorkflowAction.REJECT,
         from_statuses=_statuses(ApplicationStatus.COMMITTEE_REVIEW),
         to_status=ApplicationStatus.REJECTED,
-        roles=frozenset({Role.REGIONAL_HEAD, Role.SUPER_ADMIN}),
+        roles=frozenset({Role.EXECUTIVE_COMMITTEE_MEMBER}),
         stage=WorkflowStage.COMPLETED,
-        label="Reject",
-        description="Record a final rejection with a reason in the comment.",
+        label="Reject (LoR)",
+        description="The Executive Committee records a rejection with a speaking order.",
+        apH_clause="APH 1.10",
         tone="danger",
     ),
     Transition(
@@ -297,6 +317,7 @@ TRANSITIONS: tuple[Transition, ...] = (
         stage=None,
         label="Withdraw application",
         description="Withdraw the application without discarding its workflow history.",
+        apH_clause="APH 2.3.3f-g",
         tone="danger",
     ),
 )
@@ -356,7 +377,7 @@ class LowestLoadAssignmentStrategy:
                 ),
             )
             .where(
-                User.role == Role.SCRUTINY_OFFICER,
+                User.role == Role.SCRUTINY_COMMITTEE_MEMBER,
                 User.is_active.is_(True),
                 User.region == region,
             )
@@ -498,6 +519,17 @@ class WorkflowService:
         if actor.role == Role.SUPER_ADMIN:
             return
 
+        # APH committees are constituted nationally and read every case file
+        # referred to them; the transition table still limits which actions
+        # each committee may perform.
+        if actor.role in {
+            Role.SHC_MEMBER,
+            Role.SAC_MEMBER,
+            Role.EXECUTIVE_COMMITTEE_MEMBER,
+            Role.COMPLAINT_SCRUTINY_MEMBER,
+        }:
+            return
+
         if actor.role == Role.INSTITUTION_ADMIN:
             if actor.institution_id is None or application.institution_id != actor.institution_id:
                 raise WorkflowPermissionError(
@@ -505,14 +537,21 @@ class WorkflowService:
                 )
             return
 
-        if actor.role == Role.REGIONAL_HEAD:
+        if actor.role == Role.REGULATION_BUREAU_OFFICER:
+            if actor.region is not None and application.institution.region != actor.region:
+                raise WorkflowPermissionError(
+                    "You do not have access to this application"
+                )
+            return
+
+        if actor.role == Role.REGIONAL_OFFICER:
             if actor.region is None or application.institution.region != actor.region:
                 raise WorkflowPermissionError(
                     "You do not have access to this application"
                 )
             return
 
-        if actor.role == Role.SCRUTINY_OFFICER:
+        if actor.role == Role.SCRUTINY_COMMITTEE_MEMBER:
             assigned = application.assigned_officer_id == actor.id
             in_region = (
                 actor.region is not None and application.institution.region == actor.region
@@ -527,7 +566,7 @@ class WorkflowService:
                 )
             return
 
-        if actor.role == Role.INSPECTION_COMMITTEE:
+        if actor.role == Role.EVC_MEMBER:
             if action != WorkflowAction.SUBMIT_INSPECTION_REPORT:
                 raise WorkflowPermissionError(
                     "Inspection committee members can only submit an inspection report"
@@ -552,10 +591,13 @@ class WorkflowService:
         if actor.role == Role.INSTITUTION_ADMIN:
             if actor.institution_id is None or application.institution_id != actor.institution_id:
                 return False
-        elif actor.role == Role.REGIONAL_HEAD:
+        elif actor.role == Role.REGULATION_BUREAU_OFFICER:
+            if actor.region is not None and application.institution.region != actor.region:
+                return False
+        elif actor.role == Role.REGIONAL_OFFICER:
             if actor.region is None or application.institution.region != actor.region:
                 return False
-        elif actor.role == Role.SCRUTINY_OFFICER:
+        elif actor.role == Role.SCRUTINY_COMMITTEE_MEMBER:
             assigned = application.assigned_officer_id == actor.id
             in_region = (
                 actor.region is not None and application.institution.region == actor.region
@@ -564,7 +606,7 @@ class WorkflowService:
                 return False
             if transition.action in _ASSIGNED_SCRUTINY_ACTIONS and not assigned:
                 return False
-        elif actor.role == Role.INSPECTION_COMMITTEE:
+        elif actor.role == Role.EVC_MEMBER:
             if transition.action != WorkflowAction.SUBMIT_INSPECTION_REPORT:
                 return False
             if not self._has_inspection_for(application.id, actor.id):
@@ -683,6 +725,11 @@ class WorkflowService:
         comment = payload.comment or "Application submitted by the institution"
         if application.submitted_at is None:
             application.submitted_at = self._clock.now()
+        application.locked_at = self._clock.now()
+        if application.portal_application_no is None:
+            application.portal_application_no = next_portal_application_no(
+                self._db, application.academic_year
+            )
         self._record_transition(
             application,
             actor,
@@ -1035,7 +1082,7 @@ class WorkflowService:
         if (
             committee is None
             or not committee.is_active
-            or committee.role != Role.INSPECTION_COMMITTEE
+            or committee.role != Role.EVC_MEMBER
         ):
             raise WorkflowValidationError(
                 "Select an active inspection committee member"
@@ -1089,13 +1136,13 @@ class WorkflowService:
             Inspection.application_id == application.id,
             Inspection.status == InspectionStatus.SCHEDULED,
         )
-        if actor.role == Role.INSPECTION_COMMITTEE:
+        if actor.role == Role.EVC_MEMBER:
             query = query.where(Inspection.committee_id == actor.id)
         inspection = self._db.scalar(
             query.order_by(Inspection.scheduled_on.desc()).limit(1)
         )
         if inspection is None:
-            if actor.role == Role.INSPECTION_COMMITTEE:
+            if actor.role == Role.EVC_MEMBER:
                 raise WorkflowPermissionError(
                     "No scheduled inspection is assigned to you for this application"
                 )
@@ -1385,6 +1432,7 @@ class WorkflowService:
             action=action.value,
             comment=comment,
             details=details,
+            apH_clause=self._transition_for(action, previous_status).apH_clause,
             created_at=self._clock.now(),
         )
         self._db.add(event)
@@ -1422,7 +1470,7 @@ class WorkflowService:
             if (
                 officer is None
                 or not officer.is_active
-                or officer.role != Role.SCRUTINY_OFFICER
+                or officer.role != Role.SCRUTINY_COMMITTEE_MEMBER
             ):
                 raise WorkflowValidationError("Select an active scrutiny officer")
             if officer.region != application.institution.region:

@@ -24,9 +24,14 @@ _RESULT_LIMIT = 6
 
 _APPLICATIONS_LABELS: dict[Role, str] = {
     Role.INSTITUTION_ADMIN: "My applications",
-    Role.SCRUTINY_OFFICER: "Scrutiny queue",
-    Role.INSPECTION_COMMITTEE: "Assigned inspections",
-    Role.REGIONAL_HEAD: "Regional applications",
+    Role.REGULATION_BUREAU_OFFICER: "Regulation Bureau queue",
+    Role.SCRUTINY_COMMITTEE_MEMBER: "Scrutiny queue",
+    Role.EVC_MEMBER: "Assigned EVC visits",
+    Role.REGIONAL_OFFICER: "Regional applications",
+    Role.SHC_MEMBER: "SHC hearings",
+    Role.SAC_MEMBER: "SAC appeals",
+    Role.EXECUTIVE_COMMITTEE_MEMBER: "EC agenda",
+    Role.COMPLAINT_SCRUTINY_MEMBER: "Complaint scrutiny",
     Role.SUPER_ADMIN: "All applications",
 }
 
@@ -44,8 +49,10 @@ def _pages_for_role(role: Role) -> list[SearchPageItem]:
         SearchPageItem(label=_APPLICATIONS_LABELS[role], path="/applications"),
         SearchPageItem(label="Alerts", path="/alerts"),
     ]
-    if role in {Role.REGIONAL_HEAD, Role.SUPER_ADMIN}:
+    if role in {Role.REGIONAL_OFFICER, Role.REGULATION_BUREAU_OFFICER, Role.SUPER_ADMIN}:
         pages.append(SearchPageItem(label="Audit logs", path="/audit-logs"))
+    if role in {Role.REGIONAL_OFFICER, Role.SUPER_ADMIN}:
+        pages.append(SearchPageItem(label="Compliance admin", path="/compliance-admin"))
     if role == Role.SUPER_ADMIN:
         pages.append(SearchPageItem(label="Alert rules", path="/alert-rules"))
     pages.append(SearchPageItem(label="My profile", path="/profile"))

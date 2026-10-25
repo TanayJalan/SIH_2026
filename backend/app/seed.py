@@ -7,9 +7,12 @@ alert rules and compliance rules are seeded as editable configuration; they are
 not real AICTE norms or thresholds.
 """
 
+import json
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,17 +22,29 @@ from app.core.logging import configure_logging
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models import (
+    AcademicCalendarEvent,
     AlertRule,
     AlertTrigger,
     Application,
+    ApplicationCategory,
     ApplicationStatus,
-    ApplicationType,
+    ApplicationTrack,
+    ApplicationTypeRoute,
+    CalendarEventKey,
     ComplianceConfig,
     ComplianceRule,
     ComplianceSnapshot,
+    DecisionType,
+    FeeSchedule,
+    FeeUnit,
     Inspection,
     InspectionStatus,
     Institution,
+    InstitutionClass,
+    InstitutionRegion,
+    InstitutionStatus,
+    LandOwnership,
+    PublicNotice,
     RequiredDocument,
     Role,
     Severity,
@@ -40,6 +55,7 @@ from app.models import (
 )
 from app.services.audit import AuditService
 from app.services.compliance import evaluate_institution
+from app.services.portal_number import next_portal_application_no
 
 logger = logging.getLogger("app.seed")
 
@@ -50,41 +66,26 @@ WEST_REFERENCE = "DEMO-WEST-2026-001"
 SOUTH_REFERENCE = "DEMO-SOUTH-2026-001"
 DEMO_ALERT_REFERENCE = "DEMO-WEST-2026-003"
 
-REQUIRED_DOCUMENTS = {
-    ApplicationType.NEW: (
-        ("AFFILIATION_CERTIFICATE", True),
-        ("LAND_OWNERSHIP_DOCUMENT", True),
-        ("BUILDING_PLAN_APPROVAL", True),
-        ("FACULTY_DETAILS", True),
-        ("FINANCIAL_STATEMENT", True),
-        ("MANDATORY_DISCLOSURE", True),
-        ("NAAC_NBA_CERTIFICATE", False),
-    ),
-    ApplicationType.EXTENSION: (
-        ("AFFILIATION_CERTIFICATE", True),
-        ("LAND_OWNERSHIP_DOCUMENT", True),
-        ("BUILDING_PLAN_APPROVAL", True),
-        ("FACULTY_DETAILS", True),
-        ("FINANCIAL_STATEMENT", True),
-        ("MANDATORY_DISCLOSURE", True),
-        ("NAAC_NBA_CERTIFICATE", False),
-    ),
-    ApplicationType.INTAKE_CHANGE: (
-        ("EXISTING_APPROVAL_LETTER", True),
-        ("FACULTY_DETAILS", True),
-        ("INFRASTRUCTURE_PLAN", True),
-        ("FINANCIAL_STATEMENT", True),
-        ("MANDATORY_DISCLOSURE", True),
-        ("NAAC_NBA_CERTIFICATE", False),
-    ),
-}
+SEED_DIR = Path(__file__).resolve().parent.parent / "seeds" / "aph"
+"""Generated APH configuration (``python scripts/seed_aph.py``)."""
+
+
+def _load_seed(name: str) -> Any:
+    """Load one generated APH seed file, failing loudly when it is missing."""
+    path = SEED_DIR / name
+    if not path.exists():
+        raise RuntimeError(
+            f"Missing APH seed file {path}. Run `python scripts/seed_aph.py` first."
+        )
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 SLA_CONFIGS = (
-    (WorkflowStage.APPLICATION, 30, 20, Role.REGIONAL_HEAD),
-    (WorkflowStage.DOCUMENT_VERIFICATION, 10, 7, Role.SCRUTINY_OFFICER),
-    (WorkflowStage.SCRUTINY, 15, 10, Role.REGIONAL_HEAD),
-    (WorkflowStage.DEFICIENCY, 7, 5, Role.SCRUTINY_OFFICER),
-    (WorkflowStage.INSPECTION, 20, 14, Role.REGIONAL_HEAD),
+    (WorkflowStage.APPLICATION, 30, 20, Role.REGIONAL_OFFICER),
+    (WorkflowStage.DOCUMENT_VERIFICATION, 10, 7, Role.SCRUTINY_COMMITTEE_MEMBER),
+    (WorkflowStage.SCRUTINY, 15, 10, Role.REGIONAL_OFFICER),
+    (WorkflowStage.DEFICIENCY, 7, 5, Role.SCRUTINY_COMMITTEE_MEMBER),
+    (WorkflowStage.INSPECTION, 20, 14, Role.REGIONAL_OFFICER),
     (WorkflowStage.COMMITTEE_REVIEW, 10, 7, Role.SUPER_ADMIN),
     (WorkflowStage.DECISION, 10, 7, Role.SUPER_ADMIN),
 )
@@ -106,7 +107,7 @@ ALERT_RULES = (
             "{application_reference}, ID {application_id}) is due on {due_date}. "
             "{days_remaining} day(s) remain before the configured SLA deadline."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DEADLINE-3",
@@ -121,7 +122,7 @@ ALERT_RULES = (
             "(application {application_reference}) before the {stage} deadline "
             "on {due_date}."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DEADLINE-1",
@@ -136,7 +137,7 @@ ALERT_RULES = (
             "{application_reference}) is {due_date}. Immediate attention is "
             "required."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "SLA-BREACH",
@@ -151,7 +152,7 @@ ALERT_RULES = (
             "{application_reference}, ID {application_id}) was due on {due_date} "
             "and is now breached. Review the case and record the next action."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DEFICIENCY-DUE",
@@ -165,7 +166,7 @@ ALERT_RULES = (
             "A response from {institution} is due on {due_date} for a deficiency "
             "on application {application_reference}. Detail: {deficiency}"
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DEFICIENCY-OVERDUE",
@@ -180,7 +181,7 @@ ALERT_RULES = (
             "{application_reference}) was due on {due_date} and is now overdue. "
             "Detail: {deficiency}"
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DOCUMENT-EXPIRING-30",
@@ -195,7 +196,7 @@ ALERT_RULES = (
             "{application_reference}) expires on {due_date}. Please request a "
             "valid replacement."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "DOCUMENT-EXPIRING-15",
@@ -209,7 +210,7 @@ ALERT_RULES = (
             "The document {document} for {institution} expires on {due_date}. "
             "The application may be blocked unless a replacement is uploaded."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "COMPLIANCE-RED",
@@ -238,7 +239,7 @@ ALERT_RULES = (
             "Application {application_reference} ({application_id}) for "
             "{institution} moved from {from_status} to {status}."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
     (
         "INSPECTION-SCHEDULED",
@@ -252,7 +253,7 @@ ALERT_RULES = (
             "An inspection for {institution} (application "
             "{application_reference}) is scheduled for {inspection_date}."
         ),
-        Role.REGIONAL_HEAD,
+        Role.REGIONAL_OFFICER,
     ),
 )
 
@@ -469,10 +470,28 @@ def _get_or_create_institution(
     *,
     name: str,
     aicte_id: str,
+    pid: str,
     state: str,
     region: str,
+    aicte_region: InstitutionRegion,
+    institution_class: InstitutionClass,
     institution_type: str,
     established_year: int,
+    is_women_only: bool = False,
+    is_pwbd: bool = False,
+    in_jk_ladakh_ne: bool = False,
+    affiliating_body: str | None = None,
+    land_ownership: LandOwnership = LandOwnership.OWNED,
+    lease_years_total: int | None = None,
+    lease_years_live: int | None = None,
+    building_leased: bool = False,
+    last_eoa_year: str | None = None,
+    accreditation: dict[str, Any] | None = None,
+    infra_profile: dict[str, Any] | None = None,
+    library_profile: dict[str, Any] | None = None,
+    computing_profile: dict[str, Any] | None = None,
+    essential_requirements: dict[str, Any] | None = None,
+    campus: dict[str, Any] | None = None,
 ) -> tuple[Institution, bool]:
     institution = db.scalar(select(Institution).where(Institution.aicte_id == aicte_id))
     if institution is not None:
@@ -481,12 +500,32 @@ def _get_or_create_institution(
     institution = Institution(
         name=name,
         aicte_id=aicte_id,
+        pid=pid,
         state=state,
         region=region,
+        aicte_region=aicte_region,
+        institution_class=institution_class,
         type=institution_type,
+        institution_type=institution_type,
+        is_women_only=is_women_only,
+        is_pwbd=is_pwbd,
+        in_jk_ladakh_ne=in_jk_ladakh_ne,
+        affiliating_body=affiliating_body,
+        land_ownership=land_ownership,
+        lease_years_total=lease_years_total,
+        lease_years_live=lease_years_live,
+        building_leased=building_leased,
+        status=InstitutionStatus.ACTIVE,
+        last_eoa_year=last_eoa_year,
         established_year=established_year,
         naac_grade=None,
         nba_status=None,
+        accreditation=accreditation or {},
+        infra_profile=infra_profile or {},
+        library_profile=library_profile or {},
+        computing_profile=computing_profile or {},
+        essential_requirements=essential_requirements or {},
+        campus=campus or {},
     )
     db.add(institution)
     db.flush()
@@ -498,9 +537,12 @@ def _get_or_create_institution(
         after={
             "name": institution.name,
             "aicte_id": institution.aicte_id,
+            "pid": institution.pid,
             "state": institution.state,
             "region": institution.region,
-            "type": institution.type,
+            "aicte_region": institution.aicte_region.value,
+            "institution_class": institution.institution_class.value,
+            "institution_type": institution.institution_type,
         },
     )
     return institution, True
@@ -514,7 +556,7 @@ def _get_or_create_user(
     email: str,
     password: str,
     role: Role,
-    institution: Institution,
+    institution: Institution | None,
 ) -> tuple[User, bool]:
     normalised_email = email.strip().lower()
     user = db.scalar(select(User).where(User.email == normalised_email))
@@ -526,8 +568,8 @@ def _get_or_create_user(
         email=normalised_email,
         password_hash=hash_password(password),
         role=role,
-        institution_id=institution.id,
-        region=institution.region,
+        institution_id=institution.id if institution else None,
+        region=institution.region if institution else None,
         is_active=True,
     )
     db.add(user)
@@ -541,7 +583,7 @@ def _get_or_create_user(
             "name": user.name,
             "email": user.email,
             "role": user.role.value,
-            "institution_id": str(institution.id),
+            "institution_id": str(institution.id) if institution else None,
             "region": user.region,
         },
     )
@@ -554,13 +596,15 @@ def _get_or_create_application(
     *,
     reference: str,
     institution: Institution,
-    application_type: ApplicationType,
+    application_type: str,
+    track: ApplicationTrack,
     status: ApplicationStatus,
     stage: WorkflowStage,
     assigned_officer: User | None,
     sla_days: int,
     submitted_days_ago: int = 0,
     decision_days_ago: int | None = None,
+    decision: DecisionType | None = None,
 ) -> tuple[Application, bool]:
     terminal = status in {
         ApplicationStatus.APPROVED,
@@ -615,18 +659,44 @@ def _get_or_create_application(
             db.flush()
         return application, False
 
+    route = db.scalar(
+        select(ApplicationTypeRoute).where(ApplicationTypeRoute.type == application_type)
+    )
+    category = route.category if route is not None else ApplicationCategory.CAT1_CUTOFF
+    notice = db.scalar(
+        select(PublicNotice).where(
+            PublicNotice.academic_year == DEMO_ACADEMIC_YEAR,
+            PublicNotice.category == category,
+        )
+    )
+
     now = datetime.now(UTC)
     submitted_at = now - timedelta(days=submitted_days_ago)
+    decision_uploaded_at = (
+        now - timedelta(days=decision_days_ago) if decision_days_ago is not None else None
+    )
     application = Application(
         institution_id=institution.id,
+        track=track,
         application_type=application_type,
+        category=category,
+        public_notice_id=notice.id if notice is not None else None,
+        portal_application_no=next_portal_application_no(db, DEMO_ACADEMIC_YEAR),
         academic_year=DEMO_ACADEMIC_YEAR,
         status=status,
         current_stage=stage,
         assigned_officer_id=assigned_officer.id if assigned_officer else None,
         submitted_at=submitted_at,
+        locked_at=submitted_at,
         stage_entered_at=submitted_at,
         sla_due_at=None if terminal else submitted_at + timedelta(days=sla_days),
+        decision_type=decision,
+        decision_uploaded_at=decision_uploaded_at,
+        appeal_deadline=(
+            decision_uploaded_at + timedelta(days=7)
+            if decision_uploaded_at is not None
+            else None
+        ),
         data={"reference": reference, "demo": True},
         created_at=submitted_at,
     )
@@ -642,7 +712,10 @@ def _get_or_create_application(
         after={
             "reference": reference,
             "institution_id": str(institution.id),
-            "application_type": application.application_type.value,
+            "application_type": application.application_type,
+            "track": application.track.value,
+            "category": application.category.value,
+            "portal_application_no": application.portal_application_no,
             "status": application.status.value,
             "current_stage": application.current_stage.value,
         },
@@ -688,39 +761,249 @@ def _get_or_create_inspection(
     return inspection, True
 
 
-def _ensure_required_documents(db: Session, audit: AuditService) -> int:
-    """Create illustrative document rules without overwriting edits."""
+def _ensure_application_type_routes(db: Session, audit: AuditService) -> int:
+    """Load the Table 2.3 routing rows without overwriting administrator edits."""
     created = 0
-    for application_type, rules in REQUIRED_DOCUMENTS.items():
-        for doc_type, mandatory in rules:
-            existing = db.scalar(
-                select(RequiredDocument).where(
-                    RequiredDocument.application_type == application_type,
-                    RequiredDocument.doc_type == doc_type,
-                )
-            )
-            if existing is not None:
-                continue
-            rule = RequiredDocument(
-                application_type=application_type,
-                doc_type=doc_type,
-                mandatory=mandatory,
-            )
-            db.add(rule)
-            db.flush()
-            audit.log(
-                None,
-                "seed.required_document.create",
-                "RequiredDocument",
-                rule.id,
-                after={
-                    "application_type": application_type.value,
-                    "doc_type": doc_type,
-                    "mandatory": mandatory,
-                },
-            )
-            created += 1
+    for row in _load_seed("application_type_routes.json"):
+        existing = db.scalar(
+            select(ApplicationTypeRoute).where(ApplicationTypeRoute.type == row["type"])
+        )
+        if existing is not None:
+            continue
+        route = ApplicationTypeRoute(
+            type=row["type"],
+            label=row["label"],
+            category=ApplicationCategory(row["category"]),
+            requires_self_disclosure=row["requires_self_disclosure"],
+            requires_scrutiny=row["requires_scrutiny"],
+            requires_evc=row["requires_evc"],
+            requires_hearing_aa=row["requires_hearing_aa"],
+            nil_deficiency_required=row["nil_deficiency_required"],
+            no_ter=row["no_ter"],
+            year_round=row["year_round"],
+            apH_clause=row["apH_clause"],
+            needs_verification=row["needs_verification"],
+        )
+        db.add(route)
+        db.flush()
+        audit.log(
+            None,
+            "seed.application_type_route.create",
+            "ApplicationTypeRoute",
+            route.id,
+            after={
+                "type": route.type,
+                "category": route.category.value,
+                "apH_clause": route.apH_clause,
+                "needs_verification": route.needs_verification,
+            },
+        )
+        created += 1
     return created
+
+
+def _ensure_fee_schedules(db: Session, audit: AuditService) -> int:
+    """Load the APH TER table as integer paise without overwriting edits."""
+    created = 0
+    for row in _load_seed("fee_schedules.json"):
+        institution_class = (
+            InstitutionClass(row["institution_class"])
+            if row["institution_class"] is not None
+            else None
+        )
+        existing = db.scalar(
+            select(FeeSchedule).where(
+                FeeSchedule.item_code == row["item_code"],
+                FeeSchedule.institution_class == institution_class,
+                FeeSchedule.base_academic_year == DEMO_ACADEMIC_YEAR,
+            )
+        )
+        if existing is not None:
+            continue
+        schedule = FeeSchedule(
+            item_code=row["item_code"],
+            label=row["label"],
+            description=row["description"],
+            institution_class=institution_class,
+            unit=FeeUnit(row["unit"]),
+            amount_paise=row["amount_paise"],
+            base_academic_year=DEMO_ACADEMIC_YEAR,
+            annual_increase_pct=Decimal("10"),
+            apH_clause=row["apH_clause"],
+            needs_verification=row.get("needs_verification", False),
+        )
+        db.add(schedule)
+        db.flush()
+        audit.log(
+            None,
+            "seed.fee_schedule.create",
+            "FeeSchedule",
+            schedule.id,
+            after={
+                "item_code": schedule.item_code,
+                "institution_class": (
+                    schedule.institution_class.value if schedule.institution_class else None
+                ),
+                "amount_paise": schedule.amount_paise,
+                "apH_clause": schedule.apH_clause,
+            },
+        )
+        created += 1
+    return created
+
+
+def _ensure_required_documents(db: Session, audit: AuditService) -> int:
+    """Load the Annexure-2 document catalogue without overwriting edits."""
+    created = 0
+    for row in _load_seed("required_documents.json"):
+        existing = db.scalar(
+            select(RequiredDocument).where(
+                RequiredDocument.application_type == row["application_type"],
+                RequiredDocument.doc_type == row["doc_type"],
+            )
+        )
+        if existing is not None:
+            continue
+        rule = RequiredDocument(
+            application_type=row["application_type"],
+            doc_type=row["doc_type"],
+            doc_code=row["doc_code"],
+            mandatory=row["mandatory"],
+            condition_expr=row["condition_expr"],
+            apH_clause=row["apH_clause"],
+        )
+        db.add(rule)
+        db.flush()
+        audit.log(
+            None,
+            "seed.required_document.create",
+            "RequiredDocument",
+            rule.id,
+            after={
+                "application_type": rule.application_type,
+                "doc_type": rule.doc_type,
+                "doc_code": rule.doc_code,
+                "mandatory": rule.mandatory,
+                "apH_clause": rule.apH_clause,
+            },
+        )
+        created += 1
+    return created
+
+
+def _ensure_public_notices(db: Session, audit: AuditService) -> int:
+    """Load the demo Public Notice windows; dates are labelled DEMO."""
+    created = 0
+    for row in _load_seed("public_notices.json"):
+        category = ApplicationCategory(row["category"])
+        existing = db.scalar(
+            select(PublicNotice).where(
+                PublicNotice.academic_year == row["academic_year"],
+                PublicNotice.category == category,
+            )
+        )
+        if existing is not None:
+            continue
+        notice = PublicNotice(
+            academic_year=row["academic_year"],
+            category=category,
+            opens_on=date.fromisoformat(row["opens_on"]),
+            cutoff_on=date.fromisoformat(row["cutoff_on"]),
+            apH_clause=row["apH_clause"],
+            needs_verification=row["needs_verification"],
+            is_demo=row["is_demo"],
+            note=row["note"],
+        )
+        db.add(notice)
+        db.flush()
+        audit.log(
+            None,
+            "seed.public_notice.create",
+            "PublicNotice",
+            notice.id,
+            after={
+                "academic_year": notice.academic_year,
+                "category": notice.category.value,
+                "cutoff_on": notice.cutoff_on.isoformat(),
+                "is_demo": notice.is_demo,
+            },
+        )
+        created += 1
+    return created
+
+
+def _ensure_academic_calendar_events(db: Session, audit: AuditService) -> int:
+    """Load the demo Academic Calendar dates; every row is labelled DEMO."""
+    created = 0
+    for row in _load_seed("academic_calendar_events.json"):
+        existing = db.scalar(
+            select(AcademicCalendarEvent).where(
+                AcademicCalendarEvent.academic_year == row["academic_year"],
+                AcademicCalendarEvent.event_key == row["event_key"],
+            )
+        )
+        if existing is not None:
+            continue
+        event = AcademicCalendarEvent(
+            academic_year=row["academic_year"],
+            event_key=CalendarEventKey(row["event_key"]),
+            date=date.fromisoformat(row["date"]),
+            description=row["description"],
+            apH_clause=row["apH_clause"],
+            needs_verification=row["needs_verification"],
+            is_demo=row["is_demo"],
+        )
+        db.add(event)
+        db.flush()
+        audit.log(
+            None,
+            "seed.academic_calendar_event.create",
+            "AcademicCalendarEvent",
+            event.id,
+            after={
+                "academic_year": event.academic_year,
+                "event_key": event.event_key.value,
+                "date": event.date.isoformat(),
+                "is_demo": event.is_demo,
+            },
+        )
+        created += 1
+    return created
+
+
+def _ensure_committee_compositions(db: Session, audit: AuditService) -> int:
+    """Store the Annexure-16 compositions as editable configuration."""
+    existing = db.scalar(
+        select(ComplianceConfig).where(ComplianceConfig.key == "committee_compositions")
+    )
+    if existing is not None:
+        return 0
+    config = ComplianceConfig(
+        key="committee_compositions",
+        value=_load_seed("committee_compositions.json"),
+    )
+    db.add(config)
+    db.flush()
+    audit.log(
+        None,
+        "seed.committee_compositions.create",
+        "ComplianceConfig",
+        config.id,
+        after={"key": config.key},
+    )
+    return 1
+
+
+def _ensure_aph_reference_data(db: Session, audit: AuditService) -> dict[str, int]:
+    """Load every generated APH seed file in dependency order."""
+    return {
+        "application_type_routes": _ensure_application_type_routes(db, audit),
+        "fee_schedules": _ensure_fee_schedules(db, audit),
+        "required_documents": _ensure_required_documents(db, audit),
+        "public_notices": _ensure_public_notices(db, audit),
+        "academic_calendar_events": _ensure_academic_calendar_events(db, audit),
+        "committee_compositions": _ensure_committee_compositions(db, audit),
+    }
 
 
 def _ensure_sla_configs(db: Session, audit: AuditService) -> int:
@@ -735,6 +1018,8 @@ def _ensure_sla_configs(db: Session, audit: AuditService) -> int:
             duration_days=duration_days,
             escalation_after_days=escalation_after_days,
             escalate_to_role=escalate_to_role,
+            apH_clause="DEMO",
+            needs_verification=True,
         )
         db.add(config)
         db.flush()
@@ -748,6 +1033,8 @@ def _ensure_sla_configs(db: Session, audit: AuditService) -> int:
                 "duration_days": duration_days,
                 "escalation_after_days": escalation_after_days,
                 "escalate_to_role": escalate_to_role.value,
+                "apH_clause": "DEMO",
+                "needs_verification": True,
             },
         )
         created += 1
@@ -781,6 +1068,8 @@ def _ensure_alert_rules(db: Session, audit: AuditService) -> int:
             channel_list=list(channels),
             template=template,
             escalation_role=escalation_role,
+            apH_clause="DEMO",
+            needs_verification=True,
             is_active=True,
         )
         db.add(rule)
@@ -833,6 +1122,8 @@ def _ensure_compliance_rules(db: Session, audit: AuditService) -> int:
             threshold_max=threshold_max,
             severity=severity,
             applies_to=applies_to,
+            apH_clause="DEMO",
+            needs_verification=True,
             is_active=True,
         )
         db.add(rule)
@@ -911,7 +1202,12 @@ def seed() -> None:
         "users": 0,
         "applications": 0,
         "inspections": 0,
+        "application_type_routes": 0,
+        "fee_schedules": 0,
         "required_documents": 0,
+        "public_notices": 0,
+        "academic_calendar_events": 0,
+        "committee_compositions": 0,
         "sla_configs": 0,
         "alert_rules": 0,
         "compliance_rules": 0,
@@ -927,10 +1223,100 @@ def seed() -> None:
             audit,
             name="Sunrise Institute of Technology (Fictional Demo)",
             aicte_id=WEST_AICTE_ID,
+            pid="DEMO-PID-0001",
             state="Maharashtra",
             region="West",
+            aicte_region=InstitutionRegion.WESTERN,
+            institution_class=InstitutionClass.OTHER,
             institution_type="Engineering",
             established_year=2001,
+            affiliating_body="Demo State Technical University (Fictional)",
+            last_eoa_year="2025-26",
+            accreditation={
+                "nirf_8th": False,
+                "qs_asia_2024": False,
+                "naac_score": 3.2,
+                "nba_courses_pct": 60.0,
+                "autonomous": False,
+                "avg_admission_pct_5y": 72.5,
+            },
+            infra_profile={
+                "land_area_sqm": 12000.0,
+                "built_up_sqm": 8000.0,
+                "instructional_area_sqm": 4800.0,
+                "classrooms": 24,
+                "tutorial_rooms": 8,
+                "labs": 12,
+                "workshops": 4,
+                "library_area_sqm": 400.0,
+                "seminar_hall_sqm": 250.0,
+                "computer_centre_sqm": 300.0,
+                "playground": True,
+                "barrier_free": True,
+            },
+            library_profile={
+                "titles": 500,
+                "volumes": 2500,
+                "journals": 30,
+                "ebooks_pct": 40.0,
+                "reading_room_seats": 120,
+                "digital_library_pcs": 15,
+                "ndl_membership": True,
+            },
+            computing_profile={
+                "pcs": 240,
+                "pc_student_ratio": 10.0,
+                "printers": 15,
+                "bandwidth_mbps": 300,
+                "language_lab_pcs": 20,
+                "wifi": True,
+                "plagiarism_software": True,
+            },
+            essential_requirements={
+                "anti_ragging_committee": True,
+                "anti_ragging_squad": True,
+                "cctv": True,
+                "internal_committee": True,
+                "sc_st_committee": True,
+                "grievance_redressal": True,
+                "ombudsperson": True,
+                "innovation_council": True,
+                "barrier_free_facilities": True,
+                "abc_compliance": True,
+                "campus_safety": True,
+                "food_safety": True,
+                "digital_payments": True,
+                "letters_displayed": True,
+                "mental_health_counselling": True,
+                "women_helpline_24x7": True,
+                "first_aid": True,
+                "potable_water": True,
+                "waste_management": True,
+                "student_insurance": True,
+                "sel_mechanism": True,
+                "compulsory_internship": True,
+                "swayam_electives": True,
+                "skilling_credits": True,
+                "industry_institution_cell": True,
+                "language_lab": True,
+                "iqac": True,
+            },
+            campus={
+                "plots": [
+                    {
+                        "area_sqm": 12000.0,
+                        "title_status": "OWNED",
+                        "lease_years": 0,
+                        "distance_km": 0.0,
+                    }
+                ],
+                "gap_km": 0.0,
+                "contiguous": True,
+                "obstacles": [],
+                "built_up_sqm": 8000.0,
+                "lat": 19.076,
+                "lng": 72.8777,
+            },
         )
         created["institutions"] += int(made)
 
@@ -939,10 +1325,99 @@ def seed() -> None:
             audit,
             name="Riverbend Institute of Management (Fictional Demo)",
             aicte_id=SOUTH_AICTE_ID,
+            pid="DEMO-PID-0002",
             state="Kerala",
             region="South",
+            aicte_region=InstitutionRegion.SOUTHERN,
+            institution_class=InstitutionClass.OTHER,
             institution_type="Management",
             established_year=2005,
+            affiliating_body="Demo University of Management (Fictional)",
+            land_ownership=LandOwnership.LEASED,
+            lease_years_total=30,
+            lease_years_live=12,
+            building_leased=False,
+            last_eoa_year="2025-26",
+            accreditation={
+                "naac_score": 3.05,
+                "nba_courses_pct": 45.0,
+                "autonomous": False,
+                "avg_admission_pct_5y": 64.0,
+            },
+            infra_profile={
+                "land_area_sqm": 9000.0,
+                "built_up_sqm": 5200.0,
+                "instructional_area_sqm": 3100.0,
+                "classrooms": 16,
+                "tutorial_rooms": 6,
+                "labs": 6,
+                "library_area_sqm": 300.0,
+                "playground": True,
+                "barrier_free": True,
+            },
+            library_profile={
+                "titles": 300,
+                "volumes": 1500,
+                "journals": 20,
+                "ebooks_pct": 35.0,
+                "reading_room_seats": 80,
+                "digital_library_pcs": 10,
+                "ndl_membership": True,
+            },
+            computing_profile={
+                "pcs": 120,
+                "pc_student_ratio": 10.0,
+                "printers": 8,
+                "bandwidth_mbps": 100,
+                "language_lab_pcs": 20,
+                "wifi": True,
+                "plagiarism_software": True,
+            },
+            essential_requirements={
+                "anti_ragging_committee": True,
+                "anti_ragging_squad": True,
+                "cctv": True,
+                "internal_committee": True,
+                "sc_st_committee": True,
+                "grievance_redressal": True,
+                "ombudsperson": True,
+                "innovation_council": True,
+                "barrier_free_facilities": True,
+                "abc_compliance": True,
+                "campus_safety": True,
+                "food_safety": True,
+                "digital_payments": True,
+                "letters_displayed": True,
+                "mental_health_counselling": True,
+                "women_helpline_24x7": True,
+                "first_aid": True,
+                "potable_water": True,
+                "waste_management": True,
+                "student_insurance": True,
+                "sel_mechanism": True,
+                "compulsory_internship": True,
+                "swayam_electives": True,
+                "skilling_credits": True,
+                "industry_institution_cell": True,
+                "language_lab": True,
+                "iqac": True,
+            },
+            campus={
+                "plots": [
+                    {
+                        "area_sqm": 9000.0,
+                        "title_status": "LEASED",
+                        "lease_years": 30,
+                        "distance_km": 0.0,
+                    }
+                ],
+                "gap_km": 0.0,
+                "contiguous": True,
+                "obstacles": [],
+                "built_up_sqm": 5200.0,
+                "lat": 9.9312,
+                "lng": 76.2673,
+            },
         )
         created["institutions"] += int(made)
 
@@ -953,7 +1428,7 @@ def seed() -> None:
             email=settings.seed_admin_email,
             password=admin_password,
             role=Role.SUPER_ADMIN,
-            institution=west,
+            institution=None,
         )
         created["users"] += int(made)
 
@@ -968,35 +1443,35 @@ def seed() -> None:
         )
         created["users"] += int(made)
 
-        scrutiny_officer, made = _get_or_create_user(
+        scrutiny_member, made = _get_or_create_user(
             db,
             audit,
-            name="West Scrutiny Officer (Demo)",
+            name="Scrutiny Committee Member (Demo)",
             email="scrutiny@example.edu",
             password=demo_password,
-            role=Role.SCRUTINY_OFFICER,
+            role=Role.SCRUTINY_COMMITTEE_MEMBER,
             institution=west,
         )
         created["users"] += int(made)
 
-        inspection_member, made = _get_or_create_user(
+        evc_member, made = _get_or_create_user(
             db,
             audit,
-            name="West Inspection Committee Member (Demo)",
+            name="EVC Member (Demo)",
             email="inspection@example.edu",
             password=demo_password,
-            role=Role.INSPECTION_COMMITTEE,
+            role=Role.EVC_MEMBER,
             institution=west,
         )
         created["users"] += int(made)
 
-        regional_head, made = _get_or_create_user(
+        regional_officer, made = _get_or_create_user(
             db,
             audit,
-            name="West Regional Head (Demo)",
+            name="Regional Officer (Demo)",
             email="regional@example.edu",
             password=demo_password,
-            role=Role.REGIONAL_HEAD,
+            role=Role.REGIONAL_OFFICER,
             institution=west,
         )
         created["users"] += int(made)
@@ -1012,15 +1487,59 @@ def seed() -> None:
         )
         created["users"] += int(made)
 
+        # APH actors that do not belong to an institution.
+        for name, email, role in (
+            (
+                "Regulation Bureau Officer (Demo)",
+                "regulation@example.edu",
+                Role.REGULATION_BUREAU_OFFICER,
+            ),
+            (
+                "Executive Committee Member (Demo)",
+                "ec@example.edu",
+                Role.EXECUTIVE_COMMITTEE_MEMBER,
+            ),
+            (
+                "Standing Hearing Committee Member (Demo)",
+                "shc@example.edu",
+                Role.SHC_MEMBER,
+            ),
+            (
+                "Standing Appellate Committee Member (Demo)",
+                "sac@example.edu",
+                Role.SAC_MEMBER,
+            ),
+            (
+                "Complaint Scrutiny Member (Demo)",
+                "complaints@example.edu",
+                Role.COMPLAINT_SCRUTINY_MEMBER,
+            ),
+        ):
+            _, made = _get_or_create_user(
+                db,
+                audit,
+                name=name,
+                email=email,
+                password=demo_password,
+                role=role,
+                institution=None,
+            )
+            created["users"] += int(made)
+
+        reference_counts = _ensure_aph_reference_data(db, audit)
+        for key, value in reference_counts.items():
+            created[key] += value
+
         west_application, made = _get_or_create_application(
             db,
             audit,
             reference=WEST_REFERENCE,
             institution=west,
-            application_type=ApplicationType.NEW,
+            application_type="NEW_INSTITUTION",
+            track=ApplicationTrack.NEW_INSTITUTION,
             status=ApplicationStatus.INSPECTION_SCHEDULED,
             stage=WorkflowStage.INSPECTION,
-            assigned_officer=scrutiny_officer,
+            assigned_officer=scrutiny_member,
             sla_days=-2,
         )
         created["applications"] += int(made)
@@ -1030,7 +1549,8 @@ def seed() -> None:
             audit,
             reference=SOUTH_REFERENCE,
             institution=south,
-            application_type=ApplicationType.EXTENSION,
+            application_type="EOA_SELF_DISCLOSURE",
+            track=ApplicationTrack.EXISTING,
             status=ApplicationStatus.SUBMITTED,
             stage=WorkflowStage.APPLICATION,
             assigned_officer=None,
@@ -1043,29 +1563,47 @@ def seed() -> None:
             audit,
             reference="DEMO-WEST-2026-002",
             institution=west,
-            application_type=ApplicationType.NEW,
+            application_type="NEW_INSTITUTION",
+            track=ApplicationTrack.NEW_INSTITUTION,
             status=ApplicationStatus.APPROVED,
             stage=WorkflowStage.COMPLETED,
-            assigned_officer=regional_head,
+            assigned_officer=regional_officer,
             sla_days=30,
             submitted_days_ago=28,
             decision_days_ago=9,
+            decision=DecisionType.LOA,
         )
         created["applications"] += int(made)
 
         # A dedicated pending case for the one-click +8 day alert demo. It is
         # due in seven days, so the replay produces T-7, T-3 and T-1 warnings,
-        # then an SLA breach and escalation to the regional head.
+        # then an SLA breach and escalation to the regional officer.
         _, made = _get_or_create_application(
             db,
             audit,
             reference=DEMO_ALERT_REFERENCE,
             institution=west,
-            application_type=ApplicationType.NEW,
+            application_type="NEW_INSTITUTION",
+            track=ApplicationTrack.NEW_INSTITUTION,
             status=ApplicationStatus.SCRUTINY,
             stage=WorkflowStage.SCRUTINY,
-            assigned_officer=scrutiny_officer,
+            assigned_officer=scrutiny_member,
             sla_days=7,
+        )
+        created["applications"] += int(made)
+
+        # One Category 2 (year-round) case so the routing table is exercised.
+        _, made = _get_or_create_application(
+            db,
+            audit,
+            reference="DEMO-SOUTH-2026-002",
+            institution=south,
+            application_type="CHANGE_OF_SITE",
+            track=ApplicationTrack.EXISTING,
+            status=ApplicationStatus.SUBMITTED,
+            stage=WorkflowStage.APPLICATION,
+            assigned_officer=None,
+            sla_days=21,
         )
         created["applications"] += int(made)
 
@@ -1073,11 +1611,10 @@ def seed() -> None:
             db,
             audit,
             application=west_application,
-            committee_member=inspection_member,
+            committee_member=evc_member,
         )
         created["inspections"] += int(made)
 
-        created["required_documents"] += _ensure_required_documents(db, audit)
         created["sla_configs"] += _ensure_sla_configs(db, audit)
         created["alert_rules"] += _ensure_alert_rules(db, audit)
         created["compliance_rules"] += _ensure_compliance_rules(db, audit)

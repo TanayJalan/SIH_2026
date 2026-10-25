@@ -28,3 +28,22 @@ INSTITUTION_ADMIN, SCRUTINY_OFFICER, INSPECTION_COMMITTEE, REGIONAL_HEAD, SUPER_
 10. After finishing each task, summarize what was built, how to run it, and any known gaps.
 
 Confirm by printing the file path. Do not start building yet.
+
+---
+
+# Domain source of truth
+docs/reference/APH_SPEC.md is the authoritative domain specification (from docs/reference/APH_2024-27.pdf; text copy APH_2024-27.txt).
+1. Every rule, fee, deadline, document requirement, committee or workflow transition must carry an apH_clause value (for example "APH 1.11a") taken from APH_SPEC.md.
+2. If something is not in APH_SPEC.md, grep the .txt copy. If still not found, create it with needs_verification=true and list it in docs/OPEN_QUESTIONS.md. Never invent norms, fees or dates.
+3. Items marked with the warning sign in APH_SPEC.md section 12 are ambiguous: implement them as configurable parameters and list them in docs/OPEN_QUESTIONS.md.
+4. Cut-off dates, committee dates and processing-time limits are NOT in the handbook. They live in PublicNotice, AcademicCalendarEvent and SLAConfig tables (admin-editable, seeded with clearly labelled demo values).
+
+# Vocabulary (use exactly in code and UI)
+Regulation Bureau, Regional Officer, Scrutiny Committee, Re-Scrutiny Committee, Expert Visit Committee (EVC), Standing Hearing Committee (SHC), Standing Appellate Committee (SAC), Standing Complaint Scrutiny Committee (SCSC), PGRC, Executive Committee (EC), Council, LoA, LoD, LoR, Speaking Order, EoA, Extended EoA, Approved Intake, TER charges, Security Deposit, Self-Disclosure, Deficiency Report, Nil Deficiency.
+
+# Engineering additions
+- Money is stored as integer paise (never float). Fee tables live in the DB with clause references.
+- Deadlines are computed in one DeadlineService.
+- Every eligibility or compliance decision returns an explanation: criteria, values, pass/fail, clause.
+- Calculators are pure functions with unit tests built from worked examples in APH_SPEC.md.
+- A test must fail the build if any ComplianceRule, WorkflowTransition, FeeSchedule or AlertRule row lacks apH_clause (unless needs_verification=true).

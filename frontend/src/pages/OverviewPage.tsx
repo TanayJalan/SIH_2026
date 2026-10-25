@@ -20,18 +20,28 @@ function accessScope(user: UserProfile): { value: string; detail: string } {
   switch (user.role) {
     case "SUPER_ADMIN":
       return { value: "All institutions", detail: "System-wide access" };
-    case "REGIONAL_HEAD":
+    case "REGIONAL_OFFICER":
       return { value: user.region ?? "No region", detail: "Regional oversight" };
-    case "SCRUTINY_OFFICER":
+    case "REGULATION_BUREAU_OFFICER":
+      return { value: "All regions", detail: "Scrutiny and process oversight" };
+    case "SCRUTINY_COMMITTEE_MEMBER":
       return {
         value: user.region ?? user.institution?.name ?? "Assigned cases",
         detail: "Assignment and regional scope",
       };
-    case "INSPECTION_COMMITTEE":
+    case "EVC_MEMBER":
       return {
         value: user.region ?? user.institution?.name ?? "Assigned cases",
         detail: "Applications with your inspections",
       };
+    case "SHC_MEMBER":
+      return { value: "Hearing cases", detail: "Cases referred to the SHC" };
+    case "SAC_MEMBER":
+      return { value: "Appeal cases", detail: "Appeals referred to the SAC" };
+    case "EXECUTIVE_COMMITTEE_MEMBER":
+      return { value: "Committee cases", detail: "Cases referred to the EC" };
+    case "COMPLAINT_SCRUTINY_MEMBER":
+      return { value: "Complaint cases", detail: "Complaints referred to the SCSC" };
     case "INSTITUTION_ADMIN":
       return {
         value: user.institution?.name ?? "No institution",

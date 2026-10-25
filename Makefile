@@ -1,11 +1,13 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
+PYTHON ?= python3
 
-.PHONY: help dev seed test migrate logs shell down
+.PHONY: help dev seed seed-aph test migrate logs shell down
 
 help:
 	@echo "make dev      Build and start postgres, mailpit, backend and frontend"
-	@echo "make seed     Apply migrations and seed clearly fictional demo data"
+	@echo "make seed     Generate APH JSON, apply migrations and seed demo data"
+	@echo "make seed-aph Regenerate backend/seeds/aph/*.json from docs/reference/APH_SPEC.md"
 	@echo "make test     Run backend tests (migrations applied first)"
 	@echo "make migrate  Apply pending Alembic migrations to the running backend"
 	@echo "make logs     Follow logs from all services"
@@ -15,8 +17,11 @@ help:
 dev:
 	$(COMPOSE) up --build
 
-seed:
+seed: seed-aph
 	$(COMPOSE) run --rm backend sh -c "alembic upgrade head && python -m app.seed"
+
+seed-aph:
+	$(PYTHON) scripts/seed_aph.py
 
 test:
 	$(COMPOSE) run --rm backend sh -c "alembic upgrade head && pytest -q"

@@ -124,7 +124,7 @@ export default function ApplicationsPage() {
   const overdue = searchParams.get("overdue") === "1";
   const institutionId = searchParams.get("institution_id") ?? undefined;
   const institutionName = searchParams.get("institution") ?? undefined;
-  const isScrutiny = user?.role === "SCRUTINY_OFFICER";
+  const isScrutiny = user?.role === "SCRUTINY_COMMITTEE_MEMBER";
   const assignedToMe = isScrutiny && searchParams.get("assigned") !== "all";
   const sortDue =
     overdue || (isScrutiny && searchParams.get("sort") !== "recent");

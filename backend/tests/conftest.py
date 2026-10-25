@@ -14,10 +14,13 @@ from app.db.session import SessionLocal
 from app.main import create_app
 from app.models import (
     Application,
+    ApplicationCategory,
     ApplicationStatus,
-    ApplicationType,
+    ApplicationTrack,
     Inspection,
     Institution,
+    InstitutionClass,
+    InstitutionRegion,
     Role,
     User,
     WorkflowStage,
@@ -31,14 +34,25 @@ TEST_PASSWORD = "TestPass123!"
 
 
 @pytest.fixture(scope="session", autouse=True)
-def ensure_alert_rules() -> None:
-    """Make the rule catalogue available even on an unseeded test database."""
-    from app.seed import _ensure_alert_rules, _ensure_sla_configs
+def ensure_reference_config() -> None:
+    """Make the rule catalogue and APH routing available on an unseeded DB."""
+    from app.seed import (
+        _ensure_alert_rules,
+        _ensure_aph_reference_data,
+        _ensure_baseline_snapshots,
+        _ensure_compliance_config,
+        _ensure_compliance_rules,
+        _ensure_sla_configs,
+    )
 
     with SessionLocal() as db:
         audit = AuditService(db)
         _ensure_sla_configs(db, audit)
         _ensure_alert_rules(db, audit)
+        _ensure_compliance_rules(db, audit)
+        _ensure_compliance_config(db, audit)
+        _ensure_aph_reference_data(db, audit)
+        _ensure_baseline_snapshots(db)
         db.commit()
 
 
@@ -82,17 +96,25 @@ def test_data() -> Generator[TestData, None, None]:
         west = Institution(
             name=f"Test West Institute {suffix} (Fictional)",
             aicte_id=f"TEST-W-{suffix}",
+            pid=f"TEST-PID-W-{suffix}",
             state="Test State West",
             region=west_region,
+            aicte_region=InstitutionRegion.WESTERN,
+            institution_class=InstitutionClass.OTHER,
             type="Engineering",
+            institution_type="Engineering",
             established_year=2001,
         )
         east = Institution(
             name=f"Test East Institute {suffix} (Fictional)",
             aicte_id=f"TEST-E-{suffix}",
+            pid=f"TEST-PID-E-{suffix}",
             state="Test State East",
             region=east_region,
+            aicte_region=InstitutionRegion.EASTERN,
+            institution_class=InstitutionClass.OTHER,
             type="Management",
+            institution_type="Management",
             established_year=2005,
         )
         db.add_all([west, east])
@@ -121,9 +143,20 @@ def test_data() -> Generator[TestData, None, None]:
             "institution_admin_east": make_user(
                 "institution_admin_east", Role.INSTITUTION_ADMIN, east, east_region
             ),
-            "scrutiny": make_user("scrutiny", Role.SCRUTINY_OFFICER, west, west_region),
-            "inspection": make_user("inspection", Role.INSPECTION_COMMITTEE, west, west_region),
-            "regional": make_user("regional", Role.REGIONAL_HEAD, west, west_region),
+            "scrutiny": make_user(
+                "scrutiny", Role.SCRUTINY_COMMITTEE_MEMBER, west, west_region
+            ),
+            "inspection": make_user("inspection", Role.EVC_MEMBER, west, west_region),
+            "regional": make_user("regional", Role.REGIONAL_OFFICER, west, west_region),
+            "regulation": make_user(
+                "regulation", Role.REGULATION_BUREAU_OFFICER, None, west_region
+            ),
+            "shc": make_user("shc", Role.SHC_MEMBER, None, west_region),
+            "sac": make_user("sac", Role.SAC_MEMBER, None, west_region),
+            "ec": make_user("ec", Role.EXECUTIVE_COMMITTEE_MEMBER, None, west_region),
+            "complaints": make_user(
+                "complaints", Role.COMPLAINT_SCRUTINY_MEMBER, None, west_region
+            ),
             "super": make_user("super", Role.SUPER_ADMIN, None, None),
         }
         db.add_all(users.values())
@@ -132,23 +165,29 @@ def test_data() -> Generator[TestData, None, None]:
         submitted_at = datetime.now(UTC)
         west_application = Application(
             institution_id=west.id,
-            application_type=ApplicationType.NEW,
+            track=ApplicationTrack.NEW_INSTITUTION,
+            application_type="NEW_INSTITUTION",
+            category=ApplicationCategory.CAT1_CUTOFF,
             academic_year="2026-27",
             status=ApplicationStatus.SUBMITTED,
             current_stage=WorkflowStage.SCRUTINY,
             assigned_officer_id=users["scrutiny"].id,
             submitted_at=submitted_at,
+            locked_at=submitted_at,
             sla_due_at=submitted_at - timedelta(days=2),
             data={"reference": f"TEST-W-{suffix}", "demo": True},
         )
         east_application = Application(
             institution_id=east.id,
-            application_type=ApplicationType.EXTENSION,
+            track=ApplicationTrack.EXISTING,
+            application_type="EOA_SELF_DISCLOSURE",
+            category=ApplicationCategory.CAT1_CUTOFF,
             academic_year="2026-27",
             status=ApplicationStatus.DOCUMENT_VERIFICATION,
             current_stage=WorkflowStage.DOCUMENT_VERIFICATION,
             assigned_officer_id=None,
             submitted_at=submitted_at,
+            locked_at=submitted_at,
             sla_due_at=submitted_at + timedelta(days=10),
             data={"reference": f"TEST-E-{suffix}", "demo": True},
         )

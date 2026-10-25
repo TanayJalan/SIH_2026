@@ -1,0 +1,74 @@
+[
+  {
+    "academic_year": "2026-27",
+    "event_key": "LAST_DATE_EOA",
+    "date": "2026-06-30",
+    "description": "Illustrative last date for issue of EoA (not in the handbook).",
+    "apH_clause": "APH 2.25j",
+    "needs_verification": true,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "ENROLMENT_UPLOAD_30NOV",
+    "date": "2026-11-30",
+    "description": "Student enrolment details uploaded before 30 November.",
+    "apH_clause": "APH 2.25n",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "NOMENCLATURE_30NOV",
+    "date": "2026-11-30",
+    "description": "New course nomenclature concurrence before 30 November.",
+    "apH_clause": "APH 5.3.11",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "SD_PENALTY10_31MAY",
+    "date": "2027-05-31",
+    "description": "Security Deposit 10% penalty window closes.",
+    "apH_clause": "APH 2.25f",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "SD_PENALTY20_31JUL",
+    "date": "2027-07-31",
+    "description": "Security Deposit 20% penalty window closes.",
+    "apH_clause": "APH 2.25f",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "IC_REPORT_30JUN",
+    "date": "2027-06-30",
+    "description": "Internal Committee annual report upload.",
+    "apH_clause": "APH 6.48g",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "CLOSURE_REVOKE_10APR",
+    "date": "2027-04-10",
+    "description": "Last date to withdraw a pending closure application.",
+    "apH_clause": "APH 2.3.3g",
+    "needs_verification": false,
+    "is_demo": true
+  },
+  {
+    "academic_year": "2026-27",
+    "event_key": "RESTORATION_30APR",
+    "date": "2027-04-30",
+    "description": "Restoration approved after 30 April applies to the next academic year.",
+    "apH_clause": "APH 7.12",
+    "needs_verification": false,
+    "is_demo": true
+  }
+]

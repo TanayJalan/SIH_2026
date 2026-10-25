@@ -9,6 +9,7 @@ from app.api.routes import (
     applications,
     audit_logs,
     auth,
+    committees,
     compliance_admin,
     health,
     public,
@@ -28,3 +29,4 @@ api_router.include_router(alert_rules.router)
 api_router.include_router(alerts.router)
 api_router.include_router(audit_logs.router)
 api_router.include_router(search.router)
+api_router.include_router(committees.router)

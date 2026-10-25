@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -40,6 +40,10 @@ class ComplianceRulePreview(BaseModel):
     observed_value: float | None
     status: ComplianceRuleStatus
     message: str
+    evidence: dict[str, Any] = Field(default_factory=dict)
+    """Values the decision was based on: metric, observed value and threshold."""
+    explanation: dict[str, Any] = Field(default_factory=dict)
+    """Structured criteria, values, pass/fail and APH clause for the decision."""
 
 
 class CompliancePreviewRead(BaseModel):
@@ -78,6 +82,8 @@ class ComplianceRuleRead(BaseModel):
     threshold_max: float | None
     severity: Severity
     applies_to: str
+    apH_clause: str
+    needs_verification: bool
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -114,8 +120,12 @@ class ComplianceRuleCreate(BaseModel):
     threshold_max: float | None = Field(default=None, ge=0)
     severity: Severity
     applies_to: str = "ALL"
-    """Comma separated scopes: application types (NEW/EXTENSION/INTAKE_CHANGE),
-    programme levels (UG/PG), or ALL."""
+    """Comma separated scopes: APH application types (for example
+    NEW_INSTITUTION or EOA_SELF_DISCLOSURE), programme levels (UG/PG), or ALL."""
+    apH_clause: str = Field(default="DEMO", max_length=64)
+    """APH clause backing the rule; ``DEMO`` marks illustrative configuration."""
+    needs_verification: bool = True
+    """True while the clause or threshold still needs verification."""
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -142,6 +152,8 @@ class ComplianceRuleUpdate(BaseModel):
     threshold_max: float | None = Field(default=None, ge=0)
     severity: Severity | None = None
     applies_to: str | None = None
+    apH_clause: str | None = Field(default=None, max_length=64)
+    needs_verification: bool | None = None
     is_active: bool | None = None
 
 

@@ -10,7 +10,6 @@ from app.db.session import SessionLocal
 from app.models import (
     Application,
     ApplicationStatus,
-    ApplicationType,
     SLAConfig,
     WorkflowEvent,
     WorkflowStage,
@@ -100,14 +99,14 @@ def test_create_rejects_out_of_scope_application_type(
     response = api_client.post(
         "/applications",
         json={
-            "application_type": ApplicationType.INTAKE_CHANGE.value,
+            "application_type": "NOT_AN_APH_TYPE",
             "academic_year": "2026-27",
         },
         headers=_headers(api_client, test_data),
     )
 
     assert response.status_code == 422
-    assert "Only NEW and EXTENSION applications are supported" in response.text
+    assert "not configured" in response.text
 
 
 def test_draft_writes_are_limited_to_the_owning_institution_admin(
@@ -132,7 +131,7 @@ def test_draft_writes_are_limited_to_the_owning_institution_admin(
     )
     officer_create = api_client.post(
         "/applications",
-        json={"application_type": "NEW", "academic_year": "2026-27"},
+        json={"application_type": "NEW_INSTITUTION", "academic_year": "2026-27"},
         headers=scrutiny_headers,
     )
 
@@ -454,7 +453,7 @@ def test_academic_year_must_span_consecutive_years(
 
     response = api_client.post(
         "/applications",
-        json={"application_type": "NEW", "academic_year": "2026-29"},
+        json={"application_type": "NEW_INSTITUTION", "academic_year": "2026-29"},
         headers=headers,
     )
 

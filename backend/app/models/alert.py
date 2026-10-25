@@ -112,19 +112,6 @@ class AlertRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "alert_rules"
     __table_args__ = (
         CheckConstraint("days_before >= 0", name="days_before_non_negative"),
-        CheckConstraint(
-            "trigger_type IN ("
-            "'DEADLINE_APPROACHING', "
-            "'SLA_BREACHED', "
-            "'DEFICIENCY_DUE', "
-            "'DEFICIENCY_OVERDUE', "
-            "'DOCUMENT_EXPIRING', "
-            "'COMPLIANCE_RED', "
-            "'APPLICATION_STATUS_CHANGED', "
-            "'INSPECTION_SCHEDULED'"
-            ")",
-            name="trigger_type_allowed",
-        ),
         UniqueConstraint("code", name="uq_alert_rules_code"),
     )
 
@@ -156,4 +143,35 @@ class AlertRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=False,
         default=True,
         server_default=text("true"),
+    )
+    apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
+    # APH clause the alert supports, for example "APH 2.25f".
+    needs_verification: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    # Set when no clause exists in APH_SPEC; see OPEN_QUESTIONS.md.
+
+
+class AlertTriggerCatalogue(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """The data-driven list of alert triggers.
+
+    ``code`` is the value stored in :attr:`AlertRule.trigger_type`.
+    ``handler_key`` selects the engine handler that evaluates the trigger, so a
+    new statutory trigger only needs a catalogue row and a rule, not a
+    migration or a new branch in the engine.
+    """
+
+    __tablename__ = "alert_trigger_catalogue"
+    __table_args__ = (
+        UniqueConstraint("code", name="uq_alert_trigger_catalogue_code"),
+    )
+
+    code: Mapped[str] = mapped_column(String(64), nullable=False)
+    handler_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
+    apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
+    needs_verification: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
     )

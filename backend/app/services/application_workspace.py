@@ -16,8 +16,14 @@ from sqlalchemy.orm import Session
 from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.models.application import Application, ApplicationProgram
+from app.models.application_type_route import ApplicationTypeRoute
 from app.models.document import Document
-from app.models.enums import ApplicationStatus, WorkflowAction, WorkflowStage
+from app.models.enums import (
+    ApplicationStatus,
+    ApplicationTrack,
+    WorkflowAction,
+    WorkflowStage,
+)
 from app.models.required_document import RequiredDocument
 from app.models.user import User
 from app.schemas.application import (
@@ -34,6 +40,7 @@ from app.services.application_sections import build_application_checklist
 from app.services.audit import AuditService
 from app.services.compliance import evaluate_application
 from app.services.document_verification import verify_document
+from app.services.portal_number import next_portal_application_no
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +51,31 @@ _MEDIA_TYPES = {
     "image/png": ".png",
 }
 _SAFE_DOC_TYPE = re.compile(r"^[A-Z0-9_]+$")
+
+_NEW_INSTITUTION_TYPES = frozenset(
+    {
+        "NEW_INSTITUTION",
+        "NEW_INSTITUTION_OTHER_REGULATOR",
+        "CLOSURE_AND_NEW_INSTITUTION",
+    }
+)
+"""Chapter I variants that start a brand-new institution (APH 1.3)."""
+
+
+def _track_for(type_code: str) -> ApplicationTrack:
+    """Return the APH chapter track that owns an application type.
+
+    Chapter I types create an institution, Chapter IV types come from a
+    university and Chapter V types are ODL/online. Everything else is an
+    existing institution filing under Chapter II.
+    """
+    if type_code in _NEW_INSTITUTION_TYPES:
+        return ApplicationTrack.NEW_INSTITUTION
+    if type_code == "UNIVERSITY":
+        return ApplicationTrack.UNIVERSITY
+    if type_code == "ODL_ONLINE":
+        return ApplicationTrack.ODL
+    return ApplicationTrack.EXISTING
 
 
 class WorkspaceError(Exception):
@@ -88,14 +120,45 @@ class ApplicationWorkspaceService:
         self._clock = clock
 
     def create_draft(self, actor: User, payload: ApplicationCreate) -> Application:
-        """Create a draft owned by the actor's institution."""
+        """Create a draft owned by the actor's institution.
+
+        The APH routing table decides the category, the required steps and
+        whether the type is year-round. A type that is not in the table is
+        rejected so the seeded configuration stays authoritative.
+        """
         if actor.institution_id is None:
             raise WorkspaceError(403, "Your account is not linked to an institution")
+
+        route = self._db.scalar(
+            select(ApplicationTypeRoute).where(
+                ApplicationTypeRoute.type == payload.application_type
+            )
+        )
+        if route is None:
+            raise WorkspaceError(
+                422,
+                "This application type is not configured. Ask an administrator to add it "
+                "to the APH routing table.",
+            )
+
+        track = payload.track or _track_for(route.type)
+        category = payload.category or route.category
+        if category != route.category:
+            raise WorkspaceError(
+                422,
+                f"{route.type} is a {route.category.value} application and cannot be "
+                f"filed as {category.value}.",
+            )
 
         reference = f"APP-{payload.academic_year[:4]}-{uuid.uuid4().hex[:8].upper()}"
         application = Application(
             institution_id=actor.institution_id,
-            application_type=payload.application_type,
+            track=track,
+            application_type=route.type,
+            category=route.category,
+            portal_application_no=next_portal_application_no(
+                self._db, payload.academic_year
+            ),
             academic_year=payload.academic_year,
             status=ApplicationStatus.DRAFT,
             current_stage=WorkflowStage.APPLICATION,
@@ -415,7 +478,7 @@ class ApplicationWorkspaceService:
     def _snapshot(application: Application) -> dict[str, Any]:
         return {
             "reference": application.reference,
-            "application_type": application.application_type.value,
+            "application_type": application.application_type,
             "academic_year": application.academic_year,
             "status": application.status.value,
             "current_stage": application.current_stage.value,

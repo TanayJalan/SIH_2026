@@ -1,0 +1,605 @@
+[
+  {
+    "item_code": "PORTAL_USER_ID",
+    "label": "Portal user ID",
+    "description": "One-time portal user ID fee (APH 1.4.1).",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 600000,
+    "apH_clause": "APH 1.4.1"
+  },
+  {
+    "item_code": "NEW_INSTITUTION_TER",
+    "label": "New institution TER",
+    "description": "Government, J&K, Ladakh, North East, PwBD or exclusively women.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 10000000,
+    "apH_clause": "APH Table 1.1"
+  },
+  {
+    "item_code": "NEW_INSTITUTION_TER",
+    "label": "New institution TER",
+    "description": "All other institutions, including minority and government-aided.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 100000000,
+    "apH_clause": "APH Table 1.1"
+  },
+  {
+    "item_code": "NEW_INSTITUTION_TER_LOR",
+    "label": "New institution TER (previous-year final LoR)",
+    "description": "Reduced TER for applicants rejected with a final LoR the previous year.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 1.1 iii"
+  },
+  {
+    "item_code": "NEW_INSTITUTION_TER_LOR",
+    "label": "New institution TER (previous-year final LoR)",
+    "description": "Reduced TER for applicants rejected with a final LoR the previous year.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 10000000,
+    "apH_clause": "APH Table 1.1 iii"
+  },
+  {
+    "item_code": "EOA_SELF_DISCLOSURE",
+    "label": "EoA on self-disclosure, per division",
+    "description": "All programmes except PGDM/MBA.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "PER_DIVISION",
+    "amount_paise": 500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "EOA_SELF_DISCLOSURE",
+    "label": "EoA on self-disclosure, per division",
+    "description": "All programmes except PGDM/MBA.",
+    "institution_class": "OTHER",
+    "unit": "PER_DIVISION",
+    "amount_paise": 2000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "EOA_SELF_DISCLOSURE_PGDM_MBA",
+    "label": "EoA on self-disclosure, per division (PGDM/MBA)",
+    "description": "Per division for PGDM and MBA programmes.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "PER_DIVISION",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "EOA_SELF_DISCLOSURE_PGDM_MBA",
+    "label": "EoA on self-disclosure, per division (PGDM/MBA)",
+    "description": "Per division for PGDM and MBA programmes.",
+    "institution_class": "OTHER",
+    "unit": "PER_DIVISION",
+    "amount_paise": 4000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "LATE_SUBMISSION_PENALTY",
+    "label": "Late submission penalty",
+    "description": "Payable when an application misses the Public Notice cut-off.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "LATE_SUBMISSION_PENALTY",
+    "label": "Late submission penalty",
+    "description": "Payable when an application misses the Public Notice cut-off.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 25000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "BREAK_RESTORATION",
+    "label": "Break in EoA or restoration of intake",
+    "description": "Flat fee for EoA after a break or restoration.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 5000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "BREAK_RESTORATION",
+    "label": "Break in EoA or restoration of intake",
+    "description": "Flat fee for EoA after a break or restoration.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 25000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "OCI_FN_GULF_INTRODUCTION",
+    "label": "Introduction of OCI/FN/Gulf seats or off-campus",
+    "description": "Flat fee for the first introduction.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 5000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "OCI_FN_GULF_INTRODUCTION",
+    "label": "Introduction of OCI/FN/Gulf seats or off-campus",
+    "description": "Flat fee for the first introduction.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 60000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "OCI_FN_GULF_CONTINUATION",
+    "label": "Continuation of OCI/FN/Gulf seats, per course",
+    "description": "Per-course continuation fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "PER_COURSE",
+    "amount_paise": 500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "OCI_FN_GULF_CONTINUATION",
+    "label": "Continuation of OCI/FN/Gulf seats, per course",
+    "description": "Per-course continuation fee.",
+    "institution_class": "OTHER",
+    "unit": "PER_COURSE",
+    "amount_paise": 3000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "FPM_INTRODUCTION",
+    "label": "Introduction of Fellow Programme in Management",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 5000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "FPM_INTRODUCTION",
+    "label": "Introduction of Fellow Programme in Management",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_SITE",
+    "label": "Change of site",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_SITE",
+    "label": "Change of site",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "DIPLOMA_DEGREE_CONVERSION",
+    "label": "Diploma to degree conversion",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "DIPLOMA_DEGREE_CONVERSION",
+    "label": "Diploma to degree conversion",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "NEW_PROGRAMME",
+    "label": "New programme or level",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "NEW_PROGRAMME",
+    "label": "New programme or level",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_TRUST_NAME",
+    "label": "Change of trust name",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_TRUST_NAME",
+    "label": "Change of trust name",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "MERGER_OF_INSTITUTIONS",
+    "label": "Merger of institutions",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "MERGER_OF_INSTITUTIONS",
+    "label": "Merger of institutions",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "DEGREE_DIPLOMA_CONVERSION",
+    "label": "Degree to diploma conversion",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "DEGREE_DIPLOMA_CONVERSION",
+    "label": "Degree to diploma conversion",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "WOMEN_COED_CONVERSION",
+    "label": "Women to co-ed conversion",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "WOMEN_COED_CONVERSION",
+    "label": "Women to co-ed conversion",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "NRI_SEATS",
+    "label": "NRI seats",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "NRI_SEATS",
+    "label": "NRI seats",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "INCREASE_INTAKE",
+    "label": "Increase in intake or additional course",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "INCREASE_INTAKE",
+    "label": "Increase in intake or additional course",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "INTEGRATED_DUAL_DEGREE",
+    "label": "Integrated or dual degree",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "INTEGRATED_DUAL_DEGREE",
+    "label": "Integrated or dual degree",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "COURSE_RENAME_MERGE_REDUCTION",
+    "label": "Course rename, merger, reduction or programme closure",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "COURSE_RENAME_MERGE_REDUCTION",
+    "label": "Course rename, merger, reduction or programme closure",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 6000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_INSTITUTION_NAME",
+    "label": "Change of institution, affiliating body or type name",
+    "description": "Flat fee.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_OF_INSTITUTION_NAME",
+    "label": "Change of institution, affiliating body or type name",
+    "description": "Flat fee.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 6000000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CHANGE_IN_BANK_DETAILS",
+    "label": "Change in bank details",
+    "description": "Flat fee of Rs 6,000 for both classes.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 600000,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "CLOSURE_OF_INSTITUTION",
+    "label": "Closure of institution",
+    "description": "No TER is charged for closure.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 0,
+    "apH_clause": "APH Table 2.1"
+  },
+  {
+    "item_code": "EXTRA_SCRUTINY_SHC_SAC",
+    "label": "Extra Scrutiny, SHC or SAC",
+    "description": "Additional committee sitting, including court directions.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 1500000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "EXTRA_SCRUTINY_SHC_SAC",
+    "label": "Extra Scrutiny, SHC or SAC",
+    "description": "Additional committee sitting, including court directions.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 6000000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "EXTRA_EVC_ONLINE",
+    "label": "Extra EVC (online)",
+    "description": "Additional online EVC sitting.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 2500000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "EXTRA_EVC_ONLINE",
+    "label": "Extra EVC (online)",
+    "description": "Additional online EVC sitting.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "EXTRA_EVC_PHYSICAL",
+    "label": "Extra EVC (physical)",
+    "description": "Additional physical EVC sitting.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 5000000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "EXTRA_EVC_PHYSICAL",
+    "label": "Extra EVC (physical)",
+    "description": "Additional physical EVC sitting.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 25000000,
+    "apH_clause": "APH 2.1 note"
+  },
+  {
+    "item_code": "COLLABORATION_INTRODUCTION",
+    "label": "Collaboration or twinning introduction",
+    "description": "Flat fee from Table 3.1.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 20000000,
+    "apH_clause": "APH Table 3.1"
+  },
+  {
+    "item_code": "COLLABORATION_INTRODUCTION",
+    "label": "Collaboration or twinning introduction",
+    "description": "Flat fee from Table 3.1.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 120000000,
+    "apH_clause": "APH Table 3.1"
+  },
+  {
+    "item_code": "COLLABORATION_CONTINUATION",
+    "label": "Collaboration or twinning continuation",
+    "description": "Flat fee from Table 3.1.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 10000000,
+    "apH_clause": "APH Table 3.1"
+  },
+  {
+    "item_code": "COLLABORATION_CONTINUATION",
+    "label": "Collaboration or twinning continuation",
+    "description": "Flat fee from Table 3.1.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 60000000,
+    "apH_clause": "APH Table 3.1"
+  },
+  {
+    "item_code": "UNIVERSITY_TER",
+    "label": "University TER",
+    "description": "Government-type university.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 20000000,
+    "apH_clause": "APH Table 4.1"
+  },
+  {
+    "item_code": "UNIVERSITY_TER",
+    "label": "University TER",
+    "description": "Private university.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 100000000,
+    "apH_clause": "APH Table 4.1"
+  },
+  {
+    "item_code": "UNIVERSITY_TER_LOR",
+    "label": "University TER (previous-year final LoR)",
+    "description": "Reduced TER for a previous-year final LoR.",
+    "institution_class": "GOVT_TYPE",
+    "unit": "FLAT",
+    "amount_paise": 10000000,
+    "apH_clause": "APH Table 4.1"
+  },
+  {
+    "item_code": "UNIVERSITY_TER_LOR",
+    "label": "University TER (previous-year final LoR)",
+    "description": "Reduced TER for a previous-year final LoR.",
+    "institution_class": "OTHER",
+    "unit": "FLAT",
+    "amount_paise": 40000000,
+    "apH_clause": "APH Table 4.1"
+  },
+  {
+    "item_code": "ODL_NEW_HQ_LSC",
+    "label": "New ODL headquarters plus up to two LSCs",
+    "description": "Applies to an intake of 5,000 or fewer learners.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 100000000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_EXISTING_INSTITUTION",
+    "label": "New ODL application by an existing approved institution",
+    "description": "Flat fee.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 12500000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_ADDITIONAL_LSC",
+    "label": "Additional Learner Support Centre",
+    "description": "Each additional LSC of up to 1,000 learners.",
+    "institution_class": null,
+    "unit": "PER_LSC",
+    "amount_paise": 35000000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_EOA",
+    "label": "ODL EoA",
+    "description": "EoA for up to 1,000 learners.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 20000000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_NEW_COURSE_INCREASE",
+    "label": "New ODL course or increase in seats",
+    "description": "Charged per 1,000 seats.",
+    "institution_class": null,
+    "unit": "PER_1000_SEATS",
+    "amount_paise": 25000000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_LOR",
+    "label": "ODL TER (previous-year final LoR)",
+    "description": "Reduced TER for a previous-year final LoR.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 25000000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "ODL_CLOSURE_RENAME",
+    "label": "ODL closure, reduction or rename",
+    "description": "Charged per LSC or headquarters.",
+    "institution_class": null,
+    "unit": "PER_LSC",
+    "amount_paise": 2500000,
+    "apH_clause": "APH Table 5.5"
+  },
+  {
+    "item_code": "NOC_OTHER_REGULATOR",
+    "label": "NOC to run another regulator's courses",
+    "description": "Flat fee; Affidavit 12 is also required.",
+    "institution_class": null,
+    "unit": "FLAT",
+    "amount_paise": 6000000,
+    "apH_clause": "APH 6.30"
+  }
+]

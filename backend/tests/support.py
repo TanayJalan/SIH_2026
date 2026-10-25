@@ -90,7 +90,7 @@ def create_draft(
     headers: dict[str, str],
     tracked: list[uuid.UUID],
     *,
-    application_type: ApplicationType = ApplicationType.NEW,
+    application_type: ApplicationType = ApplicationType.NEW_INSTITUTION,
 ) -> dict[str, Any]:
     """Create an institution draft and register it for fixture cleanup."""
     response = client.post(

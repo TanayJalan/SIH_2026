@@ -20,7 +20,13 @@ router = APIRouter(tags=["audit"])
 
 AuditLogsUser = Annotated[
     User,
-    Depends(require_roles(Role.SUPER_ADMIN, Role.REGIONAL_HEAD)),
+    Depends(
+        require_roles(
+            Role.SUPER_ADMIN,
+            Role.REGIONAL_OFFICER,
+            Role.REGULATION_BUREAU_OFFICER,
+        )
+    ),
 ]
 
 

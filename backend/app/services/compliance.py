@@ -356,9 +356,10 @@ def _applies_to_application(rule: ComplianceRule, application: Application) -> b
     """Return whether a rule's scope matches this application.
 
     ``applies_to`` is a comma-separated list of scopes. A scope may be an
-    application type (``NEW``, ``EXTENSION``, ``INTAKE_CHANGE``) or a
-    programme level (``UG``, ``PG``). ``ALL`` always matches. A level-scoped
-    rule only runs when the application requests a programme at that level.
+    APH application type (``NEW_INSTITUTION``, ``EOA_SELF_DISCLOSURE``,
+    ``INCREASE_INTAKE``) or a programme level (``UG``, ``PG``). ``ALL``
+    always matches. A level-scoped rule only runs when the application
+    requests a programme at that level.
     """
     targets = {
         target.strip().upper()
@@ -367,7 +368,7 @@ def _applies_to_application(rule: ComplianceRule, application: Application) -> b
     }
     if "ALL" in targets:
         return True
-    if application.application_type.value.upper() in targets:
+    if str(application.application_type).upper() in targets:
         return True
     return any(program.level.strip().upper() in targets for program in application.programs)
 
@@ -441,6 +442,42 @@ def _rule_message(
     )
 
 
+def _rule_explanation(
+    rule: ComplianceRule,
+    *,
+    status: ComplianceRuleStatus,
+    observed_value: float | None,
+    threshold: Decimal,
+    threshold_max: Decimal | None,
+    unit: str | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Build the evidence and the criteria/values/pass-fail explanation.
+
+    The explanation is stored on every persisted result and returned with every
+    preview so a reviewer can see *why* a rule passed, failed or was skipped,
+    which APH clause backs it, and whether the clause still needs verification.
+    """
+    observed = float(observed_value) if observed_value is not None else None
+    bounds = {
+        "operator": rule.operator,
+        "threshold": float(threshold),
+        "threshold_max": float(threshold_max) if threshold_max is not None else None,
+        "unit": unit,
+    }
+    evidence = {"metric_key": rule.metric_key, "observed_value": observed, **bounds}
+    explanation = {
+        "criteria": rule.description,
+        "metric_key": rule.metric_key,
+        "observed_value": observed,
+        **bounds,
+        "status": status,
+        "passed": None if status == "NOT_ASSESSED" else status == "PASS",
+        "apH_clause": rule.apH_clause,
+        "needs_verification": rule.needs_verification,
+    }
+    return evidence, explanation
+
+
 def _evaluate_rule(
     rule: ComplianceRule,
     observed_value: float | None,
@@ -473,6 +510,15 @@ def _evaluate_rule(
             observed=observed_decimal,
         )
 
+    evidence, explanation = _rule_explanation(
+        rule,
+        status=status,
+        observed_value=observed_value,
+        threshold=threshold,
+        threshold_max=threshold_max,
+        unit=unit,
+    )
+
     return ComplianceRulePreview(
         code=rule.code,
         name=rule.name,
@@ -487,6 +533,8 @@ def _evaluate_rule(
         observed_value=observed_value,
         status=status,
         message=message,
+        evidence=evidence,
+        explanation=explanation,
     )
 
 
@@ -700,6 +748,8 @@ def evaluate_application(
                 ),
                 status=item.status,
                 message=item.message,
+                evidence=item.evidence,
+                explanation=item.explanation,
                 passed=item.status == "PASS",
                 evaluated_at=evaluated_at,
             )

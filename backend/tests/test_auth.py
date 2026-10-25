@@ -13,15 +13,20 @@ from tests.support import TestData, login
 
 ROLE_CASES = [
     ("institution_admin_west", Role.INSTITUTION_ADMIN),
-    ("scrutiny", Role.SCRUTINY_OFFICER),
-    ("inspection", Role.INSPECTION_COMMITTEE),
-    ("regional", Role.REGIONAL_HEAD),
+    ("scrutiny", Role.SCRUTINY_COMMITTEE_MEMBER),
+    ("inspection", Role.EVC_MEMBER),
+    ("regional", Role.REGIONAL_OFFICER),
+    ("regulation", Role.REGULATION_BUREAU_OFFICER),
+    ("shc", Role.SHC_MEMBER),
+    ("sac", Role.SAC_MEMBER),
+    ("ec", Role.EXECUTIVE_COMMITTEE_MEMBER),
+    ("complaints", Role.COMPLAINT_SCRUTINY_MEMBER),
     ("super", Role.SUPER_ADMIN),
 ]
 
 
 @pytest.mark.parametrize(("user_key", "expected_role"), ROLE_CASES)
-def test_all_five_roles_can_log_in_and_read_their_profile(
+def test_all_ten_roles_can_log_in_and_read_their_profile(
     api_client: TestClient,
     test_data: TestData,
     user_key: str,
