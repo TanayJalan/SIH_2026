@@ -109,6 +109,82 @@ docker compose up --build
 
 Migrations run automatically when the backend container starts.
 
+## Cloud Deployment (AWS EC2)
+
+The system is configured for cloud deployment on an AWS Free Tier `t3.micro` instance (Ubuntu 24.04 LTS).
+
+### Architecture & Service Ports
+
+The entire stack runs via Docker Compose on the remote instance:
+
+| Service | Container Port | Host Port | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | `5173` | `5173` | React + Vite UI |
+| **Backend** | `8000` | `8000` | FastAPI REST API & Swagger (`/docs`) |
+| **Mailpit** | `8025` / `1025` | `8025` / `1025` | SMTP email inspector (web UI on `8025`) |
+| **PostgreSQL** | `5432` | `5432` | PostgreSQL 16 database (volume-persisted) |
+
+> **Security Group Inbound Rules:** In the AWS EC2 Management Console, open inbound TCP traffic for ports `22` (SSH), `5173` (Frontend), `8000` (Backend API), and `8025` (Mailpit).
+
+### Server Prerequisites & Setup
+
+1. **Storage & Swap (Essential for `t3.micro` / 1GB RAM):**
+   Allocate a 20 GB root EBS volume upon launch. Create a 2GB swap space to ensure Node/Vite and Docker builds run smoothly without out-of-memory errors:
+   ```bash
+   sudo fallocate -l 2G /swapfile
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile
+   sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   ```
+
+2. **Install Docker Engine & Compose:**
+   ```bash
+   sudo apt update && sudo apt install -y ca-certificates curl gnupg
+   sudo install -m 0755 -d /etc/apt/keyrings
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+   sudo chmod a+r /etc/apt/keyrings/docker.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   sudo usermod -aG docker $USER
+   newgrp docker
+   ```
+
+3. **Deploy & Seed:**
+   ```bash
+   git clone https://github.com/TanayJalan/SIH_2026.git
+   cd SIH_2026
+
+   # Configure public IP for frontend API calls and backend CORS
+   cat << 'EOF' > .env
+   VITE_API_URL=http://<YOUR_EC2_PUBLIC_IP>:8000
+   CORS_ORIGINS=http://<YOUR_EC2_PUBLIC_IP>:5173,http://localhost:5173
+   DEBUG=true
+   DEMO_MODE=true
+   EOF
+
+   # Start containers and run seed
+   docker compose up -d --build
+   docker compose exec backend python -m app.seed
+   ```
+
+### Real-Time Update Workflow (Zero Data Loss)
+
+When changes are committed locally and pushed to GitHub:
+```text
+[Local Machine] git push ---> [GitHub] ---> git pull & docker compose up -d --build [AWS EC2]
+```
+
+To update the running deployment on EC2:
+```bash
+cd ~/SIH_2026
+git pull origin main
+docker compose up -d --build
+```
+
+**Data Persistence:** PostgreSQL data is preserved inside the named Docker volume `postgres_data`. Rebuilding the containers updates the code while preserving all created applications, users, compliance evaluations, and audit logs.
+
+
 ### Demo data
 
 ```bash
