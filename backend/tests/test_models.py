@@ -28,6 +28,7 @@ EXPECTED_TABLES = {
     "decisions",
     "deficiencies",
     "documents",
+    "expert_pool",
     "faculty",
     "fee_schedules",
     "fee_transactions",
