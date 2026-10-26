@@ -50,7 +50,10 @@ export function StatusPill({
   children,
   ...props
 }: StatusPillProps) {
-  const style = statusStyles[status];
+  // Defensive: a status value can arrive from the API before the UI knows it
+  // (for example a new workflow state). Render the neutral style instead of
+  // crashing the whole route on an undefined lookup.
+  const style = statusStyles[status] ?? statusStyles.neutral;
 
   return (
     <span

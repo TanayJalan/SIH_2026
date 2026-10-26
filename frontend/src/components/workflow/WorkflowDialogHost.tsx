@@ -27,13 +27,17 @@ import {
 import {
   ApiError,
   getAllowedActions,
+  getWorkflowDefinition,
   listCommitteeMembers,
   listDeficiencies,
   performWorkflowAction,
   type AllowedAction,
+  type AllowedActionRequirement,
   type ApplicationDetail,
+  type DecisionOutcome,
   type InspectionRecommendation,
   type WorkflowActionPayload,
+  type WorkflowDefinition,
 } from "../../lib/api";
 import { formatDate } from "../../lib/format";
 
@@ -50,9 +54,121 @@ const RECOMMENDATION_OPTIONS: {
   label: string;
 }[] = [
   { value: "APPROVE", label: "Recommend approval" },
-  { value: "CONDITIONAL_APPROVE", label: "Recommend conditional approval" },
+  { value: "DEFICIENCY", label: "Record deficiencies" },
   { value: "REJECT", label: "Recommend rejection" },
 ];
+
+const DECISION_OPTIONS: { value: DecisionOutcome; label: string }[] = [
+  { value: "LOA", label: "Letter of Approval (LoA)" },
+  { value: "EOA", label: "Extension of Approval (EoA)" },
+  { value: "LOD", label: "Letter of Deficiency (LoD)" },
+  { value: "LOR", label: "Letter of Rejection (LoR)" },
+];
+
+const SAC_RECOMMENDATION_OPTIONS: {
+  value: DecisionOutcome;
+  label: string;
+}[] = [
+  { value: "RECOMMEND", label: "Recommend the appeal be allowed" },
+  { value: "NOT_RECOMMEND", label: "Recommend the appeal be dismissed" },
+];
+
+const SHC_OUTCOME_OPTIONS: { value: DecisionOutcome; label: string }[] = [
+  { value: "RECOMMEND", label: "Deficiency closed — recommend approval" },
+  { value: "NOT_RECOMMEND", label: "Deficiency stands — do not recommend" },
+];
+
+/** Dialog body the selected action needs, beyond its server-declared form. */
+type DialogKind =
+  | AllowedActionRequirement
+  | "observations"
+  | "sac_recommendation"
+  | "appeal"
+  | "issue_letter"
+  | "list_for_ec";
+
+function dialogKind(action: AllowedAction): DialogKind {
+  switch (action.action) {
+    case "pay_security_deposit":
+      return "deposit";
+    case "observations":
+      return "observations";
+    case "sac_recommend":
+      return "sac_recommendation";
+    case "council_final":
+      return "decision";
+    case "file_appeal":
+      return "appeal";
+    case "issue_letter":
+    case "issue_loa":
+    case "issue_eoa":
+    case "issue_lod":
+    case "issue_lor":
+      return "issue_letter";
+    case "list_for_ec":
+      return "list_for_ec";
+    default:
+      return action.requires;
+  }
+}
+
+const OUTCOME_FOR_GUARD: Record<string, DecisionOutcome> = {
+  decision_loa: "LOA",
+  decision_eoa: "EOA",
+  decision_lod: "LOD",
+  decision_lor: "LOR",
+  final_outcome_loa: "LOA",
+  final_outcome_lod: "LOD",
+  final_outcome_lor: "LOR",
+  ratified_outcome_loa: "LOA",
+  ratified_outcome_lod: "LOD",
+  ratified_outcome_lor: "LOR",
+};
+
+function matchingTransitions(
+  definition: WorkflowDefinition | undefined,
+  action: AllowedAction | null,
+  status: ApplicationDetail["status"],
+) {
+  if (!definition || !action) {
+    return [];
+  }
+  return definition.transitions.filter(
+    (transition) =>
+      transition.action === action.action && transition.from_state === status,
+  );
+}
+
+/** Decision outcomes the configured guards allow for this action. */
+function decisionOptionsFor(
+  definition: WorkflowDefinition | undefined,
+  action: AllowedAction | null,
+  status: ApplicationDetail["status"],
+): { value: DecisionOutcome; label: string }[] {
+  const outcomes = new Set<DecisionOutcome>();
+  for (const transition of matchingTransitions(definition, action, status)) {
+    for (const guard of transition.guard_expr) {
+      const outcome = OUTCOME_FOR_GUARD[guard];
+      if (outcome) {
+        outcomes.add(outcome);
+      }
+    }
+  }
+  return outcomes.size === 0
+    ? DECISION_OPTIONS
+    : DECISION_OPTIONS.filter((option) => outcomes.has(option.value));
+}
+
+/** True when the selected edges require a closure outcome with the decision. */
+function needsClosureOutcome(
+  definition: WorkflowDefinition | undefined,
+  action: AllowedAction | null,
+  status: ApplicationDetail["status"],
+): boolean {
+  return matchingTransitions(definition, action, status).some((transition) =>
+    transition.guard_expr.includes("closure_outcome_present"),
+  );
+}
 
 export interface WorkflowPrefill {
   /** Category of a prefilled deficiency item. */
@@ -180,7 +296,8 @@ export function WorkflowDialogHost({
 
   const actions = allowedQuery.data?.actions ?? [];
   const scheduleAllowed = actions.some(
-    (item) => item.action === "schedule_inspection",
+    (item) =>
+      item.action === "constitute_evc" || item.requires === "inspection_schedule",
   );
   const committeeQuery = useQuery({
     queryKey: ["committee-members", applicationId],
@@ -188,10 +305,30 @@ export function WorkflowDialogHost({
     enabled: Boolean(token && applicationId && scheduleAllowed),
     retry: false,
   });
+  // Decision options come from the configured transitions, not a stage list.
+  const definitionQuery = useQuery({
+    queryKey: ["workflow-definition", application.application_type],
+    queryFn: () =>
+      getWorkflowDefinition(token, application.application_type),
+    enabled: Boolean(token && application.application_type),
+    retry: false,
+  });
 
   const [activeAction, setActiveAction] = useState<AllowedAction | null>(null);
   const [comment, setComment] = useState("");
-  const [conditions, setConditions] = useState("");
+  const [observations, setObservations] = useState("");
+  const [decision, setDecision] = useState<DecisionOutcome | "">("");
+  const [sacRecommendation, setSacRecommendation] = useState<DecisionOutcome | "">("");
+  const [shcOutcome, setShcOutcome] = useState<DecisionOutcome | "">("");
+  const [quorumMet, setQuorumMet] = useState(false);
+  const [speakingOrder, setSpeakingOrder] = useState("");
+  const [closureFailed, setClosureFailed] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoMinutes, setVideoMinutes] = useState("30");
+  const [depositReceiptNo, setDepositReceiptNo] = useState("");
+  const [affidavit3Filed, setAffidavit3Filed] = useState(false);
+  const [appealText, setAppealText] = useState("");
+  const [approvedIntake, setApprovedIntake] = useState("");
   const [deficiencyDrafts, setDeficiencyDrafts] = useState<DeficiencyDraft[]>([]);
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [selectedDeficiencyId, setSelectedDeficiencyId] = useState("");
@@ -209,6 +346,17 @@ export function WorkflowDialogHost({
   const deficienciesPending = deficienciesQuery.isPending;
   const committeePending = committeeQuery.isPending;
   const committeeAvailable = committeeQuery.data ?? [];
+  const activeKind = activeAction ? dialogKind(activeAction) : "none";
+  const decisionOptions = decisionOptionsFor(
+    definitionQuery.data,
+    activeAction,
+    application.status,
+  );
+  const showClosureOutcome = needsClosureOutcome(
+    definitionQuery.data,
+    activeAction,
+    application.status,
+  );
 
   useEffect(() => {
     if (
@@ -223,7 +371,19 @@ export function WorkflowDialogHost({
   const openAction = (action: AllowedAction, prefill?: WorkflowPrefill) => {
     setActiveAction(action);
     setComment("");
-    setConditions("");
+    setObservations("");
+    setDecision("");
+    setSacRecommendation("");
+    setShcOutcome("");
+    setQuorumMet(false);
+    setSpeakingOrder("");
+    setClosureFailed(false);
+    setVideoUrl("");
+    setVideoMinutes("30");
+    setDepositReceiptNo("");
+    setAffidavit3Filed(false);
+    setAppealText("");
+    setApprovedIntake("");
     setError(null);
     setDeficiencyDrafts(
       action.requires === "deficiencies"
@@ -284,7 +444,7 @@ export function WorkflowDialogHost({
     if (!activeAction) {
       return "No workflow action is selected.";
     }
-    switch (activeAction.requires) {
+    switch (activeKind) {
       case "deficiencies":
         if (deficiencyDrafts.length === 0) {
           return "Add at least one deficiency item.";
@@ -322,10 +482,43 @@ export function WorkflowDialogHost({
         return report.observations.trim()
           ? null
           : "Add the inspection observations.";
-      case "conditions":
-        return conditions.trim()
+      case "video":
+        if (!videoUrl.trim()) {
+          return "Enter the URL of the Expert Visit Committee video (APH 1.9f-g).";
+        }
+        if (!Number.isFinite(Number(videoMinutes)) || Number(videoMinutes) < 30) {
+          return "The visit video must be at least 30 minutes long (APH 1.9f-g).";
+        }
+        return null;
+      case "decision":
+        if (!decision) {
+          return "Choose the decision outcome.";
+        }
+        if (!quorumMet) {
+          return "Confirm that the quorum was met (APH 1.10a).";
+        }
+        if (decision === "LOR" && !speakingOrder.trim()) {
+          return "A rejection requires a Speaking Order with reasons (APH 2.24a).";
+        }
+        return null;
+      case "shc_outcome":
+        return shcOutcome ? null : "Record the SHC hearing outcome (APH 2.23.3).";
+      case "deposit":
+        if (!depositReceiptNo.trim()) {
+          return "Enter the Security Deposit receipt number.";
+        }
+        if (!affidavit3Filed) {
+          return "Confirm that Affidavit 3 was filed (APH 2.25f).";
+        }
+        return null;
+      case "observations":
+        return observations.trim()
           ? null
-          : "Written conditions are required for conditional approval.";
+          : "Record the Regulation Bureau observations.";
+      case "sac_recommendation":
+        return sacRecommendation ? null : "Record the SAC recommendation.";
+      case "appeal":
+        return appealText.trim() ? null : "Set out the grounds of the appeal.";
       default:
         return null;
     }
@@ -335,8 +528,10 @@ export function WorkflowDialogHost({
     if (!activeAction) {
       return {};
     }
-    const base = comment.trim() ? { comment: comment.trim() } : {};
-    switch (activeAction.requires) {
+    const note = comment.trim();
+    const base = note ? { comment: note } : {};
+    const decisionBase = note ? { comment: note, notes: note } : {};
+    switch (activeKind) {
       case "deficiencies":
         return {
           ...base,
@@ -370,8 +565,60 @@ export function WorkflowDialogHost({
             observations: report.observations.trim(),
           },
         };
-      case "conditions":
-        return { ...base, conditions: conditions.trim() };
+      case "video":
+        return {
+          ...base,
+          video_url: videoUrl.trim(),
+          video_minutes: Number(videoMinutes),
+        };
+      case "decision":
+        return {
+          ...decisionBase,
+          decision: decision || undefined,
+          quorum_met: quorumMet,
+          speaking_order: speakingOrder.trim() || undefined,
+          ...(showClosureOutcome ? { closure_failed: closureFailed } : {}),
+        };
+      case "shc_outcome":
+        return {
+          ...decisionBase,
+          shc_outcome: shcOutcome || undefined,
+        };
+      case "deposit":
+        return {
+          ...base,
+          deposit_receipt_no: depositReceiptNo.trim(),
+          affidavit3_filed: affidavit3Filed,
+        };
+      case "observations":
+        return {
+          ...decisionBase,
+          observations: observations.trim(),
+        };
+      case "sac_recommendation":
+        return {
+          ...decisionBase,
+          sac_recommendation: sacRecommendation || undefined,
+        };
+      case "appeal":
+        return {
+          ...decisionBase,
+          appeal_text: appealText.trim(),
+        };
+      case "issue_letter":
+        return {
+          ...base,
+          speaking_order: speakingOrder.trim() || undefined,
+          observations: observations.trim() || undefined,
+        };
+      case "list_for_ec": {
+        const parsed = Number(approvedIntake);
+        return {
+          ...base,
+          approved_intake:
+            approvedIntake.trim() && Number.isFinite(parsed) ? parsed : undefined,
+        };
+      }
       default:
         return base;
     }
@@ -450,7 +697,7 @@ export function WorkflowDialogHost({
     if (!activeAction) {
       return null;
     }
-    switch (activeAction.requires) {
+    switch (activeKind) {
       case "deficiencies":
         return (
           <div className="space-y-4">
@@ -686,18 +933,194 @@ export function WorkflowDialogHost({
             />
           </div>
         );
-      case "conditions":
+      case "video":
         return (
           <div className="space-y-4">
+            <Input
+              label="Visit video URL"
+              value={videoUrl}
+              onChange={(event) => setVideoUrl(event.target.value)}
+              placeholder="https://…"
+              required
+            />
+            <Input
+              type="number"
+              min={30}
+              max={600}
+              label="Video length (minutes)"
+              value={videoMinutes}
+              onChange={(event) => setVideoMinutes(event.target.value)}
+              hint="APH 1.9f-g requires at least 30 minutes of uninterrupted visit footage."
+              required
+            />
+          </div>
+        );
+      case "decision":
+        return (
+          <div className="space-y-4">
+            <Select
+              label="Decision outcome"
+              options={decisionOptions}
+              value={decision}
+              onValueChange={(value) => setDecision(value as DecisionOutcome)}
+              required
+            />
+            {showClosureOutcome ? (
+              <label className="flex items-start gap-2 text-12 text-ink-700">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 rounded border-line"
+                  checked={closureFailed}
+                  onChange={(event) => setClosureFailed(event.target.checked)}
+                />
+                <span>
+                  The linked closure did not succeed; grant the extension with zero
+                  approved intake (APH 2.3.3h).
+                </span>
+              </label>
+            ) : null}
+            <label className="flex items-start gap-2 text-12 text-ink-700">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 rounded border-line"
+                checked={quorumMet}
+                onChange={(event) => setQuorumMet(event.target.checked)}
+              />
+              <span>The quorum required by APH 1.10a was met.</span>
+            </label>
+            {decision === "LOR" ? (
+              <Textarea
+                label="Speaking Order"
+                value={speakingOrder}
+                onChange={(event) => setSpeakingOrder(event.target.value)}
+                placeholder="Record the reasons that must accompany a rejection (APH 2.24a)."
+                required
+              />
+            ) : null}
             <Textarea
-              label="Written conditions"
-              value={conditions}
-              onChange={(event) => setConditions(event.target.value)}
-              placeholder="List the conditions the institution must satisfy."
+              label="Decision notes (optional)"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </div>
+        );
+      case "shc_outcome":
+        return (
+          <div className="space-y-4">
+            <Select
+              label="SHC hearing outcome"
+              options={SHC_OUTCOME_OPTIONS}
+              value={shcOutcome}
+              onValueChange={(value) => setShcOutcome(value as DecisionOutcome)}
               required
             />
             <Textarea
-              label="Decision comment (optional)"
+              label="Hearing notes"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Summarise what the Standing Hearing Committee recorded."
+            />
+          </div>
+        );
+      case "deposit":
+        return (
+          <div className="space-y-4">
+            <Input
+              label="Security Deposit receipt number"
+              value={depositReceiptNo}
+              onChange={(event) => setDepositReceiptNo(event.target.value)}
+              required
+            />
+            <label className="flex items-start gap-2 text-12 text-ink-700">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 rounded border-line"
+                checked={affidavit3Filed}
+                onChange={(event) => setAffidavit3Filed(event.target.checked)}
+              />
+              <span>Affidavit 3 has been filed with the Security Deposit (APH 2.25f).</span>
+            </label>
+            <Textarea
+              label="Comment (optional)"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </div>
+        );
+      case "observations":
+        return (
+          <Textarea
+            label="Regulation Bureau observations"
+            value={observations}
+            onChange={(event) => setObservations(event.target.value)}
+            placeholder="Record the observations that go to the Executive Committee."
+            required
+          />
+        );
+      case "sac_recommendation":
+        return (
+          <div className="space-y-4">
+            <Select
+              label="SAC recommendation"
+              options={SAC_RECOMMENDATION_OPTIONS}
+              value={sacRecommendation}
+              onValueChange={(value) =>
+                setSacRecommendation(value as DecisionOutcome)
+              }
+              required
+            />
+            <Textarea
+              label="Recommendation notes"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Record the reasons for the recommendation (APH 1.11d)."
+            />
+          </div>
+        );
+      case "appeal":
+        return (
+          <Textarea
+            label="Grounds of appeal"
+            value={appealText}
+            onChange={(event) => setAppealText(event.target.value)}
+            placeholder="Set out why the institution is appealing the decision."
+            required
+          />
+        );
+      case "issue_letter":
+        return (
+          <div className="space-y-4">
+            <Textarea
+              label="Speaking Order (required for an LoR)"
+              value={speakingOrder}
+              onChange={(event) => setSpeakingOrder(event.target.value)}
+              placeholder="Reuse the Speaking Order recorded with the decision, if any."
+            />
+            <Textarea
+              label="Letter observations (optional)"
+              value={observations}
+              onChange={(event) => setObservations(event.target.value)}
+            />
+            <Textarea
+              label="Comment (optional)"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </div>
+        );
+      case "list_for_ec":
+        return (
+          <div className="space-y-4">
+            <Input
+              type="number"
+              min={0}
+              label="Approved intake (optional)"
+              value={approvedIntake}
+              onChange={(event) => setApprovedIntake(event.target.value)}
+              hint="Leave blank to keep the intake proposed in the application."
+            />
+            <Textarea
+              label="Comment (optional)"
               value={comment}
               onChange={(event) => setComment(event.target.value)}
             />
@@ -707,19 +1130,16 @@ export function WorkflowDialogHost({
         return (
           <Textarea
             label={
-              activeAction.action === "reject" ||
-              activeAction.action === "withdraw"
+              activeAction.action === "withdraw_application"
                 ? "Reason / comment"
                 : "Comment (optional)"
             }
             value={comment}
             onChange={(event) => setComment(event.target.value)}
             placeholder={
-              activeAction.action === "reject"
-                ? "Record the reason for rejection."
-                : activeAction.action === "withdraw"
-                  ? "Record why the institution is withdrawing."
-                  : "Add an optional note for the timeline."
+              activeAction.action === "withdraw_application"
+                ? "Record why the institution is withdrawing."
+                : "Add an optional note for the timeline."
             }
           />
         );

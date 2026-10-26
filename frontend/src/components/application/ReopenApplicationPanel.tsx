@@ -10,13 +10,7 @@ import {
   type ReopenResult,
 } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-
-const REOPENABLE_STATUSES = new Set([
-  "SUBMITTED",
-  "DOCUMENT_VERIFICATION",
-  "SCRUTINY",
-  "DEFICIENCY_RAISED",
-]);
+import { isReopenableStatus } from "@/lib/status";
 
 /**
  * Regulation Bureau control to reopen a wrongly submitted application once.
@@ -42,7 +36,7 @@ export default function ReopenApplicationPanel({
   const [result, setResult] = useState<ReopenResult | null>(null);
 
   const alreadyReopened = application.reopen_count >= 1;
-  const statusEligible = REOPENABLE_STATUSES.has(application.status);
+  const statusEligible = isReopenableStatus(application.status);
   const canReopen = statusEligible && !alreadyReopened;
 
   if (!canReopen && !result) {

@@ -57,8 +57,8 @@ export default function CaseDeficiencies({
 
   const deficiencies = deficienciesQuery.data ?? [];
   const open = deficiencies.filter((item) => item.status === "OPEN").length;
-  const respondAction = findAction("respond_deficiency");
-  const closeAction = findAction("close_deficiency");
+  const respondAction = findAction("submit_compliance");
+  const closeAction = findAction("re_scrutiny_verify");
 
   return (
     <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">

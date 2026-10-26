@@ -33,7 +33,7 @@ export default function CaseInspection({
   });
 
   const inspections = inspectionsQuery.data ?? [];
-  const scheduleAction = findAction("schedule_inspection");
+  const scheduleAction = findAction("constitute_evc");
 
   return (
     <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">

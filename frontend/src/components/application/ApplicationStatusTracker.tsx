@@ -1,4 +1,5 @@
 import type { ApplicationStatus, WorkflowStage } from "@/lib/api";
+import { isClosedStatus } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
 const STAGES: { key: WorkflowStage; label: string }[] = [
@@ -21,12 +22,6 @@ const STAGE_INDEX: Record<WorkflowStage, number> = {
   COMPLETED: 5,
 };
 
-const CLOSED_STATUSES: ApplicationStatus[] = [
-  "APPROVED",
-  "CONDITIONALLY_APPROVED",
-  "REJECTED",
-];
-
 interface ApplicationStatusTrackerProps {
   status: ApplicationStatus;
   currentStage: WorkflowStage;
@@ -41,7 +36,7 @@ export default function ApplicationStatusTracker({
   className,
 }: ApplicationStatusTrackerProps) {
   const currentIndex = STAGE_INDEX[currentStage] ?? 0;
-  const isClosed = CLOSED_STATUSES.includes(status);
+  const isClosed = isClosedStatus(status);
   const displayIndex = isClosed ? STAGES.length : currentIndex;
 
   return (

@@ -15,7 +15,7 @@ import CaseInspection from "../components/casefile/CaseInspection";
 import CaseOverview from "../components/casefile/CaseOverview";
 import CaseSidebar from "../components/casefile/CaseSidebar";
 import CaseTimeline from "../components/casefile/CaseTimeline";
-import { CASE_STAGES, buildStageEvents } from "../components/casefile/stages";
+import { stagesFromDefinition, buildStageEvents } from "../components/casefile/stages";
 import { WorkflowDialogHost } from "../components/workflow/WorkflowDialogHost";
 import {
   Skeleton,
@@ -31,6 +31,7 @@ import {
   ApiError,
   getApplication,
   getApplicationCompliance,
+  getWorkflowDefinition,
   getWorkflowTimeline,
   listDeficiencies,
   type ComplianceRulePreview,
@@ -87,6 +88,14 @@ export default function ApplicationDetailPage() {
     queryKey: ["compliance-preview", applicationId],
     queryFn: () => getApplicationCompliance(token ?? "", applicationId ?? ""),
     enabled: Boolean(token && applicationId && applicationQuery.data),
+    retry: false,
+  });
+  // The case-file stages are configuration, not frontend constants.
+  const definitionQuery = useQuery({
+    queryKey: ["workflow-definition", applicationQuery.data?.application_type],
+    queryFn: () =>
+      getWorkflowDefinition(token ?? "", applicationQuery.data?.application_type ?? ""),
+    enabled: Boolean(token && applicationQuery.data?.application_type),
     retry: false,
   });
 
@@ -161,10 +170,12 @@ export default function ApplicationDetailPage() {
     );
   }
 
+  const caseStages = stagesFromDefinition(definitionQuery.data);
   const stageEvents = buildStageEvents(
     application,
     timelineQuery.data?.events ?? [],
     deficienciesQuery.data ?? [],
+    definitionQuery.data,
   );
 
   const failedRules = (complianceQuery.data?.rules ?? []).filter(
@@ -220,13 +231,15 @@ export default function ApplicationDetailPage() {
           <ReopenApplicationPanel application={application} token={token ?? ""} />
         ) : null}
 
-        <StageTrack
-          stages={CASE_STAGES}
-          current={application.current_stage}
-          events={stageEvents}
-          label="Application workflow stages"
-          className="rounded-panel border border-line bg-surface p-5 sm:p-6"
-        />
+        {caseStages.length > 0 ? (
+          <StageTrack
+            stages={caseStages}
+            current={application.current_stage}
+            events={stageEvents}
+            label="Application workflow stages"
+            className="rounded-panel border border-line bg-surface p-5 sm:p-6"
+          />
+        ) : null}
 
         <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <div className="min-w-0">

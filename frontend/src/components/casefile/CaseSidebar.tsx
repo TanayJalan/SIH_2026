@@ -14,22 +14,39 @@ import {
 } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
-const OWNER_FOR_ACTION: Record<WorkflowAction, string> = {
+const OWNER_FOR_ACTION: Partial<Record<WorkflowAction, string>> = {
   submit: "Institution admin",
-  auto_assign: "Regional head",
-  verify_documents: "Scrutiny officer",
-  start_scrutiny: "Regional head",
-  raise_deficiency: "Scrutiny officer",
-  respond_deficiency: "Institution admin",
-  close_deficiency: "Scrutiny officer",
-  schedule_inspection: "Scrutiny officer",
-  submit_inspection_report: "Inspection committee",
-  send_to_committee: "Regional head",
-  approve: "Regional head",
-  conditionally_approve: "Regional head",
-  reject: "Regional head",
-  withdraw: "Institution admin",
-  reopen: "Regulation Bureau officer",
+  pay_ter: "Institution admin",
+  assign_scrutiny: "Regulation Bureau officer",
+  scrutiny_recommend: "Scrutiny Committee",
+  communicate_deficiency: "Scrutiny Committee",
+  submit_compliance: "Institution admin",
+  re_scrutiny_verify: "Scrutiny Committee",
+  constitute_evc: "Regional Officer",
+  submit_evc_video: "Expert Visit Committee",
+  evc_report: "Expert Visit Committee",
+  observations: "Regulation Bureau officer",
+  list_for_ec: "Regulation Bureau officer",
+  ec_decide: "Executive Committee",
+  council_ratification: "Council secretariat",
+  issue_letter: "Regulation Bureau officer",
+  issue_loa: "Regulation Bureau officer",
+  issue_eoa: "Regulation Bureau officer",
+  issue_lod: "Regulation Bureau officer",
+  issue_lor: "Regulation Bureau officer",
+  file_appeal: "Institution admin",
+  sac_recommend: "Standing Appellate Committee",
+  send_back: "Standing Appellate Committee",
+  council_final: "Council",
+  endorse_decision: "Regional Officer",
+  pay_security_deposit: "Institution admin",
+  apply_deposit_penalty: "Regulation Bureau officer",
+  finalize_no_appeal: "Regulation Bureau officer",
+  expire_loa: "System (scheduled job)",
+  shc_hearing: "Standing Hearing Committee",
+  run_self_disclosure_check: "Regulation Bureau officer",
+  reopen_once: "Regulation Bureau officer",
+  withdraw_application: "Institution admin",
 };
 
 const SEVERITY_WEIGHT: Record<string, number> = {
@@ -174,7 +191,9 @@ function NextStepPanel({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line pt-3">
           <div>
             <dt className="text-12 font-medium text-ink-500">Owner</dt>
-            <dd className="mt-0.5 text-ink">{OWNER_FOR_ACTION[primary.action]}</dd>
+            <dd className="mt-0.5 text-ink">
+              {OWNER_FOR_ACTION[primary.action] ?? "Case officer"}
+            </dd>
           </div>
           <div>
             <dt className="text-12 font-medium text-ink-500">Due</dt>

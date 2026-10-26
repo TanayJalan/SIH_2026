@@ -20,6 +20,7 @@ import {
 } from "../components/ui";
 import { ApiError, getApplications, type ApplicationRecord } from "../lib/api";
 import { formatDate, humanizeEnum, shortId } from "../lib/format";
+import { isClosedStatus } from "../lib/status";
 import {
   ROLE_SCOPE_DESCRIPTIONS,
   applicationsLabelFor,
@@ -51,9 +52,7 @@ function DueDate({ application }: { application: ApplicationRecord }) {
     return <span className="text-13 text-ink-500">—</span>;
   }
   const due = new Date(application.sla_due_at);
-  const closed = ["APPROVED", "CONDITIONALLY_APPROVED", "REJECTED"].includes(
-    application.status,
-  );
+  const closed = isClosedStatus(application.status);
   const overdue =
     due.getTime() < Date.now() && !closed && !application.is_withdrawn;
   return (

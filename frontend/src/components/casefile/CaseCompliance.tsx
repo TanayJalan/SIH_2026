@@ -124,7 +124,7 @@ export default function CaseCompliance({
         a.category.localeCompare(b.category),
     )
     .concat(notAssessed, showPassed ? passed : []);
-  const raiseAction = findAction("raise_deficiency");
+  const raiseAction = findAction("communicate_deficiency");
 
   return (
     <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">

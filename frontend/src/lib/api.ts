@@ -48,18 +48,59 @@ export type ApplicationCategory = "CAT1_CUTOFF" | "CAT2_YEAR_ROUND";
 
 export type DecisionType = "LOA" | "EOA" | "LOD" | "LOR";
 
+/**
+ * Every state the backend can return.
+ *
+ * The APH state machine emits the Track A-D values; the block below the
+ * "legacy" comment was produced by the pre-APH linear workflow and is kept
+ * read-only so historical rows and events still render.
+ */
 export type ApplicationStatus =
+  // Track A (Chapter I: new institution, extension of approval).
   | "DRAFT"
   | "SUBMITTED"
-  | "DOCUMENT_VERIFICATION"
   | "SCRUTINY"
+  | "DEFICIENCY_COMMUNICATED"
+  | "INSTITUTION_COMPLIANCE"
+  | "RE_SCRUTINY"
+  | "EVC_CONSTITUTED"
+  | "EVC_DONE"
+  | "REGULATION_BUREAU_OBSERVATIONS"
+  | "EC_DECISION"
+  | "COUNCIL_RATIFICATION"
+  | "LOA_ISSUED"
+  | "LOD_ISSUED"
+  | "LOR_ISSUED"
+  | "APPEAL_WINDOW"
+  | "SAC_REVIEW"
+  | "COUNCIL_FINAL"
+  | "REGIONAL_ENDORSEMENT"
+  | "FINAL_LOA"
+  | "FINAL_LOD"
+  | "FINAL_LOR"
+  | "SECURITY_DEPOSIT_PENDING"
+  | "ACTIVE_LOA"
+  | "CANCELLED"
+  | "WITHDRAWN"
+  // Track B (extension of approval by self-disclosure).
+  | "SELF_DISCLOSURE_CHECK"
+  | "RANDOM_EVC"
+  | "COMPLIANCE_WINDOW"
+  | "EC_LISTING"
+  | "EOA_ISSUED"
+  | "SPEAKING_ORDER"
+  | "ACTIVE_EOA"
+  // Track C / D (existing-institution changes).
+  | "SHC_HEARING"
+  | "CLOSED"
+  // Legacy pre-APH values (read-only for historical rows).
+  | "DOCUMENT_VERIFICATION"
   | "DEFICIENCY_RAISED"
   | "DEFICIENCY_RESPONDED"
   | "INSPECTION_SCHEDULED"
   | "INSPECTION_DONE"
   | "COMMITTEE_REVIEW"
   | "APPROVED"
-  | "CONDITIONALLY_APPROVED"
   | "REJECTED";
 
 export type WorkflowStage =
@@ -74,20 +115,37 @@ export type WorkflowStage =
 
 export type WorkflowAction =
   | "submit"
-  | "auto_assign"
-  | "verify_documents"
-  | "start_scrutiny"
-  | "raise_deficiency"
-  | "respond_deficiency"
-  | "close_deficiency"
-  | "schedule_inspection"
-  | "submit_inspection_report"
-  | "send_to_committee"
-  | "approve"
-  | "conditionally_approve"
-  | "reject"
-  | "withdraw"
-  | "reopen";
+  | "pay_ter"
+  | "assign_scrutiny"
+  | "scrutiny_recommend"
+  | "communicate_deficiency"
+  | "submit_compliance"
+  | "re_scrutiny_verify"
+  | "constitute_evc"
+  | "submit_evc_video"
+  | "evc_report"
+  | "observations"
+  | "list_for_ec"
+  | "ec_decide"
+  | "council_ratification"
+  | "issue_letter"
+  | "issue_loa"
+  | "issue_eoa"
+  | "issue_lod"
+  | "issue_lor"
+  | "file_appeal"
+  | "sac_recommend"
+  | "send_back"
+  | "council_final"
+  | "endorse_decision"
+  | "pay_security_deposit"
+  | "apply_deposit_penalty"
+  | "finalize_no_appeal"
+  | "expire_loa"
+  | "shc_hearing"
+  | "run_self_disclosure_check"
+  | "reopen_once"
+  | "withdraw_application";
 
 export interface InstitutionSummary {
   id: string;
@@ -103,13 +161,24 @@ export interface OfficerSummary {
   role: Role;
 }
 
+/**
+ * Outcome recorded against a decision.
+ *
+ * ``RECOMMEND``/``NOT_RECOMMEND``/``SEND_BACK`` cover SAC and SHC
+ * recommendations; the letter outcomes cover EC and Council decisions.
+ */
 export type DecisionOutcome =
-  | "APPROVED"
-  | "CONDITIONALLY_APPROVED"
-  | "REJECTED";
+  | "LOA"
+  | "EOA"
+  | "LOD"
+  | "LOR"
+  | "RECOMMEND"
+  | "NOT_RECOMMEND"
+  | "SEND_BACK";
 
 export interface ApplicationDecision {
-  outcome: DecisionOutcome;
+  /** Legacy decision payload; prefer the decision letters API. */
+  outcome: string;
   decided_by: string;
   decided_by_name: string;
   decided_at: string;
@@ -688,10 +757,7 @@ export interface ApplicationSubmission {
 
 export type DeficiencyStatus = "OPEN" | "RESPONDED" | "CLOSED";
 export type InspectionStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
-export type InspectionRecommendation =
-  | "APPROVE"
-  | "CONDITIONAL_APPROVE"
-  | "REJECT";
+export type InspectionRecommendation = "APPROVE" | "DEFICIENCY" | "REJECT";
 
 export type AllowedActionRequirement =
   | "none"
@@ -700,7 +766,10 @@ export type AllowedActionRequirement =
   | "deficiency_id"
   | "inspection_schedule"
   | "inspection_report"
-  | "conditions";
+  | "video"
+  | "decision"
+  | "shc_outcome"
+  | "deposit";
 
 export interface AllowedAction {
   action: WorkflowAction;
@@ -716,6 +785,53 @@ export interface AllowedActionsResponse {
   current_stage: WorkflowStage;
   is_withdrawn: boolean;
   actions: AllowedAction[];
+}
+
+/** One configured state of a workflow definition (read-only reference data). */
+export interface WorkflowStateDefinition {
+  code: ApplicationStatus;
+  label: string;
+  stage: WorkflowStage;
+  is_initial: boolean;
+  is_terminal: boolean;
+  sort_order: number;
+  description: string;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+/** One legal edge of a workflow definition (read-only reference data). */
+export interface WorkflowTransitionDefinition {
+  from_state: ApplicationStatus;
+  to_state: ApplicationStatus;
+  action: string;
+  label: string;
+  description: string;
+  allowed_roles: Role[];
+  guard_expr: string[];
+  side_effects: string[];
+  requires: AllowedActionRequirement;
+  tone: string;
+  sla_stage: WorkflowStage | null;
+  priority: number;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+/**
+ * The configured workflow for an application type. The case file reads its
+ * stages from here instead of hard-coding the APH pipeline.
+ */
+export interface WorkflowDefinition {
+  key: string;
+  label: string;
+  track: string;
+  description: string;
+  config: Record<string, unknown>;
+  apH_clause: string;
+  needs_verification: boolean;
+  states: WorkflowStateDefinition[];
+  transitions: WorkflowTransitionDefinition[];
 }
 
 export interface WorkflowEventRecord {
@@ -807,8 +923,29 @@ export interface WorkflowActionPayload {
   deficiency_id?: string;
   committee_id?: string;
   scheduled_on?: string;
+  evc_mode?: string;
   report?: InspectionReport;
-  conditions?: string;
+  // Expert Visit Committee evidence (APH 1.9f-g).
+  video_url?: string;
+  video_minutes?: number;
+  // Regulation Bureau, EC, SAC and Council decisions.
+  notes?: string;
+  observations?: string;
+  decision?: DecisionOutcome;
+  sac_recommendation?: DecisionOutcome;
+  shc_outcome?: DecisionOutcome;
+  quorum_met?: boolean;
+  speaking_order?: string;
+  // Security Deposit and Affidavit 3 (APH 2.25f).
+  deposit_receipt_no?: string;
+  affidavit3_filed?: boolean;
+  // Appeals and track-specific facts.
+  appeal_text?: string;
+  approved_intake?: number;
+  random_evc?: boolean;
+  closure_failed?: boolean;
+  pending_court_case?: boolean;
+  charge_sheet_pending?: boolean;
 }
 
 export interface WorkflowActionResult {
@@ -1526,6 +1663,16 @@ export function getAllowedActions(
 ): Promise<AllowedActionsResponse> {
   return request<AllowedActionsResponse>(
     `/applications/${applicationId}/allowed-actions`,
+    { token },
+  );
+}
+
+export function getWorkflowDefinition(
+  token: string,
+  applicationType: string,
+): Promise<WorkflowDefinition> {
+  return request<WorkflowDefinition>(
+    withQuery("/workflow/definition", { type: applicationType }),
     { token },
   );
 }
