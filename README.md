@@ -180,7 +180,14 @@ To update the running deployment on EC2:
 cd ~/SIH_2026
 git pull origin main
 docker compose up -d --build
+
+# Idempotent: loads any new reference rows (workflow definitions, alert rules,
+# fee tables, ...) without overwriting administrator edits.
+docker compose exec backend python -m app.seed
 ```
+
+The backend container runs `alembic upgrade head` on start, so migrations are applied
+automatically. The seed is only needed when a release adds or changes reference data.
 
 **Data Persistence:** PostgreSQL data is preserved inside the named Docker volume `postgres_data`. Rebuilding the containers updates the code while preserving all created applications, users, compliance evaluations, and audit logs.
 
