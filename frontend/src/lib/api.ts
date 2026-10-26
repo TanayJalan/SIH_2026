@@ -86,7 +86,8 @@ export type WorkflowAction =
   | "approve"
   | "conditionally_approve"
   | "reject"
-  | "withdraw";
+  | "withdraw"
+  | "reopen";
 
 export interface InstitutionSummary {
   id: string;
@@ -281,6 +282,8 @@ export interface DocumentRecord {
   id: string;
   application_id: string;
   doc_type: string;
+  doc_code: string | null;
+  signed_with_dsc: boolean;
   filename: string;
   content_type: string;
   size_bytes: number;
@@ -294,6 +297,7 @@ export interface DocumentRecord {
 
 export interface ChecklistDocument {
   doc_type: string;
+  doc_code: string | null;
   label: string;
   mandatory: boolean;
   uploaded: boolean;
@@ -302,6 +306,7 @@ export interface ChecklistDocument {
   content_type: string | null;
   size_bytes: number | null;
   version: number | null;
+  signed_with_dsc: boolean | null;
   verification_status: DocumentVerificationStatus | null;
   verification_reason: string | null;
   uploaded_at: string | null;
@@ -338,6 +343,165 @@ export interface ApplicationChecklist {
   percentage: number;
   can_submit: boolean;
   missing: MissingItem[];
+}
+
+export interface FeeLine {
+  item_code: string;
+  label: string;
+  unit: string;
+  units: number;
+  unit_amount_paise: number;
+  amount_paise: number;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export interface FeeQuote {
+  application_id: string;
+  application_no: string | null;
+  academic_year: string;
+  institution_class: string;
+  currency: string;
+  lines: FeeLine[];
+  total_paise: number;
+  paid_paise: number;
+  refunded_paise: number;
+  due_paise: number;
+  is_paid: boolean;
+  late_submission: boolean;
+  ter_receipt_no: string | null;
+  ter_paid_at: string | null;
+  payment_required_for_submission: boolean;
+  notes: string[];
+}
+
+export type FeeKind = "TER" | "PENALTY" | "REFUND" | "DEDUCTION";
+
+export interface FeeTransaction {
+  id: string;
+  application_id: string;
+  item_code: string;
+  amount_paise: number;
+  kind: FeeKind;
+  receipt_no: string | null;
+  paid_at: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export interface FeePaymentResult {
+  quote: FeeQuote;
+  transactions: FeeTransaction[];
+}
+
+export type RefundReason =
+  | "SCRUTINY_REJECTED_NO_APPEAL"
+  | "REVOKED_AFTER_PAYMENT"
+  | "EXCESS_PAYMENT";
+
+export interface RefundResult {
+  transaction: FeeTransaction;
+  refundable_paise: number;
+  retained_paise: number;
+  note: string;
+}
+
+export interface SecurityDepositLine {
+  programme_family: string;
+  level: string;
+  base_paise: number;
+  leased: boolean;
+  deposit_paise: number;
+  penalty_percent: number;
+  total_due_paise: number;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export interface SecurityDepositQuote {
+  application_id: string;
+  as_of: string;
+  intimation_on: string | null;
+  lines: SecurityDepositLine[];
+  total_base_paise: number;
+  total_due_paise: number;
+  penalty_windows: string;
+  notes: string[];
+}
+
+export interface RouteStep {
+  key: string;
+  label: string;
+  applies: boolean;
+  description: string;
+  apH_clause: string;
+}
+
+export interface RouteDocument {
+  doc_code: string | null;
+  doc_type: string;
+  label: string;
+  mandatory: boolean;
+  condition_expr: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export interface ApplicationTypeRouteSummary {
+  type: ApplicationType;
+  label: string;
+  category: ApplicationCategory;
+  year_round: boolean;
+  cutoff_applies: boolean;
+  cutoff_on: string | null;
+  steps: RouteStep[];
+  required_documents: RouteDocument[];
+  ter_item_code: string | null;
+  ter_label: string | null;
+  ter_unit: string | null;
+  ter_unit_amount_paise: number | null;
+  ter_note: string;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export interface DeficiencyReportItem {
+  code: string;
+  name: string;
+  category: string;
+  severity: Severity;
+  status: ComplianceRuleStatus;
+  message: string;
+  apH_clause: string;
+  needs_verification: boolean;
+  observed_value: number | null;
+  explanation: Record<string, unknown>;
+}
+
+export interface DeficiencyReport {
+  application_id: string;
+  application_no: string | null;
+  academic_year: string;
+  generated_at: string;
+  nil_deficiency: boolean;
+  banner: string;
+  items: DeficiencyReportItem[];
+  passed_count: number;
+  failed_count: number;
+  not_assessed_count: number;
+  score: number;
+  status: ComplianceOutcome;
+  include_not_assessed: boolean;
+  apH_clause: string;
+}
+
+export interface ReopenResult {
+  application_id: string;
+  reopen_count: number;
+  status: ApplicationStatus;
+  quote: FeeQuote;
+  transactions: FeeTransaction[];
+  message: string;
 }
 
 export type ComplianceRuleStatus = "PASS" | "FAIL" | "NOT_ASSESSED";
@@ -1051,6 +1215,142 @@ export function getDocumentChecklist(
   );
 }
 
+export function getApplicationTypeRoutes(
+  token: string,
+  academicYear?: string,
+): Promise<ApplicationTypeRouteSummary[]> {
+  const query = academicYear
+    ? `?academic_year=${encodeURIComponent(academicYear)}`
+    : "";
+  return request<ApplicationTypeRouteSummary[]>(
+    `/applications/type-routes${query}`,
+    { token },
+  );
+}
+
+export function getApplicationFee(
+  token: string,
+  applicationId: string,
+  options: { extraScrutiny?: boolean; extraEvcMode?: "ONLINE" | "PHYSICAL" } = {},
+): Promise<FeeQuote> {
+  const params = new URLSearchParams();
+  if (options.extraScrutiny) {
+    params.set("extra_scrutiny", "true");
+  }
+  if (options.extraEvcMode) {
+    params.set("extra_evc_mode", options.extraEvcMode);
+  }
+  const query = params.toString();
+  return request<FeeQuote>(
+    `/applications/${applicationId}/fee${query ? `?${query}` : ""}`,
+    { token },
+  );
+}
+
+export function payApplicationFee(
+  token: string,
+  applicationId: string,
+): Promise<FeePaymentResult> {
+  return request<FeePaymentResult>(`/applications/${applicationId}/fee/pay`, {
+    method: "POST",
+    token,
+    body: { payment_method: "SIMULATED", confirm: true },
+  });
+}
+
+export function refundApplicationFee(
+  token: string,
+  applicationId: string,
+  reason: RefundReason,
+  note?: string,
+): Promise<RefundResult> {
+  return request<RefundResult>(`/applications/${applicationId}/fee/refund`, {
+    method: "POST",
+    token,
+    body: { reason, note },
+  });
+}
+
+export function getSecurityDepositQuote(
+  token: string,
+  applicationId: string,
+): Promise<SecurityDepositQuote> {
+  return request<SecurityDepositQuote>(
+    `/applications/${applicationId}/security-deposit-quote`,
+    { token },
+  );
+}
+
+export function reopenApplication(
+  token: string,
+  applicationId: string,
+  input: {
+    reason: string;
+    trust_resolution_reference?: string;
+    late_penalty_acknowledged?: boolean;
+  },
+): Promise<ReopenResult> {
+  return request<ReopenResult>(`/applications/${applicationId}/reopen`, {
+    method: "POST",
+    token,
+    body: {
+      late_penalty_acknowledged: true,
+      ...input,
+    },
+  });
+}
+
+export function getDeficiencyReport(
+  token: string,
+  applicationId: string,
+  includeNotAssessed = true,
+): Promise<DeficiencyReport> {
+  return request<DeficiencyReport>(
+    `/applications/${applicationId}/deficiency-report?include_not_assessed=${includeNotAssessed}`,
+    { token },
+  );
+}
+
+export function listDocumentShells(
+  token: string,
+  applicationId: string,
+): Promise<Record<string, string>> {
+  return request<Record<string, string>>(
+    `/applications/${applicationId}/document-shells`,
+    { token },
+  );
+}
+
+export async function downloadDocumentShell(
+  token: string,
+  applicationId: string,
+  docCode: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/applications/${applicationId}/document-shells/${docCode}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    throw buildApiError(response.status, payload);
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+  link.href = objectUrl;
+  link.download = `${docCode.toLowerCase()}.html`;
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}
+
 export function listApplicationDocuments(
   token: string,
   applicationId: string,
@@ -1287,6 +1587,7 @@ export function uploadApplicationDocument(
   docType: string,
   file: File,
   onProgress?: (percent: number) => void,
+  signedWithDsc = true,
 ): Promise<DocumentRecord> {
   return new Promise<DocumentRecord>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -1321,6 +1622,7 @@ export function uploadApplicationDocument(
     const formData = new FormData();
     formData.append("doc_type", docType);
     formData.append("file", file);
+    formData.append("signed_with_dsc", String(signedWithDsc));
     xhr.send(formData);
   });
 }

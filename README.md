@@ -194,9 +194,9 @@ make seed
 The seed is idempotent. It creates two fictional institutions with APH institution profiles, one
 account per APH role, five applications (including decided cases for the public average) and one
 inspection with audit records. It also loads the APH application-type routing table, fee schedule,
-required-document checklist, committee compositions, demo public notices and academic calendar
-events, plus the illustrative SLA configuration, 15 compliance rules, alert rules and default
-severity weights and RED/AMBER/GREEN breakpoints. Change both seed passwords before sharing any
+Security Deposit rate table (Table 1.4), required-document checklist, committee compositions, demo
+public notices and academic calendar events, plus the illustrative SLA configuration, 15 compliance
+rules, alert rules and default severity weights and RED/AMBER/GREEN breakpoints. Change both seed passwords before sharing any
 environment.
 
 | Role | Email |

@@ -21,6 +21,7 @@ export type WizardStepId =
   | "accreditation"
   | "programs"
   | "documents"
+  | "payment"
   | "review";
 
 export interface WizardStep {
@@ -64,6 +65,11 @@ export const WIZARD_STEPS: WizardStep[] = [
     id: "documents",
     label: "Documents",
     description: "Upload the documents required for this application type.",
+  },
+  {
+    id: "payment",
+    label: "Payment",
+    description: "Review the TER, penalty and committee charges, then pay the simulated gateway.",
   },
   {
     id: "review",

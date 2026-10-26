@@ -25,6 +25,9 @@ from tests.support import (
     create_draft as _create_draft,
 )
 from tests.support import (
+    pay_application_fee as _pay_application_fee,
+)
+from tests.support import (
     upload_mandatory_documents as _upload_mandatory_documents,
 )
 
@@ -203,7 +206,7 @@ def test_document_upload_validation_versioning_and_download(
 
     first = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={"file": ("affiliation.pdf", b"%PDF-1.4\nfirst version\n", "application/pdf")},
         headers=headers,
     )
@@ -215,7 +218,7 @@ def test_document_upload_validation_versioning_and_download(
 
     second = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={"file": ("affiliation-v2.pdf", b"%PDF-1.4\nsecond version\n", "application/pdf")},
         headers=headers,
     )
@@ -251,7 +254,7 @@ def test_document_upload_validation_versioning_and_download(
 
     unsupported = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={"file": ("notes.txt", b"plain text", "text/plain")},
         headers=headers,
     )
@@ -259,7 +262,7 @@ def test_document_upload_validation_versioning_and_download(
 
     oversized = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={"file": ("large.pdf", b"%PDF-" + b"0" * (10 * 1024 * 1024), "application/pdf")},
         headers=headers,
     )
@@ -285,7 +288,7 @@ def test_document_upload_records_automated_verification(
 
     verified = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={
             "file": (
                 "affiliation_certificate.pdf",
@@ -302,7 +305,7 @@ def test_document_upload_records_automated_verification(
 
     flagged = api_client.post(
         f"/applications/{application_id}/documents",
-        data={"doc_type": "AFFILIATION_CERTIFICATE"},
+        data={"doc_type": "AFFILIATION_CERTIFICATE", "signed_with_dsc": "true"},
         files={
             "file": (
                 "scan.pdf",
@@ -374,6 +377,7 @@ def test_complete_application_submits_with_sla_and_workflow_event(
     )
     assert update.status_code == 200, update.text
     _upload_mandatory_documents(api_client, headers, application_id)
+    _pay_application_fee(api_client, headers, application_id)
 
     checklist = api_client.get(f"/applications/{application_id}/checklist", headers=headers)
     assert checklist.status_code == 200, checklist.text

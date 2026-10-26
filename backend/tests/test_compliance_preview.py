@@ -23,6 +23,7 @@ from tests.support import (
     TestData,
     auth_headers,
     create_draft,
+    pay_application_fee,
     upload_mandatory_documents,
 )
 
@@ -168,6 +169,7 @@ def _prepare_submitted_application(
     )
     assert update.status_code == 200, update.text
     upload_mandatory_documents(client, headers, application_id)
+    pay_application_fee(client, headers, application_id)
     submitted = client.post(f"/applications/{application_id}/submit", headers=headers)
     assert submitted.status_code == 200, submitted.text
 

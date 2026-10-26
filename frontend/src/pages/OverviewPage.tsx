@@ -4,6 +4,7 @@ import { ArrowRight, Plus } from "lucide-react";
 
 import { useAuth } from "../auth/AuthContext";
 import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
+import ApplicationStatusTracker from "../components/application/ApplicationStatusTracker";
 import EscalationBadge from "../components/EscalationBadge";
 import PageHeader from "../components/PageHeader";
 import { Button, EmptyState, Skeleton, Stat } from "../components/ui";
@@ -201,6 +202,12 @@ export default function OverviewPage() {
                         {application.institution.name} ·{" "}
                         {humanizeEnum(application.application_type)} · {application.academic_year}
                       </p>
+                      <ApplicationStatusTracker
+                        className="mt-3 max-w-xl"
+                        status={application.status}
+                        currentStage={application.current_stage}
+                        portalApplicationNo={application.portal_application_no}
+                      />
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <ApplicationStatusBadge status={application.status} />

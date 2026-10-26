@@ -134,6 +134,13 @@ def perform_action(
     application = _readable_application(db, current_user, application_id)
     payload = payload or WorkflowActionRequest()
 
+    if action == WorkflowAction.REOPEN:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Reopen through POST /applications/{application_id}/reopen so the fresh TER "
+            "and the late penalty are recorded (APH 2.3.3d-e).",
+        )
+
     if action == WorkflowAction.SUBMIT:
         settings = request.app.state.settings
         workspace = ApplicationWorkspaceService(db, audit, settings, clock)
@@ -214,7 +221,11 @@ def get_allowed_actions(
     """Return role- and status-aware actions for UI button rendering."""
     application = _readable_application(db, current_user, application_id)
     service = WorkflowService(db, audit, clock)
-    transitions = service.allowed_actions(application, current_user)
+    transitions = [
+        transition
+        for transition in service.allowed_actions(application, current_user)
+        if transition.action != WorkflowAction.REOPEN
+    ]
     return AllowedActionsRead(
         application_id=application.id,
         status=application.status,

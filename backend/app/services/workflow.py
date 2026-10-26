@@ -168,6 +168,25 @@ TRANSITIONS: tuple[Transition, ...] = (
         tone="primary",
     ),
     Transition(
+        action=WorkflowAction.REOPEN,
+        from_statuses=_statuses(
+            ApplicationStatus.SUBMITTED,
+            ApplicationStatus.DOCUMENT_VERIFICATION,
+            ApplicationStatus.SCRUTINY,
+            ApplicationStatus.DEFICIENCY_RAISED,
+        ),
+        to_status=ApplicationStatus.DRAFT,
+        roles=frozenset({Role.REGULATION_BUREAU_OFFICER}),
+        stage=WorkflowStage.APPLICATION,
+        label="Reopen a wrongly submitted application (once)",
+        description=(
+            "Regulation Bureau reopens a submitted application once, after a fresh TER "
+            "and the late penalty are paid and the Trust resolution (Format 3) is recorded."
+        ),
+        apH_clause="APH 2.3.3d-e",
+        tone="danger",
+    ),
+    Transition(
         action=WorkflowAction.AUTO_ASSIGN,
         from_statuses=_statuses(ApplicationStatus.SUBMITTED),
         to_status=ApplicationStatus.DOCUMENT_VERIFICATION,
@@ -701,6 +720,7 @@ class WorkflowService:
             WorkflowAction.CONDITIONALLY_APPROVE: self._apply_conditionally_approve,
             WorkflowAction.REJECT: self._apply_reject,
             WorkflowAction.WITHDRAW: self._apply_withdraw,
+            WorkflowAction.REOPEN: self._apply_reopen,
         }
         return handlers[action](
             application,
@@ -1350,10 +1370,47 @@ class WorkflowService:
         )
         return "Application withdrawn. The workflow history has been preserved."
 
+    def _apply_reopen(
+        self,
+        application: Application,
+        actor: User,
+        transition: Transition,
+        payload: WorkflowActionRequest,
+        before: dict[str, Any],
+        events: list[WorkflowEvent],
+        request: Any | None,
+    ) -> str:
+        if application.reopen_count >= 1:
+            raise WorkflowValidationError(
+                "An application can be reopened only once (APH 2.3.3d-e)."
+            )
+        application.reopen_count += 1
+        application.locked_at = None
+        application.submitted_at = None
+        application.assigned_officer_id = None
+        self._record_transition(
+            application,
+            actor,
+            transition.action,
+            transition,
+            before=before,
+            comment=payload.comment or "Application reopened by the Regulation Bureau",
+            details={
+                "reopen_count": application.reopen_count,
+                "trust_resolution_required": "Format 3",
+            },
+            events=events,
+            request=request,
+        )
+        application.sla_due_at = None
+        return (
+            "Application reopened once. Correct the data, pay the new TER if required "
+            "and resubmit before the Public Notice last date."
+        )
+
     # ------------------------------------------------------------------
     # Event and audit primitives
     # ------------------------------------------------------------------
-
     def _record_transition(
         self,
         application: Application,

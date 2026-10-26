@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from pathlib import Path
 from typing import Annotated
 
@@ -13,6 +14,7 @@ from fastapi import (
     Form,
     HTTPException,
     Request,
+    Response,
     UploadFile,
     status,
 )
@@ -46,6 +48,17 @@ from app.schemas.application import (
 )
 from app.schemas.common import ErrorResponse
 from app.schemas.compliance import CompliancePreviewRead, CompliancePreviewRequest
+from app.schemas.fees import (
+    DeficiencyReportRead,
+    FeePaymentRequest,
+    FeePaymentResultRead,
+    FeeQuoteRead,
+    RefundRequest,
+    RefundResultRead,
+    ReopenRequest,
+    ReopenResultRead,
+    SecurityDepositQuoteRead,
+)
 from app.services.application_sections import (
     build_application_checklist,
     build_document_checklist,
@@ -54,7 +67,10 @@ from app.services.application_workspace import ApplicationWorkspaceService
 from app.services.audit import AuditService
 from app.services.authorization import can_access_application
 from app.services.compliance import evaluate_compliance
+from app.services.deficiency_report import build_deficiency_report
+from app.services.document_shells import build_document_shell, shell_codes
 from app.services.document_verification import verification_reason
+from app.services.fees import FeeService
 
 router = APIRouter(prefix="/applications", tags=["application workspace"])
 
@@ -114,6 +130,8 @@ def _document_read(document: Document) -> DocumentRead:
         id=document.id,
         application_id=document.application_id,
         doc_type=document.doc_type,
+        doc_code=document.doc_code,
+        signed_with_dsc=document.signed_with_dsc,
         filename=document.filename,
         content_type=document.content_type,
         size_bytes=document.size_bytes,
@@ -328,6 +346,7 @@ async def upload_document(
     clock: ClockDep,
     doc_type: Annotated[str, Form(min_length=1, max_length=100)],
     file: Annotated[UploadFile, File()],
+    signed_with_dsc: Annotated[bool, Form()] = False,
 ) -> DocumentRead:
     """Store a PDF, JPG or PNG up to 10 MB as the next version for its type."""
     application = _owned_application(db, current_user, application_id)
@@ -336,6 +355,7 @@ async def upload_document(
         application,
         doc_type=doc_type,
         upload=file,
+        signed_with_dsc=signed_with_dsc,
     )
     return _document_read(document)
 
@@ -533,4 +553,226 @@ def submit_application(
         application=ApplicationDetailRead.model_validate(loaded),
         submitted_at=loaded.submitted_at,
         sla_due_at=loaded.sla_due_at,
+    )
+
+
+def _fee_service(db: Session, audit: AuditService, clock: ClockDep) -> FeeService:
+    """Build the fee service for the current request."""
+    return FeeService(db, audit, clock)
+
+
+@router.get(
+    "/{application_id}/fee",
+    response_model=FeeQuoteRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Quote the TER, late penalty and extra committee charges",
+)
+def get_fee_quote(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+    extra_scrutiny: bool = False,
+    extra_evc_mode: str | None = None,
+) -> FeeQuoteRead:
+    """Return the computed fee position for the application (APH Table 2.1)."""
+    application = _readable_application(db, current_user, application_id)
+    return _fee_service(db, audit, clock).quote(
+        application,
+        extra_scrutiny=extra_scrutiny,
+        extra_evc_mode=extra_evc_mode,
+    )
+
+
+@router.post(
+    "/{application_id}/fee/pay",
+    response_model=FeePaymentResultRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Pay the TER through the simulated gateway",
+)
+def pay_application_fee(
+    application_id: uuid.UUID,
+    payload: FeePaymentRequest,
+    request: Request,
+    current_user: InstitutionAdminUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> FeePaymentResultRead:
+    """Record one immutable FeeTransaction per quotation line and stamp the receipt."""
+    application = _owned_application(db, current_user, application_id)
+    return _fee_service(db, audit, clock).pay_ter(
+        current_user,
+        application,
+        request=request,
+    )
+
+
+@router.post(
+    "/{application_id}/fee/refund",
+    response_model=RefundResultRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Record a TER refund for a documented reason",
+)
+def refund_application_fee(
+    application_id: uuid.UUID,
+    payload: RefundRequest,
+    request: Request,
+    current_user: Annotated[
+        User,
+        Depends(
+            require_roles(Role.INSTITUTION_ADMIN, Role.REGULATION_BUREAU_OFFICER)
+        ),
+    ],
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> RefundResultRead:
+    """Refund TER minus the APH deduction; it is never netted into a later payment."""
+    application = _readable_application(db, current_user, application_id)
+    return _fee_service(db, audit, clock).refund(
+        current_user,
+        application,
+        payload,
+        request=request,
+    )
+
+
+@router.get(
+    "/{application_id}/security-deposit-quote",
+    response_model=SecurityDepositQuoteRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Quote the Table 1.4 Security Deposit and penalty window",
+)
+def get_security_deposit_quote(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+    as_of: date | None = None,
+) -> SecurityDepositQuoteRead:
+    """Return the deposit per programme, doubled when the campus is leased (APH 2.25f)."""
+    application = _readable_application(db, current_user, application_id)
+    return _fee_service(db, audit, clock).security_deposit_quote(application, as_of=as_of)
+
+
+@router.post(
+    "/{application_id}/reopen",
+    response_model=ReopenResultRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Reopen a submitted application once (Regulation Bureau)",
+)
+def reopen_application(
+    application_id: uuid.UUID,
+    payload: ReopenRequest,
+    request: Request,
+    current_user: Annotated[
+        User, Depends(require_roles(Role.REGULATION_BUREAU_OFFICER))
+    ],
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> ReopenResultRead:
+    """Collect a fresh TER and late penalty, then unlock the application once (APH 2.3.3d-e)."""
+    application = _readable_application(db, current_user, application_id)
+    return _fee_service(db, audit, clock).reopen(
+        current_user,
+        application,
+        payload,
+        request=request,
+    )
+
+
+@router.get(
+    "/{application_id}/deficiency-report",
+    response_model=DeficiencyReportRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Generate the printable Deficiency Report or a Nil Deficiency banner",
+)
+def get_deficiency_report(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+    clock: ClockDep,
+    include_not_assessed: bool = True,
+) -> DeficiencyReportRead:
+    """Evaluate the current application version and list deficiencies with clauses."""
+    application = _readable_application(db, current_user, application_id)
+    return build_deficiency_report(
+        db,
+        application,
+        evaluated_at=clock.now(),
+        include_not_assessed=include_not_assessed,
+    )
+
+
+@router.get(
+    "/{application_id}/document-shells",
+    response_model=dict[str, str],
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="List downloadable document shells",
+)
+def list_document_shells(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> dict[str, str]:
+    """Return the document codes that have a generated printable shell."""
+    _readable_application(db, current_user, application_id)
+    return shell_codes()
+
+
+@router.get(
+    "/{application_id}/document-shells/{doc_code}",
+    response_class=Response,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Download a printable document shell",
+)
+def download_document_shell(
+    application_id: uuid.UUID,
+    doc_code: str,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> Response:
+    """Generate the Affidavit 2, Format 3 or Certificate shell as printable HTML."""
+    application = _readable_application(db, current_user, application_id)
+    try:
+        shell = build_document_shell(application, doc_code)
+    except KeyError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document shell not found") from exc
+    return Response(
+        content=shell.content,
+        media_type=shell.media_type,
+        headers={"Content-Disposition": f'attachment; filename="{shell.filename}"'},
     )

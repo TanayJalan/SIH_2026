@@ -1265,6 +1265,36 @@ def build_required_documents() -> list[dict[str, Any]]:
 
 
 # ---------------------------------------------------------------------------
+# Section 1 / Table 1.4: Security Deposit rate table
+# ---------------------------------------------------------------------------
+
+SECURITY_DEPOSIT_SCHEDULES: list[dict[str, Any]] = [
+    {
+        "programme_family": family,
+        "level": level,
+        "amount_paise": lakh(amount_lakh),
+        "doubled_for_leased": True,
+        "apH_clause": "APH Table 1.4",
+        "needs_verification": False,
+    }
+    for family, amount_lakh, levels in (
+        ("ENGINEERING_TECHNOLOGY", 15.0, ("DIPLOMA",)),
+        ("ENGINEERING_TECHNOLOGY", 35.0, ("UG",)),
+        ("ENGINEERING_TECHNOLOGY", 15.0, ("PG",)),
+        ("PLANNING", 15.0, ("DIPLOMA", "UG", "PG")),
+        ("APPLIED_ARTS", 15.0, ("DIPLOMA", "UG", "PG")),
+        ("DESIGN", 15.0, ("DIPLOMA", "UG", "PG")),
+        ("HMCT", 15.0, ("DIPLOMA", "UG", "PG")),
+        ("COMPUTER_APPLICATIONS", 5.0, ("UG",)),
+        ("COMPUTER_APPLICATIONS", 15.0, ("PG",)),
+        ("MANAGEMENT", 5.0, ("UG",)),
+        ("MANAGEMENT", 15.0, ("PG",)),
+    )
+    for level in levels
+]
+
+
+# ---------------------------------------------------------------------------
 # Section 1 / Annexure-16: committee compositions
 # ---------------------------------------------------------------------------
 
@@ -1569,6 +1599,7 @@ def main() -> None:
     """Write every APH seed file."""
     _write("application_type_routes.json", APPLICATION_TYPE_ROUTES)
     _write("fee_schedules.json", FEE_SCHEDULES)
+    _write("security_deposit_schedules.json", SECURITY_DEPOSIT_SCHEDULES)
     _write("required_documents.json", build_required_documents())
     _write("committee_compositions.json", COMMITTEE_COMPOSITIONS)
     _write("public_notices.json", PUBLIC_NOTICES)

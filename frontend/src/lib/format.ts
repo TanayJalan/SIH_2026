@@ -40,3 +40,21 @@ export function initials(name: string): string {
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
 }
+
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+/** Format an integer paise amount as Indian rupees. */
+export function formatInr(paise: number): string {
+  return inrFormatter.format(paise / 100);
+}
+
+/** Format an integer paise amount in lakh, for APH fee tables. */
+export function formatLakh(paise: number): string {
+  return `${(paise / 10_000_000).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })} lakh`;
+}

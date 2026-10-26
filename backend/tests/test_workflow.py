@@ -31,6 +31,7 @@ from tests.support import (
     TestUser,
     auth_headers,
     create_draft,
+    pay_application_fee,
     upload_mandatory_documents,
 )
 
@@ -64,6 +65,7 @@ def _start_application(
     )
     assert update.status_code == 200, update.text
     upload_mandatory_documents(client, admin_headers, application_id)
+    pay_application_fee(client, admin_headers, application_id)
 
     path = (
         f"/applications/{application_id}/actions/submit"

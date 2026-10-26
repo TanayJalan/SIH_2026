@@ -5,9 +5,13 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  CreditCard,
+  Download,
   FileWarning,
   Loader2,
+  Lock,
   Send,
+  ShieldAlert,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -18,6 +22,7 @@ import ApplicationProgressRail, {
   type SaveState,
 } from "../components/application/ApplicationProgressRail";
 import CompliancePreviewPanel from "../components/application/CompliancePreviewPanel";
+import DeficiencyReportPanel from "../components/application/DeficiencyReportPanel";
 import DocumentChecklist from "../components/application/DocumentChecklist";
 import DocumentVerificationBadge from "../components/application/DocumentVerificationBadge";
 import ProgramEditor from "../components/application/ProgramEditor";
@@ -52,9 +57,14 @@ import {
 } from "../lib/application";
 import {
   ApiError,
+  downloadDocumentShell,
   getApplication,
   getApplicationChecklist,
+  getApplicationFee,
   getCompliancePreview,
+  getSecurityDepositQuote,
+  listDocumentShells,
+  payApplicationFee,
   submitApplication,
   updateApplicationData,
   type ApplicationData,
@@ -63,7 +73,7 @@ import {
   type NaacGrade,
   type NbaStatus,
 } from "../lib/api";
-import { formatDate, humanizeEnum, shortId } from "../lib/format";
+import { formatDate, formatInr, humanizeEnum, shortId } from "../lib/format";
 import { applicationsLabelFor } from "../lib/roles";
 import { useDebouncedValue } from "../lib/useDebouncedValue";
 
@@ -209,6 +219,31 @@ export default function ApplicationWizardPage() {
     placeholderData: (previousData) => previousData,
   });
 
+  const feeQuery = useQuery({
+    queryKey: ["application-fee", applicationId],
+    queryFn: () => getApplicationFee(token ?? "", applicationId ?? ""),
+    enabled: Boolean(token && applicationId),
+    retry: false,
+  });
+
+  const securityDepositQuery = useQuery({
+    queryKey: ["security-deposit", applicationId],
+    queryFn: () => getSecurityDepositQuote(token ?? "", applicationId ?? ""),
+    enabled: Boolean(token && applicationId),
+    retry: false,
+  });
+
+  const shellsQuery = useQuery({
+    queryKey: ["document-shells", applicationId],
+    queryFn: () => listDocumentShells(token ?? "", applicationId ?? ""),
+    enabled: Boolean(token && applicationId),
+    retry: false,
+  });
+
+  const [paying, setPaying] = useState(false);
+  const [downloadingShell, setDownloadingShell] = useState<string | null>(null);
+  const [shellError, setShellError] = useState<string | null>(null);
+
   useEffect(() => {
     const loadedApplication = applicationQuery.data;
     if (!loadedApplication || hydratedId.current === loadedApplication.id) {
@@ -290,7 +325,9 @@ export default function ApplicationWizardPage() {
   const finance = form.finance;
   const accreditation = form.accreditation;
   const mandatoryDocs = checklist?.documents.filter((document) => document.mandatory) ?? [];
-  const uploadedDocs = mandatoryDocs.filter((document) => document.uploaded).length;
+  const uploadedDocs = mandatoryDocs.filter(
+    (document) => document.uploaded && document.signed_with_dsc !== false,
+  ).length;
   const documentPercent =
     mandatoryDocs.length > 0 ? Math.round((uploadedDocs / mandatoryDocs.length) * 100) : 100;
 
@@ -317,6 +354,12 @@ export default function ApplicationWizardPage() {
           section: "Documents",
           message: `Upload the required document: ${document.label}.`,
         });
+      } else if (document.signed_with_dsc === false) {
+        items.push({
+          code: `document.${document.doc_type}.dsc`,
+          section: "Documents",
+          message: `Re-upload ${document.label} with a valid digital signature (DSC).`,
+        });
       }
     }
     return items;
@@ -338,7 +381,9 @@ export default function ApplicationWizardPage() {
   const canSubmit =
     blockingIssues.length === 0 &&
     Boolean(checklist?.can_submit) &&
+    Boolean(feeQuery.data?.is_paid) &&
     !checklistQuery.isPending;
+  const feePaid = Boolean(feeQuery.data?.is_paid);
   const submitDisabled =
     submitting ||
     !canSubmit ||
@@ -365,6 +410,9 @@ export default function ApplicationWizardPage() {
           completion[step.id] =
             mandatoryDocs.length > 0 && uploadedDocs === mandatoryDocs.length;
           break;
+        case "payment":
+          completion[step.id] = Boolean(feeQuery.data?.is_paid);
+          break;
         case "review":
           completion[step.id] = canSubmit;
           break;
@@ -374,6 +422,7 @@ export default function ApplicationWizardPage() {
   }, [
     application?.programs.length,
     canSubmit,
+    feeQuery.data?.is_paid,
     form,
     mandatoryDocs.length,
     uploadedDocs,
@@ -506,6 +555,18 @@ export default function ApplicationWizardPage() {
         return;
       }
     }
+    if (!feePaid) {
+      const paymentIndex = WIZARD_STEPS.findIndex((item) => item.id === "payment");
+      setStepIndex(Math.max(0, paymentIndex));
+      setErrors({});
+      toast({
+        title: "TER payment required",
+        description:
+          "Pay the TER on the Payment step before submitting. The server will reject an unpaid submission.",
+        variant: "error",
+      });
+      return;
+    }
     if (!token || !applicationId) {
       return;
     }
@@ -549,6 +610,59 @@ export default function ApplicationWizardPage() {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!token || !applicationId) {
+      return;
+    }
+    setPaying(true);
+    try {
+      const result = await payApplicationFee(token, applicationId);
+      queryClient.setQueryData(["application-fee", applicationId], result.quote);
+      toast({
+        title: "TER paid",
+        description: result.quote.ter_receipt_no
+          ? `Receipt ${result.quote.ter_receipt_no} recorded. You can now submit.`
+          : "Payment recorded against this application.",
+        variant: "success",
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["application-fee", applicationId] }),
+        queryClient.invalidateQueries({ queryKey: ["checklist", applicationId] }),
+        queryClient.invalidateQueries({ queryKey: ["application", applicationId] }),
+      ]);
+    } catch (payError) {
+      toast({
+        title: "Payment not recorded",
+        description:
+          payError instanceof ApiError
+            ? payError.message
+            : "The simulated gateway could not complete the payment.",
+        variant: "error",
+      });
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleShellDownload = async (docCode: string) => {
+    if (!token || !applicationId) {
+      return;
+    }
+    setDownloadingShell(docCode);
+    setShellError(null);
+    try {
+      await downloadDocumentShell(token, applicationId, docCode);
+    } catch (shellFailure) {
+      setShellError(
+        shellFailure instanceof ApiError
+          ? shellFailure.message
+          : "The document shell could not be downloaded.",
+      );
+    } finally {
+      setDownloadingShell(null);
     }
   };
 
@@ -697,6 +811,33 @@ export default function ApplicationWizardPage() {
             </Button>
           }
         />
+        <section className="rounded-panel border border-line bg-surface p-5">
+          <div className="flex items-start gap-2.5">
+            <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-500" />
+            <div className="space-y-1">
+              <h2 className="text-14 font-semibold text-ink">Final submission locked</h2>
+              <p className="text-12 leading-5 text-ink-500">
+                {application.locked_at
+                  ? `Locked on ${formatDate(application.locked_at)}. `
+                  : "Data is locked. "}
+                Any edit is rejected with HTTP 409. The Regulation Bureau may reopen the
+                application once under APH 2.3.3d-e.
+              </p>
+              <p className="text-12 text-ink-500">
+                Portal application number:{" "}
+                <span className="font-medium text-ink-700">
+                  {application.portal_application_no ?? "Not issued"}
+                </span>
+              </p>
+              <p className="text-12 text-ink-500">
+                Reopenings used: {application.reopen_count} of 1
+                {application.late_submission
+                  ? " · flagged as a late submission and moved to the next academic year"
+                  : ""}
+              </p>
+            </div>
+          </div>
+        </section>
       </>
     );
   }
@@ -711,11 +852,15 @@ export default function ApplicationWizardPage() {
         } to enable submission.`
       : checklistQuery.isPending
         ? "Checking the server-side completeness checklist…"
-        : saveState === "pending" || saveState === "saving"
-          ? "Saving your latest changes before submission…"
-          : saveState === "error"
-            ? "The latest changes could not be saved. Retry before submitting."
-            : "Ready to submit. The server will re-check every required item.";
+        : !feePaid
+          ? feeQuery.isError
+            ? "The TER position could not be loaded. Retry the Payment step before submitting."
+            : "Pay the TER on the Payment step to enable submission."
+          : saveState === "pending" || saveState === "saving"
+            ? "Saving your latest changes before submission…"
+            : saveState === "error"
+              ? "The latest changes could not be saved. Retry before submitting."
+              : "Ready to submit. The server will re-check every required item.";
 
   const stepContent = () => {
     switch (currentStep.id) {
@@ -1268,8 +1413,248 @@ export default function ApplicationWizardPage() {
                 }}
               />
             )}
+
+            <section className="rounded-input border border-line bg-paper p-4">
+              <div className="flex items-start gap-2.5">
+                <Download aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-500" />
+                <div>
+                  <h3 className="text-13 font-semibold text-ink">Downloadable document shells</h3>
+                  <p className="mt-0.5 text-12 leading-5 text-ink-500">
+                    Printable templates generated from this application. The Affidavit 2 shell
+                    carries a fictional-data note and an e-stamp fee note for Rs.100; complete the
+                    stamp duty and notarisation before uploading the signed copy.
+                  </p>
+                </div>
+              </div>
+              {shellsQuery.isPending ? (
+                <p className="mt-3 text-12 text-ink-500">Loading document shells…</p>
+              ) : shellsQuery.isError ? (
+                <p className="mt-3 text-12 text-breach-strong">
+                  The document shells could not be listed.
+                </p>
+              ) : (
+                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {Object.entries(shellsQuery.data ?? {}).map(([code, label]) => (
+                    <li key={code}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => void handleShellDownload(code)}
+                        disabled={downloadingShell === code}
+                      >
+                        {downloadingShell === code ? (
+                          <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                        ) : (
+                          <Download aria-hidden="true" className="size-4" />
+                        )}
+                        {label}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {shellError ? (
+                <p role="alert" className="mt-2 text-12 text-breach-strong">
+                  {shellError}
+                </p>
+              ) : null}
+            </section>
           </div>
         );
+      case "payment": {
+        const fee = feeQuery.data;
+        const deposit = securityDepositQuery.data;
+        return (
+          <div className="space-y-5">
+            <div className="rounded-input border border-line bg-paper p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-13 font-medium text-ink">TER and committee charges</p>
+                  <p className="mt-0.5 text-12 text-ink-500">
+                    Computed from the fee table for this application type and the annual factor.
+                    The amounts are integer paise and carry their APH clause.
+                  </p>
+                </div>
+                <span
+                  className={
+                    fee?.is_paid
+                      ? "rounded-pill bg-ok-soft px-2.5 py-1 text-12 font-medium text-ok-strong"
+                      : "rounded-pill bg-watch-soft px-2.5 py-1 text-12 font-medium text-watch-strong"
+                  }
+                >
+                  {fee?.is_paid ? "Paid" : "Payment due"}
+                </span>
+              </div>
+            </div>
+
+            {fee?.late_submission ? (
+              <section className="rounded-input border border-watch bg-watch-soft p-4 text-13 leading-5 text-watch-strong">
+                <p className="flex items-center gap-2 font-medium">
+                  <AlertCircle aria-hidden="true" className="size-4" />
+                  Late submission
+                </p>
+                <p className="mt-1">
+                  This application is after the Public Notice cut-off. It is accepted but flagged
+                  and the late penalty is included below; it will be moved to the next academic
+                  year (APH 2.3.3).
+                </p>
+              </section>
+            ) : null}
+
+            {feeQuery.isPending ? (
+              <p className="flex items-center gap-2 text-13 text-ink-500">
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                Computing the fee position…
+              </p>
+            ) : feeQuery.isError ? (
+              <p className="rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
+                The fee position could not be loaded. Retry before submitting.
+              </p>
+            ) : fee ? (
+              <section className="rounded-input border border-line bg-surface p-4">
+                <ul className="divide-y divide-line">
+                  {fee.lines.length === 0 ? (
+                    <li className="py-2 text-13 text-ink-700">
+                      No TER is due for this application type.
+                    </li>
+                  ) : (
+                    fee.lines.map((line) => (
+                      <li
+                        key={line.item_code}
+                        className="flex items-start justify-between gap-3 py-2.5"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-13 font-medium text-ink">{line.label}</p>
+                          <p className="mt-0.5 text-12 text-ink-500">
+                            {line.units} × {formatInr(line.unit_amount_paise)}{" "}
+                            {humanizeEnum(line.unit).toLowerCase()} · {line.apH_clause}
+                            {line.needs_verification ? " · needs verification" : ""}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-13 font-semibold tabular-nums text-ink">
+                          {formatInr(line.amount_paise)}
+                        </span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+                <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-line pt-3 text-13 sm:grid-cols-4">
+                  <div>
+                    <dt className="text-12 text-ink-500">Total</dt>
+                    <dd className="font-semibold tabular-nums text-ink">
+                      {formatInr(fee.total_paise)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-12 text-ink-500">Paid</dt>
+                    <dd className="font-semibold tabular-nums text-ink">
+                      {formatInr(fee.paid_paise)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-12 text-ink-500">Refunded</dt>
+                    <dd className="font-semibold tabular-nums text-ink">
+                      {formatInr(fee.refunded_paise)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-12 text-ink-500">Due</dt>
+                    <dd className="font-semibold tabular-nums text-ink">
+                      {formatInr(fee.due_paise)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {fee.ter_receipt_no ? (
+                  <p className="mt-3 rounded-input border border-ok bg-ok-soft p-3 text-12 text-ok-strong">
+                    TER receipt {fee.ter_receipt_no}
+                    {fee.ter_paid_at ? ` · paid ${formatDate(fee.ter_paid_at)}` : ""}
+                  </p>
+                ) : (
+                  <div className="mt-3 rounded-input border border-line bg-paper p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-13 font-medium text-ink">Simulated payment gateway</p>
+                        <p className="mt-0.5 text-12 text-ink-500">
+                          No card details are collected. The demo gateway records one immutable
+                          FeeTransaction per line and issues a TER receipt.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => void handlePay()}
+                        disabled={paying || fee.due_paise === 0}
+                      >
+                        {paying ? (
+                          <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                        ) : (
+                          <CreditCard aria-hidden="true" className="size-4" />
+                        )}
+                        {paying ? "Processing…" : `Pay ${formatInr(fee.due_paise)}`}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {fee.notes.length > 0 ? (
+                  <ul className="mt-3 space-y-1 text-12 leading-5 text-ink-500">
+                    {fee.notes.map((note) => (
+                      <li key={note}>• {note}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            ) : null}
+
+            {deposit && deposit.lines.length > 0 ? (
+              <section className="rounded-input border border-line bg-surface p-4">
+                <h3 className="text-13 font-semibold text-ink">Security Deposit (Table 1.4)</h3>
+                <p className="mt-0.5 text-12 leading-5 text-ink-500">
+                  Payable after the LoA. The deposit doubles when the building or land is leased.
+                  {deposit.intimation_on
+                    ? ` Intimation date ${formatDate(deposit.intimation_on)}.`
+                    : ""}
+                </p>
+                <ul className="mt-3 divide-y divide-line">
+                  {deposit.lines.map((line) => (
+                    <li
+                      key={`${line.programme_family}-${line.level}`}
+                      className="flex items-start justify-between gap-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-13 font-medium text-ink">
+                          {humanizeEnum(line.programme_family)} · {humanizeEnum(line.level)}
+                        </p>
+                        <p className="mt-0.5 text-12 text-ink-500">
+                          Base {formatInr(line.base_paise)}
+                          {line.leased ? " · doubled for leased premises" : ""}
+                          {line.penalty_percent > 0
+                            ? ` · ${line.penalty_percent}% penalty window`
+                            : ""}{" "}
+                          · {line.apH_clause}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-13 font-semibold tabular-nums text-ink">
+                        {formatInr(line.total_due_paise)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-12 text-ink-500">{deposit.penalty_windows}</p>
+              </section>
+            ) : null}
+
+            <div className="rounded-input border border-line bg-paper p-4 text-12 leading-5 text-ink-700">
+              <p className="font-medium text-ink">Refund rules</p>
+              <p className="mt-1">
+                A rejected application with no appeal is refunded after retaining Rs.0.60 lakh; a
+                revoked approval is refunded after retaining Rs.0.25 lakh (APH 1.4.2h). Refunds are
+                recorded as separate transactions and are never adjusted into a later payment.
+              </p>
+            </div>
+          </div>
+        );
+      }
       case "review":
         return (
           <div className="space-y-5">
@@ -1287,6 +1672,18 @@ export default function ApplicationWizardPage() {
                 </span>
               </div>
             </div>
+
+            <section className="rounded-input border border-breach bg-breach-soft p-4 text-13 leading-5 text-breach-strong">
+              <p className="flex items-center gap-2 font-semibold">
+                <ShieldAlert aria-hidden="true" className="size-4" />
+                Warning: penal action for false information
+              </p>
+              <p className="mt-1">
+                Under APH 2.3.5b and 7.4a, submitting false information or a fabricated document
+                can lead to rejection, withdrawal of approval, debarment and other penal action.
+                Verify every declaration, figure and upload before you submit.
+              </p>
+            </section>
 
             <ReviewSection title="Institution profile">
               <ReviewField label="Head of institution" value={valueOrDash(profile?.head_name)} />
@@ -1401,7 +1798,7 @@ export default function ApplicationWizardPage() {
                     className="rounded-input border border-line bg-paper p-3"
                   >
                     <div className="flex items-start gap-2.5">
-                      {document.uploaded ? (
+                      {document.uploaded && document.signed_with_dsc !== false ? (
                         <CheckCircle2
                           aria-hidden="true"
                           className="mt-0.5 size-4 shrink-0 text-ok"
@@ -1410,7 +1807,7 @@ export default function ApplicationWizardPage() {
                         <FileWarning
                           aria-hidden="true"
                           className={
-                            document.mandatory
+                            document.mandatory || document.signed_with_dsc === false
                               ? "mt-0.5 size-4 shrink-0 text-watch"
                               : "mt-0.5 size-4 shrink-0 text-ink-300"
                           }
@@ -1432,6 +1829,11 @@ export default function ApplicationWizardPage() {
                               ? "Missing"
                               : "Not uploaded"}
                         </p>
+                        {document.uploaded && document.signed_with_dsc === false ? (
+                          <p className="mt-1 text-12 font-medium text-breach-strong">
+                            Invalid: uploaded without a valid DSC signature (APH 1.4.6).
+                          </p>
+                        ) : null}
                         {document.uploaded ? (
                           <DocumentVerificationBadge
                             status={document.verification_status}
@@ -1501,6 +1903,45 @@ export default function ApplicationWizardPage() {
                 </p>
               </section>
             ) : null}
+
+            <section className="rounded-input border border-line p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-13 font-semibold text-ink">Fee and payment</h3>
+                  <p className="mt-0.5 text-12 leading-5 text-ink-500">
+                    {feeQuery.data
+                      ? `Total ${formatInr(feeQuery.data.total_paise)} · paid ${formatInr(
+                          feeQuery.data.paid_paise,
+                        )} · due ${formatInr(feeQuery.data.due_paise)}`
+                      : "The fee position is loading."}
+                  </p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => goToStep("payment")}>
+                  <CreditCard aria-hidden="true" className="size-4" />
+                  Payment step
+                </Button>
+              </div>
+              {!feePaid ? (
+                <p className="mt-2 rounded-input border border-watch bg-watch-soft p-3 text-12 text-watch-strong">
+                  The TER must be paid before the server will accept this submission. Submit stays
+                  disabled until the receipt is recorded.
+                </p>
+              ) : (
+                <p className="mt-2 flex items-center gap-1.5 text-12 text-ok-strong">
+                  <CheckCircle2 aria-hidden="true" className="size-4" />
+                  TER paid
+                  {feeQuery.data?.ter_receipt_no
+                    ? ` · receipt ${feeQuery.data.ter_receipt_no}`
+                    : ""}
+                </p>
+              )}
+            </section>
+
+            <DeficiencyReportPanel
+              applicationId={application.id}
+              token={token ?? ""}
+              autoLoad
+            />
 
             <div className="rounded-input border border-line bg-paper p-4 text-12 leading-5 text-ink-700">
               <p className="font-medium text-ink">Submission and SLA</p>

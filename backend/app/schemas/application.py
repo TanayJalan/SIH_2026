@@ -160,6 +160,8 @@ class DocumentRead(BaseModel):
     id: uuid.UUID
     application_id: uuid.UUID
     doc_type: str
+    doc_code: str | None = None
+    signed_with_dsc: bool = False
     filename: str
     content_type: str
     size_bytes: int
@@ -175,6 +177,7 @@ class ChecklistDocument(BaseModel):
     """One row in the required-document checklist."""
 
     doc_type: str
+    doc_code: str | None = None
     label: str
     mandatory: bool
     uploaded: bool
@@ -183,6 +186,7 @@ class ChecklistDocument(BaseModel):
     content_type: str | None = None
     size_bytes: int | None = None
     version: int | None = None
+    signed_with_dsc: bool | None = None
     verification_status: DocumentVerificationStatus | None = None
     verification_reason: str | None = None
     uploaded_at: datetime | None = None

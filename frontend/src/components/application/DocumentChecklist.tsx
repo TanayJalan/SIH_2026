@@ -57,6 +57,7 @@ function DocumentRow({
   document,
   versions,
   disabled,
+  signedWithDsc,
   onUploaded,
 }: {
   applicationId: string;
@@ -64,6 +65,7 @@ function DocumentRow({
   document: ChecklistDocument;
   versions: DocumentRecord[];
   disabled?: boolean;
+  signedWithDsc: boolean;
   onUploaded: () => void;
 }) {
   const { toast } = useToast();
@@ -100,6 +102,7 @@ function DocumentRow({
         document.doc_type,
         file,
         setProgress,
+        signedWithDsc,
       );
       setLastVerification({
         status: uploaded.verification_status,
@@ -250,6 +253,20 @@ function DocumentRow({
                 Drag a PDF, JPG or PNG here, or choose a file. Maximum 10 MB.
               </p>
             )}
+            {document.uploaded ? (
+              <p
+                className={cn(
+                  "mt-1 text-12",
+                  document.signed_with_dsc
+                    ? "text-ok-strong"
+                    : "text-breach-strong",
+                )}
+              >
+                {document.signed_with_dsc
+                  ? "Digitally signed (DSC) — APH 1.4.6 satisfied."
+                  : "Not digitally signed — this upload is invalid under APH 1.4.6. Replace it with a DSC-signed file."}
+              </p>
+            ) : null}
             {uploading ? (
               <p className="mt-2 flex items-center gap-1.5 text-12 text-ink-500">
                 <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
@@ -391,6 +408,7 @@ export default function DocumentChecklist({
   disabled,
   onUploaded,
 }: DocumentChecklistProps) {
+  const [signedWithDsc, setSignedWithDsc] = useState(true);
   const versionsQuery = useQuery({
     queryKey: ["document-versions", applicationId],
     queryFn: () => listApplicationDocuments(token, applicationId),
@@ -416,6 +434,25 @@ export default function DocumentChecklist({
 
   return (
     <div className="space-y-3">
+      <div className="rounded-input border border-line bg-paper p-3">
+        <label className="flex items-start gap-2 text-13 text-ink">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-line"
+            checked={signedWithDsc}
+            disabled={disabled}
+            onChange={(event) => setSignedWithDsc(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium">The file I am uploading is digitally signed (DSC).</span>
+            <span className="mt-0.5 block text-12 leading-5 text-ink-500">
+              APH 1.4.6 requires every uploaded document to be signed with a valid Digital
+              Signature Certificate. An unsigned upload is stored as invalid and blocks final
+              submission.
+            </span>
+          </span>
+        </label>
+      </div>
       <p className="text-12 leading-5 text-ink-500">
         Drag a file directly onto a document row, or use the upload button. Replacing a required
         document creates a new version and keeps the earlier files available.
@@ -429,6 +466,7 @@ export default function DocumentChecklist({
             document={document}
             versions={versionsByType[document.doc_type] ?? []}
             disabled={disabled}
+            signedWithDsc={signedWithDsc}
             onUploaded={onUploaded}
           />
         ))}

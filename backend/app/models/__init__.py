@@ -68,6 +68,7 @@ from app.models.institution import Institution
 from app.models.programme import ApprovedIntakeLedger, Programme
 from app.models.required_document import RequiredDocument
 from app.models.security_deposit import SecurityDeposit
+from app.models.security_deposit_schedule import SecurityDepositSchedule
 from app.models.sla import SLAConfig
 from app.models.user import User
 from app.models.workflow import WorkflowEvent
@@ -141,6 +142,7 @@ __all__ = [
     "Role",
     "SLAConfig",
     "SecurityDeposit",
+    "SecurityDepositSchedule",
     "SecurityDepositStatus",
     "Severity",
     "Timer",

@@ -23,6 +23,7 @@ from app.models import (
     DeadlineRule,
     FeeSchedule,
     RequiredDocument,
+    SecurityDepositSchedule,
     SLAConfig,
 )
 from app.services.workflow import TRANSITIONS
@@ -41,6 +42,7 @@ def _missing_clause(rows: list[object]) -> list[str]:
                 or getattr(row, "action", None)
                 or getattr(row, "type", None)
                 or getattr(row, "doc_code", None)
+                or getattr(row, "programme_family", None)
                 or getattr(row, "id", None)
             )
             missing.append(str(label))
@@ -52,6 +54,7 @@ def _missing_clause(rows: list[object]) -> list[str]:
     [
         (ComplianceRule, "ComplianceRule"),
         (FeeSchedule, "FeeSchedule"),
+        (SecurityDepositSchedule, "SecurityDepositSchedule"),
         (AlertRule, "AlertRule"),
         (AlertTriggerCatalogue, "AlertTriggerCatalogue"),
         (DeadlineRule, "DeadlineRule"),

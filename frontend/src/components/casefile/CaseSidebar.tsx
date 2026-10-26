@@ -29,6 +29,7 @@ const OWNER_FOR_ACTION: Record<WorkflowAction, string> = {
   conditionally_approve: "Regional head",
   reject: "Regional head",
   withdraw: "Institution admin",
+  reopen: "Regulation Bureau officer",
 };
 
 const SEVERITY_WEIGHT: Record<string, number> = {

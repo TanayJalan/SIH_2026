@@ -21,6 +21,7 @@ from app.models.document import Document
 from app.models.enums import (
     ApplicationStatus,
     ApplicationTrack,
+    DocumentVerificationStatus,
     WorkflowAction,
     WorkflowStage,
 )
@@ -40,6 +41,7 @@ from app.services.application_sections import build_application_checklist
 from app.services.audit import AuditService
 from app.services.compliance import evaluate_application
 from app.services.document_verification import verify_document
+from app.services.fees import FeeService
 from app.services.portal_number import next_portal_application_no
 
 logger = logging.getLogger(__name__)
@@ -102,6 +104,22 @@ class SubmissionBlockedError(WorkspaceError):
 
 class DocumentUploadError(WorkspaceError):
     """An uploaded file failed validation."""
+
+
+class PaymentRequiredError(WorkspaceError):
+    """Submission was attempted before the TER (and any late penalty) was paid."""
+
+    def __init__(self, quote: Any) -> None:
+        super().__init__(
+            409,
+            {
+                "message": "TER payment is required before this application can be submitted.",
+                "total_paise": quote.total_paise,
+                "due_paise": quote.due_paise,
+                "late_submission": quote.late_submission,
+                "lines": [line.model_dump(mode="json") for line in quote.lines],
+            },
+        )
 
 
 class ApplicationWorkspaceService:
@@ -305,8 +323,14 @@ class ApplicationWorkspaceService:
         *,
         doc_type: str,
         upload: UploadFile,
+        signed_with_dsc: bool = True,
     ) -> Document:
-        """Validate, store and version an uploaded document."""
+        """Validate, store and version an uploaded document.
+
+        A document without a DSC is still stored for reference, but it is marked
+        ``REJECTED`` so the checklist and submission gate treat it as invalid
+        (APH 1.4.3, 1.4.6).
+        """
         self._ensure_draft(application)
         normalised_doc_type = doc_type.strip().upper()
         if not _SAFE_DOC_TYPE.fullmatch(normalised_doc_type):
@@ -340,6 +364,14 @@ class ApplicationWorkspaceService:
             filename=original_filename,
             data=data,
         )
+        verification_status = verification.status
+        verification_reason = verification.reason
+        if not signed_with_dsc:
+            verification_status = DocumentVerificationStatus.REJECTED
+            verification_reason = (
+                "The upload is not digitally signed (DSC). APH 1.4.6 requires every "
+                "document to be DSC-signed; an unsigned document cannot be used for submission."
+            )
         storage_root = self._settings.storage_dir.resolve()
         relative_dir = Path(str(application.id)) / normalised_doc_type
         target = storage_root / relative_dir / f"{uuid.uuid4().hex}{_MEDIA_TYPES[media_type]}"
@@ -359,17 +391,20 @@ class ApplicationWorkspaceService:
             document = Document(
                 application_id=application.id,
                 doc_type=normalised_doc_type,
+                doc_code=rule.doc_code,
+                signed_with_dsc=signed_with_dsc,
                 filename=original_filename,
                 content_type=media_type,
                 size_bytes=len(data),
                 storage_path=target.relative_to(storage_root).as_posix(),
                 uploaded_by=actor.id,
                 version=max_version + 1,
-                verification_status=verification.status,
+                verification_status=verification_status,
                 verification_notes={
                     "engine": "document-check-v1",
-                    "reason": verification.reason,
+                    "reason": verification_reason,
                     "matched_terms": list(verification.matched_terms),
+                    "signed_with_dsc": signed_with_dsc,
                 },
             )
             self._db.add(document)
@@ -382,12 +417,14 @@ class ApplicationWorkspaceService:
                 after={
                     "application_id": str(application.id),
                     "doc_type": document.doc_type,
+                    "doc_code": document.doc_code,
+                    "signed_with_dsc": document.signed_with_dsc,
                     "filename": document.filename,
                     "content_type": document.content_type,
                     "size_bytes": document.size_bytes,
                     "version": document.version,
                     "verification_status": document.verification_status.value,
-                    "verification_reason": verification.reason,
+                    "verification_reason": verification_reason,
                 },
             )
             self._commit()
@@ -406,11 +443,23 @@ class ApplicationWorkspaceService:
         *,
         request: Request | None = None,
     ) -> workflow.WorkflowResult:
-        """Validate readiness and submit through the central state machine."""
+        """Validate readiness, confirm TER payment and submit through the state machine."""
         self._ensure_draft(application)
         checklist = build_application_checklist(self._db, application)
         if not checklist.can_submit:
             raise SubmissionBlockedError(checklist)
+
+        route = self._db.scalar(
+            select(ApplicationTypeRoute).where(
+                ApplicationTypeRoute.type == application.application_type
+            )
+        )
+        fee_service = FeeService(self._db, self._audit, self._clock)
+        if route is not None and not route.no_ter:
+            fee_service.flag_late_submission(application, self._clock.now())
+            quote = fee_service.quote(application)
+            if quote.total_paise > 0 and not quote.is_paid:
+                raise PaymentRequiredError(quote)
 
         service = workflow.WorkflowService(
             self._db,

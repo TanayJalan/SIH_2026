@@ -1,0 +1,154 @@
+[
+  {
+    "programme_family": "ENGINEERING_TECHNOLOGY",
+    "level": "DIPLOMA",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "ENGINEERING_TECHNOLOGY",
+    "level": "UG",
+    "amount_paise": 350000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "ENGINEERING_TECHNOLOGY",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "PLANNING",
+    "level": "DIPLOMA",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "PLANNING",
+    "level": "UG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "PLANNING",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "APPLIED_ARTS",
+    "level": "DIPLOMA",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "APPLIED_ARTS",
+    "level": "UG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "APPLIED_ARTS",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "DESIGN",
+    "level": "DIPLOMA",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "DESIGN",
+    "level": "UG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "DESIGN",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "HMCT",
+    "level": "DIPLOMA",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "HMCT",
+    "level": "UG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "HMCT",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "COMPUTER_APPLICATIONS",
+    "level": "UG",
+    "amount_paise": 50000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "COMPUTER_APPLICATIONS",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "MANAGEMENT",
+    "level": "UG",
+    "amount_paise": 50000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  },
+  {
+    "programme_family": "MANAGEMENT",
+    "level": "PG",
+    "amount_paise": 150000000,
+    "doubled_for_leased": true,
+    "apH_clause": "APH Table 1.4",
+    "needs_verification": false
+  }
+]

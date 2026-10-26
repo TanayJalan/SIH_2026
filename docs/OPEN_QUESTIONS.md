@@ -64,6 +64,8 @@ in editable tables and are seeded with clearly labelled demo values.
 | OQ-24 | `SHOW_CAUSE_REPLY` duration | OPEN | APH 2.23.3 describes the show-cause step in the complaint/SHC path but does not state a reply period. The seed uses 15 days with `needs_verification = true` and `start_event_configurable = true`; replace the duration when the Council publishes one. |
 | OQ-25 | `AlertTriggerCatalogue.SLA_BREACHED` | CONFIGURABLE | Processing-time limits are not published in the handbook, so this catalogue row uses `apH_clause = 'DEMO'` and `needs_verification = true`, matching the `sla_configs` decision in OQ-04. The other seven trigger rows cite the APH event they represent. |
 | OQ-26 | Fixed-date deadline encoding | RESOLVED | `ENROLMENT_UPLOAD`, `IC_REPORT` and `CLOSURE_REVOKE` use the matching `CalendarEventKey` as `start_event` and `duration_days = 0`. The actual date remains in `academic_calendar_events` (OQ-03), so no handbook date is duplicated in code. |
+| OQ-27 | Security Deposit penalty clock | CONFIGURABLE | APH 2.25f gives 15 days, then 10% up to 31 May and 20% up to 31 July. The dates are parameters of the pure `security_deposit_penalty` calculator (`SecurityDepositPenaltyWindows`) so they can change without touching the arithmetic, but they are not yet a DB-backed admin row. The 10%/20% rates themselves are fixed by the clause. |
+| OQ-28 | Security Deposit rate table | CONFIGURABLE | Table 1.4 base amounts are seeded into `security_deposit_schedules` (in paise) with double for leased premises. They are data, not code, so a revised table only needs re-seeding; the leased doubling is also stored per row. |
 
 ## 6. Related implementation gaps (not domain ambiguities)
 
@@ -73,9 +75,11 @@ They are listed so the next task does not mistake seeded data for working behavi
 * `DeadlineService` exists for the new `DeadlineRule`/`Timer` tables, but the legacy
   `applications.sla_due_at` and `applications.appeal_deadline` calculations are not yet routed
   through it.
-* No APH fee calculator, faculty-ratio calculator or built-up-area calculator yet; the fee and
-  programme tables are in place for them.
-* No admin UI yet for `application_type_routes`, `fee_schedules`, `public_notices`,
-  `academic_calendar_events`, `committees` or `security_deposits`.
+* The APH fee calculator (`app/services/fee_calculator.py`) covers TER, the annual
+  increase, the late penalty, extra committee charges, refund deductions and the Security
+  Deposit, but the Security Deposit penalty windows are still calculator parameters rather
+  than an admin-editable row (OQ-27).
+* No admin UI yet for `application_type_routes`, `fee_schedules`, `security_deposit_schedules`,
+  `public_notices`, `academic_calendar_events`, `committees` or `security_deposits`.
 * Complaint, appeal, penal-action and committee tables are modelled and seeded with reference data,
   but their end-to-end workflows are outside the one deep MVP flow.

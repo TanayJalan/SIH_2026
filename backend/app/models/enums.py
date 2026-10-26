@@ -166,6 +166,7 @@ class WorkflowAction(StrEnum):
     CONDITIONALLY_APPROVE = "conditionally_approve"
     REJECT = "reject"
     WITHDRAW = "withdraw"
+    REOPEN = "reopen"
 
 
 class WorkflowStage(StrEnum):

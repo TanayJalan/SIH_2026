@@ -15,6 +15,7 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.core.middleware import RequestContextMiddleware
 from app.services.application_workspace import WorkspaceError
+from app.services.fees import FeeError
 from app.services.scheduler import ComplianceScheduler
 from app.services.workflow import WorkflowError
 
@@ -62,6 +63,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(WorkflowError)
     async def _workflow_error_handler(_: Request, exc: WorkflowError) -> JSONResponse:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+    @app.exception_handler(FeeError)
+    async def _fee_error_handler(_: Request, exc: FeeError) -> JSONResponse:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
     app.add_middleware(RequestContextMiddleware)

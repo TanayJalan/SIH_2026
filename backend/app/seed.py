@@ -48,6 +48,7 @@ from app.models import (
     PublicNotice,
     RequiredDocument,
     Role,
+    SecurityDepositSchedule,
     Severity,
     SLAConfig,
     User,
@@ -853,6 +854,44 @@ def _ensure_fee_schedules(db: Session, audit: AuditService) -> int:
     return created
 
 
+def _ensure_security_deposit_schedules(db: Session, audit: AuditService) -> int:
+    """Load the Table 1.4 Security Deposit rates without overwriting edits."""
+    created = 0
+    for row in _load_seed("security_deposit_schedules.json"):
+        existing = db.scalar(
+            select(SecurityDepositSchedule).where(
+                SecurityDepositSchedule.programme_family == row["programme_family"],
+                SecurityDepositSchedule.level == row["level"],
+            )
+        )
+        if existing is not None:
+            continue
+        schedule = SecurityDepositSchedule(
+            programme_family=row["programme_family"],
+            level=row["level"],
+            amount_paise=row["amount_paise"],
+            doubled_for_leased=row["doubled_for_leased"],
+            apH_clause=row["apH_clause"],
+            needs_verification=row.get("needs_verification", False),
+        )
+        db.add(schedule)
+        db.flush()
+        audit.log(
+            None,
+            "seed.security_deposit_schedule.create",
+            "SecurityDepositSchedule",
+            schedule.id,
+            after={
+                "programme_family": schedule.programme_family,
+                "level": schedule.level,
+                "amount_paise": schedule.amount_paise,
+                "apH_clause": schedule.apH_clause,
+            },
+        )
+        created += 1
+    return created
+
+
 def _ensure_required_documents(db: Session, audit: AuditService) -> int:
     """Load the Annexure-2 document catalogue without overwriting edits."""
     created = 0
@@ -1001,6 +1040,7 @@ def _ensure_aph_reference_data(db: Session, audit: AuditService) -> dict[str, in
         "application_type_routes": _ensure_application_type_routes(db, audit),
         "fee_schedules": _ensure_fee_schedules(db, audit),
         "required_documents": _ensure_required_documents(db, audit),
+        "security_deposit_schedules": _ensure_security_deposit_schedules(db, audit),
         "public_notices": _ensure_public_notices(db, audit),
         "academic_calendar_events": _ensure_academic_calendar_events(db, audit),
         "committee_compositions": _ensure_committee_compositions(db, audit),
@@ -1598,6 +1638,7 @@ def seed() -> None:
         "application_type_routes": 0,
         "fee_schedules": 0,
         "required_documents": 0,
+        "security_deposit_schedules": 0,
         "public_notices": 0,
         "academic_calendar_events": 0,
         "committee_compositions": 0,

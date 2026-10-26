@@ -265,11 +265,12 @@ def _document_checklist(
         document = latest.get(rule.doc_type)
         if rule.mandatory:
             required_count += 1
-            if document is not None:
+            if document is not None and document.signed_with_dsc:
                 uploaded_count += 1
         documents.append(
             ChecklistDocument(
                 doc_type=rule.doc_type,
+                doc_code=rule.doc_code,
                 label=document_label(rule.doc_type),
                 mandatory=rule.mandatory,
                 uploaded=document is not None,
@@ -278,6 +279,9 @@ def _document_checklist(
                 content_type=document.content_type if document is not None else None,
                 size_bytes=document.size_bytes if document is not None else None,
                 version=document.version if document is not None else None,
+                signed_with_dsc=(
+                    document.signed_with_dsc if document is not None else None
+                ),
                 verification_status=(
                     document.verification_status if document is not None else None
                 ),
@@ -327,6 +331,17 @@ def build_application_checklist(
                     code=f"document.{document.doc_type}",
                     section="Documents",
                     message=f"Upload the required document: {document.label}.",
+                )
+            )
+        elif document.mandatory and document.uploaded and not document.signed_with_dsc:
+            missing.append(
+                MissingItem(
+                    code=f"document.{document.doc_type}.dsc",
+                    section="Documents",
+                    message=(
+                        f"Re-upload {document.label} with a valid digital signature (DSC). "
+                        "APH 1.4.6 does not allow an unsigned document."
+                    ),
                 )
             )
 

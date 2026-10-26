@@ -90,12 +90,17 @@ def create_draft(
     headers: dict[str, str],
     tracked: list[uuid.UUID],
     *,
-    application_type: ApplicationType = ApplicationType.NEW_INSTITUTION,
+    application_type: ApplicationType | str = ApplicationType.NEW_INSTITUTION,
 ) -> dict[str, Any]:
     """Create an institution draft and register it for fixture cleanup."""
+    type_value = (
+        application_type.value
+        if isinstance(application_type, ApplicationType)
+        else application_type
+    )
     response = client.post(
         "/applications",
-        json={"application_type": application_type.value, "academic_year": "2026-27"},
+        json={"application_type": type_value, "academic_year": "2026-27"},
         headers=headers,
     )
     assert response.status_code == 201, response.text
@@ -108,6 +113,8 @@ def upload_mandatory_documents(
     client: TestClient,
     headers: dict[str, str],
     application_id: str,
+    *,
+    signed_with_dsc: bool = True,
 ) -> None:
     """Upload one fictional PDF for every mandatory document rule."""
     checklist = client.get(
@@ -120,7 +127,10 @@ def upload_mandatory_documents(
             continue
         upload = client.post(
             f"/applications/{application_id}/documents",
-            data={"doc_type": document["doc_type"]},
+            data={
+                "doc_type": document["doc_type"],
+                "signed_with_dsc": str(signed_with_dsc).lower(),
+            },
             files={
                 "file": (
                     f"{document['doc_type'].lower()}.pdf",
@@ -131,3 +141,19 @@ def upload_mandatory_documents(
             headers=headers,
         )
         assert upload.status_code == 201, upload.text
+
+
+def pay_application_fee(
+    client: TestClient,
+    headers: dict[str, str],
+    application_id: str,
+) -> dict[str, Any]:
+    """Pay the computed TER through the simulated gateway."""
+    response = client.post(
+        f"/applications/{application_id}/fee/pay",
+        json={"payment_method": "SIMULATED", "confirm": True},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+

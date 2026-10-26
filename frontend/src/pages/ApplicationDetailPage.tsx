@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import PageHeader from "../components/PageHeader";
+import DeficiencyReportPanel from "../components/application/DeficiencyReportPanel";
+import ReopenApplicationPanel from "../components/application/ReopenApplicationPanel";
 import CaseCommittees from "../components/casefile/CaseCommittees";
 import CaseCompliance from "../components/casefile/CaseCompliance";
 import CaseDeficiencies from "../components/casefile/CaseDeficiencies";
@@ -33,7 +35,7 @@ import {
   listDeficiencies,
   type ComplianceRulePreview,
 } from "../lib/api";
-import { shortId } from "../lib/format";
+import { shortId, formatDate, formatDateTime } from "../lib/format";
 import { applicationsLabelFor } from "../lib/roles";
 
 const TABS = [
@@ -43,6 +45,7 @@ const TABS = [
   { value: "deficiencies", label: "Deficiencies" },
   { value: "inspection", label: "Inspection" },
   { value: "committees", label: "Committees" },
+  { value: "deficiency-report", label: "Deficiency Report" },
   { value: "timeline", label: "Timeline" },
 ];
 
@@ -194,6 +197,29 @@ export default function ApplicationDetailPage() {
           risk={risk}
         />
 
+        {application.locked_at && application.status !== "DRAFT" ? (
+          <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
+            <h2 className="text-14 font-semibold text-ink">Final submission locked</h2>
+            <p className="mt-1 text-12 leading-5 text-ink-500">
+              Locked on {formatDateTime(application.locked_at)}. Edits are rejected with HTTP 409
+              while the application is outside the DRAFT state.
+              {application.portal_application_no
+                ? ` Portal application number ${application.portal_application_no}.`
+                : ""}
+              {application.reopen_count >= 1
+                ? " The single permitted reopening under APH 2.3.3d-e has already been used."
+                : ""}
+              {application.late_submission
+                ? ` Flagged as a late submission on ${formatDate(application.submitted_at)} and moved to the next academic year.`
+                : ""}
+            </p>
+          </section>
+        ) : null}
+
+        {user.role === "REGULATION_BUREAU_OFFICER" && application.status !== "DRAFT" ? (
+          <ReopenApplicationPanel application={application} token={token ?? ""} />
+        ) : null}
+
         <StageTrack
           stages={CASE_STAGES}
           current={application.current_stage}
@@ -258,6 +284,14 @@ export default function ApplicationDetailPage() {
                     user.role === "REGULATION_BUREAU_OFFICER" ||
                     user.role === "SUPER_ADMIN"
                   }
+                />
+              </TabsContent>
+
+              <TabsContent value="deficiency-report">
+                <DeficiencyReportPanel
+                  applicationId={application.id}
+                  token={token ?? ""}
+                  className="mt-4"
                 />
               </TabsContent>
 
