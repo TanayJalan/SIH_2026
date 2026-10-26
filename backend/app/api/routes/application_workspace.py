@@ -581,7 +581,9 @@ def get_fee_quote(
 ) -> FeeQuoteRead:
     """Return the computed fee position for the application (APH Table 2.1)."""
     application = _readable_application(db, current_user, application_id)
-    return _fee_service(db, audit, clock).quote(
+    fee_service = _fee_service(db, audit, clock)
+    fee_service.flag_late_submission(application, clock.now())
+    return fee_service.quote(
         application,
         extra_scrutiny=extra_scrutiny,
         extra_evc_mode=extra_evc_mode,
@@ -610,7 +612,9 @@ def pay_application_fee(
 ) -> FeePaymentResultRead:
     """Record one immutable FeeTransaction per quotation line and stamp the receipt."""
     application = _owned_application(db, current_user, application_id)
-    return _fee_service(db, audit, clock).pay_ter(
+    fee_service = _fee_service(db, audit, clock)
+    fee_service.flag_late_submission(application, clock.now())
+    return fee_service.pay_ter(
         current_user,
         application,
         request=request,

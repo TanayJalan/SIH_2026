@@ -34,6 +34,7 @@ from app.models import (
     ComplianceConfig,
     ComplianceRule,
     ComplianceSnapshot,
+    DeadlineRule,
     DecisionType,
     ExpertPool,
     FeeSchedule,
@@ -52,8 +53,11 @@ from app.models import (
     Severity,
     SLAConfig,
     User,
+    WorkflowDefinition,
     WorkflowEvent,
     WorkflowStage,
+    WorkflowState,
+    WorkflowTransition,
 )
 from app.services.audit import AuditService
 from app.services.compliance import evaluate_institution
@@ -88,8 +92,78 @@ SLA_CONFIGS = (
     (WorkflowStage.SCRUTINY, 15, 10, Role.REGIONAL_OFFICER),
     (WorkflowStage.DEFICIENCY, 7, 5, Role.SCRUTINY_COMMITTEE_MEMBER),
     (WorkflowStage.INSPECTION, 20, 14, Role.REGIONAL_OFFICER),
-    (WorkflowStage.COMMITTEE_REVIEW, 10, 7, Role.SUPER_ADMIN),
-    (WorkflowStage.DECISION, 10, 7, Role.SUPER_ADMIN),
+    (WorkflowStage.COMMITTEE_REVIEW, 10, 7, Role.REGIONAL_OFFICER),
+    (WorkflowStage.DECISION, 10, 7, Role.EXECUTIVE_COMMITTEE_MEMBER),
+)
+
+# Deadline rules are configuration, not constants. The appeal clock start event
+# is configurable because APH does not fix it unambiguously (APH 1.11a); the
+# Security Deposit ladder is quoted from APH 2.25f.
+DEADLINE_RULES = (
+    (
+        "APPEAL_WINDOW",
+        "DECISION_UPLOADED",
+        7,
+        Role.INSTITUTION_ADMIN,
+        [],
+        "APH 1.11a",
+        True,
+        False,
+    ),
+    (
+        "SECURITY_DEPOSIT",
+        "DECISION_UPLOADED",
+        15,
+        Role.INSTITUTION_ADMIN,
+        [
+            {"after_days": 15, "penalty_percent": 10, "until": "05-31"},
+            {"after_days": 15, "penalty_percent": 20, "until": "07-31"},
+            {"after_days": 15, "action": "WITHDRAWAL"},
+        ],
+        "APH 2.25f",
+        False,
+        False,
+    ),
+    (
+        "ENROLMENT_UPLOAD",
+        "ENROLMENT_UPLOAD_30NOV",
+        0,
+        Role.INSTITUTION_ADMIN,
+        [],
+        "APH 3.4",
+        False,
+        False,
+    ),
+    (
+        "IC_REPORT",
+        "IC_REPORT_30JUN",
+        0,
+        Role.EVC_MEMBER,
+        [],
+        "APH 1.9",
+        False,
+        False,
+    ),
+    (
+        "CLOSURE_REVOKE",
+        "CLOSURE_REVOKE_10APR",
+        0,
+        Role.REGIONAL_OFFICER,
+        [],
+        "APH 2.3.3h",
+        False,
+        True,
+    ),
+    (
+        "SHOW_CAUSE_REPLY",
+        "SHOW_CAUSE_ISSUED",
+        15,
+        Role.INSTITUTION_ADMIN,
+        [],
+        "APH 2.24",
+        False,
+        True,
+    ),
 )
 
 # Database configuration, not hard-coded business logic. Administrators can
@@ -254,6 +328,51 @@ ALERT_RULES = (
         (
             "An inspection for {institution} (application "
             "{application_reference}) is scheduled for {inspection_date}."
+        ),
+        Role.REGIONAL_OFFICER,
+    ),
+    (
+        "APPEAL-WINDOW-CLOSING",
+        "Appeal window closing",
+        "Warns the institution before the seven-day appeal window closes.",
+        AlertTrigger.APPEAL_WINDOW_CLOSING,
+        3,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The appeal window for {institution} (application "
+            "{application_reference}) closes on {due_date}. {days_remaining} "
+            "day(s) remain to file the single appeal."
+        ),
+        Role.REGIONAL_OFFICER,
+    ),
+    (
+        "DEPOSIT-DUE-7",
+        "Security Deposit due: 7 days",
+        "Early warning for the Security Deposit and Affidavit 3.",
+        AlertTrigger.DEPOSIT_DUE,
+        7,
+        Severity.MEDIUM,
+        ("IN_APP", "EMAIL"),
+        (
+            "The Security Deposit and Affidavit 3 for {institution} "
+            "(application {application_reference}) are due on {due_date}. "
+            "{days_remaining} day(s) remain."
+        ),
+        Role.REGIONAL_OFFICER,
+    ),
+    (
+        "DEPOSIT-DUE-1",
+        "Security Deposit due: 1 day",
+        "Final warning before the Security Deposit clock closes.",
+        AlertTrigger.DEPOSIT_DUE,
+        1,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The Security Deposit for {institution} (application "
+            "{application_reference}) is due on {due_date}. Missing it "
+            "attracts a penalty or withdrawal (APH 2.25f)."
         ),
         Role.REGIONAL_OFFICER,
     ),
@@ -609,9 +728,14 @@ def _get_or_create_application(
     decision: DecisionType | None = None,
 ) -> tuple[Application, bool]:
     terminal = status in {
-        ApplicationStatus.APPROVED,
-        ApplicationStatus.CONDITIONALLY_APPROVED,
-        ApplicationStatus.REJECTED,
+        ApplicationStatus.ACTIVE_LOA,
+        ApplicationStatus.ACTIVE_EOA,
+        ApplicationStatus.FINAL_LOA,
+        ApplicationStatus.FINAL_LOD,
+        ApplicationStatus.FINAL_LOR,
+        ApplicationStatus.CANCELLED,
+        ApplicationStatus.CLOSED,
+        ApplicationStatus.WITHDRAWN,
     }
     application = db.scalar(
         select(Application).where(Application.data["reference"].astext == reference)
@@ -643,9 +767,14 @@ def _get_or_create_application(
             application.sla_due_at is None
             and application.status
             not in {
-                ApplicationStatus.APPROVED,
-                ApplicationStatus.CONDITIONALLY_APPROVED,
-                ApplicationStatus.REJECTED,
+                ApplicationStatus.ACTIVE_LOA,
+                ApplicationStatus.ACTIVE_EOA,
+                ApplicationStatus.FINAL_LOA,
+                ApplicationStatus.FINAL_LOD,
+                ApplicationStatus.FINAL_LOR,
+                ApplicationStatus.CANCELLED,
+                ApplicationStatus.CLOSED,
+                ApplicationStatus.WITHDRAWN,
             }
         ):
             previous_due = None
@@ -771,6 +900,13 @@ def _ensure_application_type_routes(db: Session, audit: AuditService) -> int:
             select(ApplicationTypeRoute).where(ApplicationTypeRoute.type == row["type"])
         )
         if existing is not None:
+            # Backfill the workflow assignment introduced by the data-driven
+            # engine. The routing flags themselves are never overwritten.
+            if existing.workflow_key is None:
+                existing.workflow_key = row.get("workflow_key")
+            if not existing.not_implemented:
+                existing.not_implemented = row.get("not_implemented", False)
+                existing.not_implemented_note = row.get("not_implemented_note")
             continue
         route = ApplicationTypeRoute(
             type=row["type"],
@@ -783,6 +919,9 @@ def _ensure_application_type_routes(db: Session, audit: AuditService) -> int:
             nil_deficiency_required=row["nil_deficiency_required"],
             no_ter=row["no_ter"],
             year_round=row["year_round"],
+            workflow_key=row.get("workflow_key"),
+            not_implemented=row.get("not_implemented", False),
+            not_implemented_note=row.get("not_implemented_note"),
             apH_clause=row["apH_clause"],
             needs_verification=row["needs_verification"],
         )
@@ -1034,9 +1173,88 @@ def _ensure_committee_compositions(db: Session, audit: AuditService) -> int:
     return 1
 
 
+def _ensure_workflow_definitions(db: Session, audit: AuditService) -> int:
+    """Load the APH workflow definitions, states and transitions as data."""
+    created = 0
+    for row in _load_seed("workflow_definitions.json"):
+        existing = db.scalar(
+            select(WorkflowDefinition).where(WorkflowDefinition.key == row["key"])
+        )
+        if existing is not None:
+            continue
+        definition = WorkflowDefinition(
+            key=row["key"],
+            label=row["label"],
+            track=row["track"],
+            description=row["description"],
+            is_active=row["is_active"],
+            config=row.get("config", {}),
+            apH_clause=row["apH_clause"],
+            needs_verification=row["needs_verification"],
+        )
+        db.add(definition)
+        db.flush()
+        for state_row in row["states"]:
+            db.add(
+                WorkflowState(
+                    definition_id=definition.id,
+                    code=ApplicationStatus(state_row["code"]),
+                    label=state_row["label"],
+                    stage=WorkflowStage(state_row["stage"]),
+                    is_initial=state_row["is_initial"],
+                    is_terminal=state_row["is_terminal"],
+                    sort_order=state_row["sort_order"],
+                    description=state_row["description"],
+                    apH_clause=state_row["apH_clause"],
+                    needs_verification=state_row["needs_verification"],
+                )
+            )
+        for transition_row in row["transitions"]:
+            db.add(
+                WorkflowTransition(
+                    definition_id=definition.id,
+                    from_state=ApplicationStatus(transition_row["from_state"]),
+                    to_state=ApplicationStatus(transition_row["to_state"]),
+                    action=transition_row["action"],
+                    label=transition_row["label"],
+                    description=transition_row["description"],
+                    allowed_roles=list(transition_row["allowed_roles"]),
+                    guard_expr=list(transition_row["guard_expr"]),
+                    side_effects=list(transition_row["side_effects"]),
+                    requires=transition_row["requires"],
+                    tone=transition_row["tone"],
+                    sla_stage=(
+                        WorkflowStage(transition_row["sla_stage"])
+                        if transition_row.get("sla_stage")
+                        else None
+                    ),
+                    priority=transition_row["priority"],
+                    apH_clause=transition_row["apH_clause"],
+                    needs_verification=transition_row["needs_verification"],
+                )
+            )
+        db.flush()
+        audit.log(
+            None,
+            "seed.workflow_definition.create",
+            "WorkflowDefinition",
+            definition.id,
+            after={
+                "key": definition.key,
+                "track": definition.track,
+                "states": len(row["states"]),
+                "transitions": len(row["transitions"]),
+            },
+        )
+        created += 1
+    return created
+
+
 def _ensure_aph_reference_data(db: Session, audit: AuditService) -> dict[str, int]:
     """Load every generated APH seed file in dependency order."""
     return {
+        "deadline_rules": _ensure_deadline_rules(db, audit),
+        "workflow_definitions": _ensure_workflow_definitions(db, audit),
         "application_type_routes": _ensure_application_type_routes(db, audit),
         "fee_schedules": _ensure_fee_schedules(db, audit),
         "required_documents": _ensure_required_documents(db, audit),
@@ -1045,6 +1263,50 @@ def _ensure_aph_reference_data(db: Session, audit: AuditService) -> dict[str, in
         "academic_calendar_events": _ensure_academic_calendar_events(db, audit),
         "committee_compositions": _ensure_committee_compositions(db, audit),
     }
+
+
+def _ensure_deadline_rules(db: Session, audit: AuditService) -> int:
+    """Create the appeal and Security Deposit clocks without overwriting edits."""
+    created = 0
+    for (
+        code,
+        start_event,
+        duration_days,
+        owner_role,
+        penalty_ladder,
+        apH_clause,
+        start_event_configurable,
+        needs_verification,
+    ) in DEADLINE_RULES:
+        existing = db.scalar(select(DeadlineRule).where(DeadlineRule.code == code))
+        if existing is not None:
+            continue
+        rule = DeadlineRule(
+            code=code,
+            start_event=start_event,
+            duration_days=duration_days,
+            owner_role=owner_role,
+            penalty_ladder=list(penalty_ladder),
+            apH_clause=apH_clause,
+            start_event_configurable=start_event_configurable,
+            needs_verification=needs_verification,
+        )
+        db.add(rule)
+        db.flush()
+        audit.log(
+            None,
+            "seed.deadline_rule.create",
+            "DeadlineRule",
+            rule.id,
+            after={
+                "code": rule.code,
+                "start_event": rule.start_event,
+                "duration_days": rule.duration_days,
+                "apH_clause": rule.apH_clause,
+            },
+        )
+        created += 1
+    return created
 
 
 def _ensure_sla_configs(db: Session, audit: AuditService) -> int:
@@ -1972,7 +2234,7 @@ def seed() -> None:
             institution=west,
             application_type="NEW_INSTITUTION",
             track=ApplicationTrack.NEW_INSTITUTION,
-            status=ApplicationStatus.INSPECTION_SCHEDULED,
+            status=ApplicationStatus.EVC_CONSTITUTED,
             stage=WorkflowStage.INSPECTION,
             assigned_officer=scrutiny_member,
             sla_days=-2,
@@ -2000,7 +2262,7 @@ def seed() -> None:
             institution=west,
             application_type="NEW_INSTITUTION",
             track=ApplicationTrack.NEW_INSTITUTION,
-            status=ApplicationStatus.APPROVED,
+            status=ApplicationStatus.ACTIVE_LOA,
             stage=WorkflowStage.COMPLETED,
             assigned_officer=regional_officer,
             sla_days=30,

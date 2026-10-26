@@ -11,7 +11,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 1.3.2",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "NEW_INSTITUTION_OTHER_REGULATOR",
@@ -25,7 +28,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 1.3.3",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CLOSURE_AND_NEW_INSTITUTION",
@@ -39,7 +45,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 1.5.2",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "Combined closure/new-institution logic is outside scope."
   },
   {
     "type": "UNIVERSITY",
@@ -53,7 +62,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 4.4",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "University-specific logic is outside the prototype scope."
   },
   {
     "type": "EOA_SELF_DISCLOSURE",
@@ -67,7 +79,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.5",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_B",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "NRI_SEATS",
@@ -81,7 +96,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.8a",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_B",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "DIPLOMA_DEGREE_CONVERSION",
@@ -95,7 +113,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.14",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CHANGE_OF_NAME",
@@ -109,7 +130,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.19",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "NEW_PROGRAMME",
@@ -123,7 +147,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.7",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "MERGER_OF_INSTITUTIONS",
@@ -137,7 +164,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.13",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "Merger logic is outside the prototype scope."
   },
   {
     "type": "EOA_AFTER_BREAK",
@@ -151,7 +181,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.16",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "Break-in-EoA restoration is outside the prototype scope."
   },
   {
     "type": "SUPERNUMERARY_FN_OCI",
@@ -165,7 +198,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.9",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "INCREASE_INTAKE",
@@ -179,7 +215,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.6",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "INTEGRATED_DUAL_DEGREE",
@@ -193,7 +232,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.10",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "OFF_CAMPUS",
@@ -207,7 +249,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.11",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "FPM",
@@ -221,7 +266,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.12",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "COURSE_RENAME_MERGE_REDUCTION",
@@ -235,7 +283,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 2.18",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "COLLABORATION_TWINNING",
@@ -249,7 +300,10 @@
     "no_ter": false,
     "year_round": false,
     "apH_clause": "APH 3.2a",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CHANGE_OF_SITE",
@@ -263,7 +317,10 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 2.17",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_C",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CLOSURE_OF_INSTITUTION",
@@ -277,7 +334,10 @@
     "no_ter": true,
     "year_round": true,
     "apH_clause": "APH 2.21",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "WOMEN_COED_CONVERSION",
@@ -291,7 +351,10 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 2.15",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CLOSURE_OF_PROGRAMME",
@@ -305,7 +368,10 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 2.18",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CHANGE_IN_BANK_DETAILS",
@@ -320,7 +386,10 @@
     "year_round": true,
     "apH_clause": "APH Annexure-2 2.12",
     "needs_verification": true,
-    "note": "Table 2.2 lists the type as year-round, but the main body has no clause number (section 2.22 is missing). Only Annexure-2 2.12 describes the documents."
+    "note": "Table 2.2 lists the type as year-round, but the main body has no clause number (section 2.22 is missing). Only Annexure-2 2.12 describes the documents.",
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "CHANGE_OF_TRUST_NAME",
@@ -334,7 +403,10 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 2.20",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_D",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "EXTENDED_EOA",
@@ -348,7 +420,10 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 2.1a",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": "TRACK_A",
+    "not_implemented": false,
+    "not_implemented_note": null
   },
   {
     "type": "DEEMED_UNIVERSITY_CONVERSION",
@@ -363,7 +438,10 @@
     "year_round": true,
     "apH_clause": "APH Table 2.2",
     "needs_verification": true,
-    "note": "Table 2.2 lists the type but the handbook gives no dedicated clause for the conversion itself; Chapter IV applies."
+    "note": "Table 2.2 lists the type but the handbook gives no dedicated clause for the conversion itself; Chapter IV applies.",
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "Deemed-university conversion is outside scope."
   },
   {
     "type": "ODL_ONLINE",
@@ -377,6 +455,9 @@
     "no_ter": false,
     "year_round": true,
     "apH_clause": "APH 5.3",
-    "needs_verification": false
+    "needs_verification": false,
+    "workflow_key": null,
+    "not_implemented": true,
+    "not_implemented_note": "ODL/online approval is outside the prototype scope."
   }
 ]

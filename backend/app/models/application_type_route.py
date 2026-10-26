@@ -58,6 +58,13 @@ class ApplicationTypeRoute(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     year_round: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
+    workflow_key: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    """Workflow definition key (TRACK_A ...). ``NULL`` falls back to the track."""
+    not_implemented: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    """True for APH types deliberately outside the prototype scope."""
+    not_implemented_note: Mapped[str | None] = mapped_column(String(255), nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
     needs_verification: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")

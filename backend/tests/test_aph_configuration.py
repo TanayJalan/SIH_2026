@@ -25,8 +25,13 @@ from app.models import (
     RequiredDocument,
     SecurityDepositSchedule,
     SLAConfig,
+    WorkflowDefinition,
+    WorkflowState,
+    WorkflowTransition,
 )
-from app.services.workflow import TRANSITIONS
+from app.models.enums import WorkflowAction
+from app.services.workflow_effects import EFFECTS
+from app.services.workflow_guards import GUARDS
 
 
 def _missing_clause(rows: list[object]) -> list[str]:
@@ -61,6 +66,9 @@ def _missing_clause(rows: list[object]) -> list[str]:
         (RequiredDocument, "RequiredDocument"),
         (ApplicationTypeRoute, "ApplicationTypeRoute"),
         (SLAConfig, "SLAConfig"),
+        (WorkflowDefinition, "WorkflowDefinition"),
+        (WorkflowState, "WorkflowState"),
+        (WorkflowTransition, "WorkflowTransition"),
     ],
 )
 def test_configuration_rows_carry_an_aph_clause(model, label: str) -> None:
@@ -71,15 +79,59 @@ def test_configuration_rows_carry_an_aph_clause(model, label: str) -> None:
     assert not missing, f"{label} rows without an apH_clause: {missing}"
 
 
-def test_workflow_transitions_carry_an_aph_clause() -> None:
-    """Every state-machine transition cites its APH clause or is flagged."""
-    missing = _missing_clause(list(TRANSITIONS))
-    assert not missing, f"Workflow transitions without an apH_clause: {missing}"
-
-
 def test_application_type_enum_matches_routing_table() -> None:
     """The enum and the authoritative Table 2.3 routing table must agree."""
     enum_values = {member.value for member in ApplicationType}
     with SessionLocal() as db:
         route_values = set(db.scalars(select(ApplicationTypeRoute.type)).all())
     assert route_values == enum_values
+
+
+def test_every_workflow_edge_references_a_seeded_state_and_registered_handler() -> None:
+    """Workflow data may only name states, roles, guards and effects that exist.
+
+    This is the guard against a typo in seed data silently disabling a step: an
+    unknown guard or effect would fail at request time, so it fails the build
+    instead.
+    """
+    known_actions = {action.value for action in WorkflowAction}
+    with SessionLocal() as db:
+        definitions = list(db.scalars(select(WorkflowDefinition)).all())
+        assert definitions, "No workflow definitions are seeded"
+        for definition in definitions:
+            states = set(
+                db.scalars(
+                    select(WorkflowState.code).where(
+                        WorkflowState.definition_id == definition.id
+                    )
+                ).all()
+            )
+            edges = list(
+                db.scalars(
+                    select(WorkflowTransition).where(
+                        WorkflowTransition.definition_id == definition.id
+                    )
+                ).all()
+            )
+            assert edges, f"{definition.key} has no transitions"
+            for edge in edges:
+                assert edge.from_state in states, (definition.key, edge.from_state)
+                assert edge.to_state in states, (definition.key, edge.to_state)
+                assert edge.action in known_actions, (definition.key, edge.action)
+                unknown_guards = set(edge.guard_expr or []) - set(GUARDS)
+                unknown_effects = set(edge.side_effects or []) - set(EFFECTS)
+                assert not unknown_guards, (definition.key, edge.action, unknown_guards)
+                assert not unknown_effects, (definition.key, edge.action, unknown_effects)
+
+
+def test_workflow_definition_covers_every_application_type_route() -> None:
+    """Every routed APH type must point at a real workflow or be marked unimplemented."""
+    with SessionLocal() as db:
+        keys = set(db.scalars(select(WorkflowDefinition.key)).all())
+        routes = list(db.scalars(select(ApplicationTypeRoute)).all())
+    assert routes, "No application type routes are seeded"
+    for route in routes:
+        if route.not_implemented:
+            assert route.not_implemented_note, route.type
+            continue
+        assert route.workflow_key in keys, (route.type, route.workflow_key)

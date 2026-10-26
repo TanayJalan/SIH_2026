@@ -131,42 +131,122 @@ class DecisionLetterType(StrEnum):
 class ApplicationStatus(StrEnum):
     """Primary status values for an application.
 
-    Withdrawal and escalation are overlays stored on the application so they
-    can coexist with the primary workflow state instead of terminating it.
+    The state vocabulary follows the APH Annexure-7 cycle. Withdrawal is an
+    overlay stored on the application so it can coexist with the primary
+    workflow state instead of terminating it.
+
+    The values below the "legacy" marker were emitted by the pre-APH linear
+    workflow. They are retained so historical rows and their events remain
+    readable; the state machine never emits them. Migration
+    ``0013_workflow_definition`` remaps existing rows to the APH states.
     """
 
+    # Track A (Chapter I: new institution, extension of approval).
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
-    DOCUMENT_VERIFICATION = "DOCUMENT_VERIFICATION"
     SCRUTINY = "SCRUTINY"
+    DEFICIENCY_COMMUNICATED = "DEFICIENCY_COMMUNICATED"
+    INSTITUTION_COMPLIANCE = "INSTITUTION_COMPLIANCE"
+    RE_SCRUTINY = "RE_SCRUTINY"
+    EVC_CONSTITUTED = "EVC_CONSTITUTED"
+    EVC_DONE = "EVC_DONE"
+    REGULATION_BUREAU_OBSERVATIONS = "REGULATION_BUREAU_OBSERVATIONS"
+    EC_DECISION = "EC_DECISION"
+    COUNCIL_RATIFICATION = "COUNCIL_RATIFICATION"
+    LOA_ISSUED = "LOA_ISSUED"
+    LOD_ISSUED = "LOD_ISSUED"
+    LOR_ISSUED = "LOR_ISSUED"
+    APPEAL_WINDOW = "APPEAL_WINDOW"
+    SAC_REVIEW = "SAC_REVIEW"
+    COUNCIL_FINAL = "COUNCIL_FINAL"
+    REGIONAL_ENDORSEMENT = "REGIONAL_ENDORSEMENT"
+    FINAL_LOA = "FINAL_LOA"
+    FINAL_LOD = "FINAL_LOD"
+    FINAL_LOR = "FINAL_LOR"
+    SECURITY_DEPOSIT_PENDING = "SECURITY_DEPOSIT_PENDING"
+    ACTIVE_LOA = "ACTIVE_LOA"
+    CANCELLED = "CANCELLED"
+    WITHDRAWN = "WITHDRAWN"
+
+    # Track B (extension of approval by self-disclosure).
+    SELF_DISCLOSURE_CHECK = "SELF_DISCLOSURE_CHECK"
+    RANDOM_EVC = "RANDOM_EVC"
+    COMPLIANCE_WINDOW = "COMPLIANCE_WINDOW"
+    EC_LISTING = "EC_LISTING"
+    EOA_ISSUED = "EOA_ISSUED"
+    SPEAKING_ORDER = "SPEAKING_ORDER"
+    ACTIVE_EOA = "ACTIVE_EOA"
+
+    # Track C / D (existing-institution changes).
+    SHC_HEARING = "SHC_HEARING"
+    CLOSED = "CLOSED"
+
+    # Legacy pre-APH values (read-only for historical rows).
+    DOCUMENT_VERIFICATION = "DOCUMENT_VERIFICATION"
     DEFICIENCY_RAISED = "DEFICIENCY_RAISED"
     DEFICIENCY_RESPONDED = "DEFICIENCY_RESPONDED"
     INSPECTION_SCHEDULED = "INSPECTION_SCHEDULED"
     INSPECTION_DONE = "INSPECTION_DONE"
     COMMITTEE_REVIEW = "COMMITTEE_REVIEW"
     APPROVED = "APPROVED"
-    CONDITIONALLY_APPROVED = "CONDITIONALLY_APPROVED"
     REJECTED = "REJECTED"
 
 
 class WorkflowAction(StrEnum):
-    """Actions accepted by the workflow state machine."""
+    """Actions accepted by the workflow state machine.
+
+    The names are the stable public API for ``POST
+    /applications/{id}/actions/{action}``. Which action is legal in which
+    state, and which role may perform it, is data in ``workflow_transitions``.
+    """
 
     SUBMIT = "submit"
-    AUTO_ASSIGN = "auto_assign"
-    VERIFY_DOCUMENTS = "verify_documents"
-    START_SCRUTINY = "start_scrutiny"
-    RAISE_DEFICIENCY = "raise_deficiency"
-    RESPOND_DEFICIENCY = "respond_deficiency"
-    CLOSE_DEFICIENCY = "close_deficiency"
-    SCHEDULE_INSPECTION = "schedule_inspection"
-    SUBMIT_INSPECTION_REPORT = "submit_inspection_report"
-    SEND_TO_COMMITTEE = "send_to_committee"
-    APPROVE = "approve"
-    CONDITIONALLY_APPROVE = "conditionally_approve"
-    REJECT = "reject"
-    WITHDRAW = "withdraw"
-    REOPEN = "reopen"
+    PAY_TER = "pay_ter"
+    ASSIGN_SCRUTINY = "assign_scrutiny"
+    SCRUTINY_RECOMMEND = "scrutiny_recommend"
+    COMMUNICATE_DEFICIENCY = "communicate_deficiency"
+    SUBMIT_COMPLIANCE = "submit_compliance"
+    RE_SCRUTINY_VERIFY = "re_scrutiny_verify"
+    CONSTITUTE_EVC = "constitute_evc"
+    SUBMIT_EVC_VIDEO = "submit_evc_video"
+    EVC_REPORT = "evc_report"
+    OBSERVATIONS = "observations"
+    LIST_FOR_EC = "list_for_ec"
+    EC_DECIDE = "ec_decide"
+    COUNCIL_RATIFICATION = "council_ratification"
+    ISSUE_LETTER = "issue_letter"
+    ISSUE_LOA = "issue_loa"
+    ISSUE_EOA = "issue_eoa"
+    ISSUE_LOD = "issue_lod"
+    ISSUE_LOR = "issue_lor"
+    FILE_APPEAL = "file_appeal"
+    SAC_RECOMMEND = "sac_recommend"
+    SEND_BACK = "send_back"
+    COUNCIL_FINAL = "council_final"
+    ENDORSE_DECISION = "endorse_decision"
+    PAY_SECURITY_DEPOSIT = "pay_security_deposit"
+    APPLY_DEPOSIT_PENALTY = "apply_deposit_penalty"
+    FINALIZE_NO_APPEAL = "finalize_no_appeal"
+    EXPIRE_LOA = "expire_loa"
+    SHC_HEARING = "shc_hearing"
+    RUN_SELF_DISCLOSURE_CHECK = "run_self_disclosure_check"
+    REOPEN_ONCE = "reopen_once"
+    WITHDRAW_APPLICATION = "withdraw_application"
+
+    # Legacy names retained as aliases so existing integrations keep working.
+    AUTO_ASSIGN = "assign_scrutiny"
+    VERIFY_DOCUMENTS = "scrutiny_recommend"
+    START_SCRUTINY = "assign_scrutiny"
+    RAISE_DEFICIENCY = "communicate_deficiency"
+    RESPOND_DEFICIENCY = "submit_compliance"
+    CLOSE_DEFICIENCY = "re_scrutiny_verify"
+    SCHEDULE_INSPECTION = "constitute_evc"
+    SUBMIT_INSPECTION_REPORT = "evc_report"
+    SEND_TO_COMMITTEE = "observations"
+    APPROVE = "issue_loa"
+    REJECT = "issue_lor"
+    WITHDRAW = "withdraw_application"
+    REOPEN = "reopen_once"
 
 
 class WorkflowStage(StrEnum):
@@ -208,10 +288,15 @@ class InspectionStatus(StrEnum):
 
 
 class InspectionRecommendation(StrEnum):
-    """Committee recommendation recorded with an inspection report."""
+    """Committee recommendation recorded with an inspection report.
+
+    APH does not permit conditional or partial approval (APH 4.9c, 2.27): an
+    EVC either finds the institution compliant or records deficiencies that
+    must be closed before the next stage.
+    """
 
     APPROVE = "APPROVE"
-    CONDITIONAL_APPROVE = "CONDITIONAL_APPROVE"
+    DEFICIENCY = "DEFICIENCY"
     REJECT = "REJECT"
 
 
@@ -260,6 +345,8 @@ class AlertTrigger(StrEnum):
     COMPLIANCE_RED = "COMPLIANCE_RED"
     APPLICATION_STATUS_CHANGED = "APPLICATION_STATUS_CHANGED"
     INSPECTION_SCHEDULED = "INSPECTION_SCHEDULED"
+    APPEAL_WINDOW_CLOSING = "APPEAL_WINDOW_CLOSING"
+    DEPOSIT_DUE = "DEPOSIT_DUE"
 
 
 class InstitutionRegion(StrEnum):

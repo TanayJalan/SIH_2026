@@ -93,8 +93,10 @@ def run_nightly() -> None:
 
 
 def run_alert_scan_job(*, clock: SimulatedClock, settings: Settings) -> None:
-    """Job entry point for the 15-minute alert and escalation scan."""
+    """Job entry point for the 15-minute alert and workflow clock scan."""
+    from app.db.session import SessionLocal
     from app.services.alert_engine import run_alert_scan
+    from app.services.workflow_jobs import sweep
 
     try:
         result = run_alert_scan(clock=clock, settings=settings)
@@ -109,3 +111,14 @@ def run_alert_scan_job(*, clock: SimulatedClock, settings: Settings) -> None:
         )
     except Exception:
         logger.exception("Periodic alert scan failed.")
+        return
+
+    try:
+        with SessionLocal() as db:
+            advanced = sweep(db, clock)
+        logger.info(
+            "Workflow clock sweep completed",
+            extra={"event": "workflow.sweep.completed", "advanced": advanced},
+        )
+    except Exception:
+        logger.exception("Periodic workflow clock sweep failed.")

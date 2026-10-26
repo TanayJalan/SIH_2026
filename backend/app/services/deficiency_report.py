@@ -87,6 +87,6 @@ def build_deficiency_report(
         failed_count=preview.failed_count,
         not_assessed_count=preview.not_assessed_count,
         score=preview.score,
-        status=preview.status.value,
+        status=getattr(preview.status, "value", str(preview.status)),
         include_not_assessed=include_not_assessed,
     )

@@ -17,6 +17,7 @@ from app.api.dependencies import (
     require_roles,
 )
 from app.models.application import Application
+from app.models.decision import DecisionLetter
 from app.models.deficiency import Deficiency
 from app.models.enums import Role, WorkflowAction
 from app.models.inspection import Inspection
@@ -27,7 +28,9 @@ from app.schemas.common import ErrorResponse
 from app.schemas.workflow import (
     AllowedActionRead,
     AllowedActionsRead,
+    AppealFileRequest,
     CommitteeMemberRead,
+    DecisionLetterRead,
     DeficiencyRead,
     InspectionRead,
     WorkflowActionRead,
@@ -151,6 +154,7 @@ def perform_action(
             audit,
             clock,
             notifications=NotificationService.from_settings(request.app.state.settings),
+            settings=request.app.state.settings,
         )
         result = service.execute(
             application,
@@ -325,3 +329,84 @@ def list_committee_members(
         .order_by(User.name.asc())
     ).all()
     return [CommitteeMemberRead.model_validate(member) for member in members]
+
+
+@router.get(
+    "/{application_id}/letters",
+    response_model=list[DecisionLetterRead],
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="List the decision letters published for an application",
+)
+def list_letters(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> list[DecisionLetterRead]:
+    """Return every LoA, EoA, LoD, LoR or Speaking Order issued for the file."""
+    application = _readable_application(db, current_user, application_id)
+    letters = db.scalars(
+        select(DecisionLetter)
+        .where(DecisionLetter.application_id == application.id)
+        .order_by(DecisionLetter.issued_on.desc(), DecisionLetter.created_at.desc())
+    ).all()
+    reads: list[DecisionLetterRead] = []
+    for letter in letters:
+        read = DecisionLetterRead.model_validate(letter)
+        reads.append(
+            read.model_copy(update={"download_url": f"/letters/{letter.id}/download"})
+        )
+    return reads
+
+
+@router.post(
+    "/{application_id}/appeal",
+    response_model=WorkflowActionRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="File the single appeal against an LoD or LoR",
+)
+def file_appeal(
+    application_id: uuid.UUID,
+    payload: AppealFileRequest,
+    request: Request,
+    current_user: CurrentUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> WorkflowActionRead:
+    """File the appeal through the state machine so the clock is enforced once.
+
+    A late appeal or a second appeal is rejected by the ``within_appeal_window``
+    and ``no_prior_appeal`` guards (APH 1.11a).
+    """
+    application = _readable_application(db, current_user, application_id)
+    service = WorkflowService(
+        db,
+        audit,
+        clock,
+        notifications=NotificationService.from_settings(request.app.state.settings),
+        settings=request.app.state.settings,
+    )
+    result = service.execute(
+        application,
+        actor=current_user,
+        action=WorkflowAction.FILE_APPEAL,
+        payload=WorkflowActionRequest(
+            appeal_text=payload.appeal_text,
+            comment=payload.comment,
+        ),
+        request=request,
+    )
+    loaded = _reload_application(db, application_id)
+    return WorkflowActionRead(
+        application=ApplicationDetailRead.model_validate(loaded),
+        events=_event_reads(db, list(result.events)),
+        message=result.message,
+    )

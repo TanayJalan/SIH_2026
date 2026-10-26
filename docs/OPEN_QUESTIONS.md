@@ -72,14 +72,35 @@ in editable tables and are seeded with clearly labelled demo values.
 These are known gaps in the prototype that this database/RBAC retrofit deliberately did not close.
 They are listed so the next task does not mistake seeded data for working behaviour.
 
-* `DeadlineService` exists for the new `DeadlineRule`/`Timer` tables, but the legacy
-  `applications.sla_due_at` and `applications.appeal_deadline` calculations are not yet routed
-  through it.
+* `DeadlineService` now starts the appeal and Security Deposit clocks and is used by
+  `decision_letters` and the workflow guards. `applications.sla_due_at` is still
+  computed from `sla_configs` by the workflow engine rather than by a `Timer` row, so
+  SLA escalation and the statutory clocks remain two separate mechanisms.
 * The APH fee calculator (`app/services/fee_calculator.py`) covers TER, the annual
   increase, the late penalty, extra committee charges, refund deductions and the Security
   Deposit, but the Security Deposit penalty windows are still calculator parameters rather
   than an admin-editable row (OQ-27).
 * No admin UI yet for `application_type_routes`, `fee_schedules`, `security_deposit_schedules`,
   `public_notices`, `academic_calendar_events`, `committees` or `security_deposits`.
-* Complaint, appeal, penal-action and committee tables are modelled and seeded with reference data,
-  but their end-to-end workflows are outside the one deep MVP flow.
+* Complaint and penal-action tables are modelled and seeded with reference data, but their
+  end-to-end workflows are outside the one deep MVP flow. The appeal path (LoD/LoR →
+  appeal window → SAC → Council → Regional endorsement) is implemented in Track A-D.
+
+## 7. Workflow state machine
+
+The workflow is seeded from `backend/seeds/aph/workflow_definitions.json`; see
+`docs/WORKFLOW.md` for the rendered diagrams and the transition-to-clause table. The
+following decisions are deliberately configuration or scope calls rather than handbook
+facts.
+
+| ID | Item | Status | Detail |
+| --- | --- | --- | --- |
+| OQ-29 | `LAST_DATE_EOA` for the demo year | CONFIGURABLE | The seeded `2026-27` calendar closes the EoA window on `2026-06-30`, which is already in the past for the system clock. Tests move the row forward. Replace the demo calendar with the real Public Notice before demonstrating an EoA decision. |
+| OQ-30 | Random EVC sample | CONFIGURABLE | `workflow_definitions.config.random_evc_percent` is seeded at `10` (`TRACK_B`). APH 2.3.5a requires a random sample but does not publish a percentage. The sample is deterministic per application id so retries do not change the outcome. |
+| OQ-31 | `council_ratification` reachability | OPEN | APH 2.25a describes Council ratification of an EC decision. In the normal Track A-D flow `ec_decide` already advances the status, so `council_ratification` is only reachable when a quorate EC `Decision` row exists while the application is still `EC_DECISION`; the integrity test seeds that state directly. Decide whether production should park a case at `EC_DECISION` for ratification or treat ratification as an out-of-band act. |
+| OQ-32 | SHC hearing | CONFIGURABLE | The Standing Hearing Committee is modelled as a single `SHC_HEARING` state with a recorded outcome (APH 2.23.3), not as a multi-session hearing. Add sessions only if the Council publishes that process. |
+| OQ-33 | Track C and Track D reuse | CONFIGURABLE | Tracks C and D reuse the Track A edges through `requires_scrutiny`, `requires_evc` and `requires_hearing`. Track B and Track C issue an EoA (`ACTIVE_EOA`); Track A issues an LoA and enters the Security Deposit cycle. The routing row, not the code, decides which flags apply. |
+| OQ-34 | Track B Bureau verification | RESOLVED | Responded self-disclosure deficiencies need a verification step before the case can be cleared, so Track B has a `re_scrutiny_verify` self-loop on `SELF_DISCLOSURE_CHECK` (APH 1.8, 2.4). Without it, responded deficiencies could never close. |
+| OQ-35 | `core_branches_required` | CONFIGURABLE | APH 2.6c requires Engineering & Technology to retain at least three core branches. The count lives in `workflow_definitions.config`; the keyword list used to identify branches is not seeded, so the guard passes until an administrator supplies `core_branch_keywords` or the application declares `data.core_branches`. |
+| OQ-36 | Not-implemented application types | RESOLVED | `CLOSURE_AND_NEW_INSTITUTION`, `UNIVERSITY`, `MERGER_OF_INSTITUTIONS`, `EOA_AFTER_BREAK`, `DEEMED_UNIVERSITY_CONVERSION` and `ODL_ONLINE` are seeded with `not_implemented = true` and a note. The workflow raises HTTP 503 rather than inventing a path. |
+| OQ-37 | Statutory-clock warning windows | CONFIGURABLE | The appeal-window warning fires at T-3 and the Security Deposit warnings at T-7 and T-1. APH fixes the seven-day appeal window (1.11a) and the fifteen-day deposit window (2.25f) but not the reminder points, so they live in `alert_rules.days_before` as editable rows with `needs_verification = true`. `complete_timers()` closes the corresponding `Timer` when the appeal is filed or the deposit is paid. |

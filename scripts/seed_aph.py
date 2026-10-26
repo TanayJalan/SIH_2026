@@ -21,11 +21,20 @@ the item is listed in ``docs/OPEN_QUESTIONS.md``.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = REPO_ROOT / "backend" / "seeds" / "aph"
+
+sys.path.insert(0, str(REPO_ROOT / "backend"))
+
+from app.services.workflow_catalogue import (  # noqa: E402
+    NOT_IMPLEMENTED_TYPES,
+    ROUTE_WORKFLOW_KEYS,
+    build_workflow_definitions,
+)
 
 LAKH = 100_000
 """One lakh rupees."""
@@ -1597,7 +1606,12 @@ def _write(name: str, payload: Any) -> None:
 
 def main() -> None:
     """Write every APH seed file."""
+    for route in APPLICATION_TYPE_ROUTES:
+        route["workflow_key"] = ROUTE_WORKFLOW_KEYS.get(route["type"])
+        route["not_implemented"] = route["type"] in NOT_IMPLEMENTED_TYPES
+        route["not_implemented_note"] = NOT_IMPLEMENTED_TYPES.get(route["type"])
     _write("application_type_routes.json", APPLICATION_TYPE_ROUTES)
+    _write("workflow_definitions.json", build_workflow_definitions())
     _write("fee_schedules.json", FEE_SCHEDULES)
     _write("security_deposit_schedules.json", SECURITY_DEPOSIT_SCHEDULES)
     _write("required_documents.json", build_required_documents())

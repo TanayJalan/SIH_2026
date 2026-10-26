@@ -466,6 +466,7 @@ class ApplicationWorkspaceService:
             self._audit,
             self._clock,
             notifications=NotificationService.from_settings(self._settings),
+            settings=self._settings,
         )
         result = service.execute(
             application,

@@ -24,6 +24,7 @@ EXPECTED_TABLES = {
     "compliance_snapshots",
     "council_ratifications",
     "deadline_rules",
+    "decision_letter_number_seq",
     "decision_letters",
     "decisions",
     "deficiencies",
@@ -38,11 +39,15 @@ EXPECTED_TABLES = {
     "programmes",
     "public_notices",
     "required_documents",
+    "security_deposit_schedules",
     "security_deposits",
     "sla_configs",
     "timers",
     "users",
+    "workflow_definitions",
     "workflow_events",
+    "workflow_states",
+    "workflow_transitions",
 }
 
 

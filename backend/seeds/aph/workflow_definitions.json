@@ -1,0 +1,4668 @@
+[
+  {
+    "key": "TRACK_A",
+    "label": "Track A - Chapter I approval and extension",
+    "track": "TRACK_A",
+    "description": "New institution and extension-of-approval cycle: scrutiny, deficiency loop, EVC, EC decision, appeal, Council, endorsement, Security Deposit.",
+    "apH_clause": "APH 1.3-1.12",
+    "needs_verification": false,
+    "is_active": true,
+    "config": {
+      "appeal_start_event": "DECISION_UPLOADED",
+      "security_deposit": true
+    },
+    "states": [
+      {
+        "code": "DRAFT",
+        "label": "Draft",
+        "stage": "APPLICATION",
+        "is_initial": true,
+        "is_terminal": false,
+        "sort_order": 0,
+        "description": "",
+        "apH_clause": "APH 1.4",
+        "needs_verification": false
+      },
+      {
+        "code": "SUBMITTED",
+        "label": "Submitted (locked, TER paid, portal number issued)",
+        "stage": "APPLICATION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 1,
+        "description": "",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "code": "SCRUTINY",
+        "label": "Scrutiny Committee",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 2,
+        "description": "",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "code": "DEFICIENCY_COMMUNICATED",
+        "label": "Deficiency communicated (LoD)",
+        "stage": "DEFICIENCY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 3,
+        "description": "",
+        "apH_clause": "APH 2.3.3b",
+        "needs_verification": false
+      },
+      {
+        "code": "INSTITUTION_COMPLIANCE",
+        "label": "Institution response received",
+        "stage": "DEFICIENCY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 4,
+        "description": "",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "code": "RE_SCRUTINY",
+        "label": "Re-Scrutiny of listed deficiencies",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 5,
+        "description": "",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "code": "EVC_CONSTITUTED",
+        "label": "Expert Visit Committee constituted",
+        "stage": "INSPECTION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 6,
+        "description": "",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "code": "EVC_DONE",
+        "label": "EVC report received",
+        "stage": "INSPECTION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 7,
+        "description": "",
+        "apH_clause": "APH 1.9",
+        "needs_verification": false
+      },
+      {
+        "code": "REGULATION_BUREAU_OBSERVATIONS",
+        "label": "Regulation Bureau observations",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 8,
+        "description": "",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_DECISION",
+        "label": "Executive Committee decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 9,
+        "description": "",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "code": "COUNCIL_RATIFICATION",
+        "label": "Council ratification",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 10,
+        "description": "",
+        "apH_clause": "APH 2.25a",
+        "needs_verification": false
+      },
+      {
+        "code": "LOA_ISSUED",
+        "label": "Letter of Approval recorded",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 11,
+        "description": "",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "code": "LOD_ISSUED",
+        "label": "Letter of Deficiency recorded",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 12,
+        "description": "",
+        "apH_clause": "APH 2.23.3",
+        "needs_verification": false
+      },
+      {
+        "code": "LOR_ISSUED",
+        "label": "Letter of Rejection recorded with Speaking Order",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 13,
+        "description": "",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "code": "APPEAL_WINDOW",
+        "label": "Seven-day appeal window (SAC)",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 14,
+        "description": "",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "code": "SAC_REVIEW",
+        "label": "Standing Appellate Committee",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 15,
+        "description": "",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "code": "COUNCIL_FINAL",
+        "label": "Council final decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 16,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "REGIONAL_ENDORSEMENT",
+        "label": "Regional Officer endorsement",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 17,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOA",
+        "label": "Final Letter of Approval",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 18,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOD",
+        "label": "Final Letter of Deficiency",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 19,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOR",
+        "label": "Final Letter of Rejection",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 20,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "SECURITY_DEPOSIT_PENDING",
+        "label": "Security Deposit pending",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 21,
+        "description": "",
+        "apH_clause": "APH 2.25f",
+        "needs_verification": false
+      },
+      {
+        "code": "ACTIVE_LOA",
+        "label": "Active LoA",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 22,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "CANCELLED",
+        "label": "Approval cancelled",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 23,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "WITHDRAWN",
+        "label": "Withdrawn",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 24,
+        "description": "",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ],
+    "transitions": [
+      {
+        "action": "submit",
+        "from_state": "DRAFT",
+        "to_state": "SUBMITTED",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "submit",
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Submit application",
+        "description": "TER paid, data locked and a portal number issued (APH 1.4.3).",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "action": "pay_ter",
+        "from_state": "DRAFT",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "pay_ter"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Confirm TER payment",
+        "description": "Verify that the computed TER has been paid before submission.",
+        "apH_clause": "APH 1.4.2h",
+        "needs_verification": false
+      },
+      {
+        "action": "assign_scrutiny",
+        "from_state": "SUBMITTED",
+        "to_state": "SCRUTINY",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Assign the Scrutiny Committee",
+        "description": "Regulation Bureau assigns a scrutiny member and opens scrutiny.",
+        "apH_clause": "APH 1.8a",
+        "needs_verification": false
+      },
+      {
+        "action": "communicate_deficiency",
+        "from_state": "SCRUTINY",
+        "to_state": "DEFICIENCY_COMMUNICATED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_deficiencies"
+        ],
+        "side_effects": [
+          "create_deficiencies"
+        ],
+        "requires": "deficiencies",
+        "tone": "primary",
+        "sla_stage": "DEFICIENCY",
+        "priority": 0,
+        "label": "Communicate deficiencies (LoD)",
+        "description": "Issue the Deficiency Report and pause the application.",
+        "apH_clause": "APH 2.3.3b",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SCRUTINY",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "constitute_evc"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Recommend an Expert Visit Committee",
+        "description": "Scrutiny is clear; the Regional Officer constitutes the EVC.",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SCRUTINY",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_not_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "scrutiny_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Clear scrutiny without an EVC",
+        "description": "This route does not require an Expert Visit Committee.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "submit_compliance",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "INSTITUTION_COMPLIANCE",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "open_deficiencies"
+        ],
+        "side_effects": [
+          "record_responses"
+        ],
+        "requires": "responses",
+        "tone": "primary",
+        "sla_stage": "DEFICIENCY",
+        "priority": 0,
+        "label": "Submit compliance",
+        "description": "Respond to every open deficiency with evidence.",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "action": "re_scrutiny_verify",
+        "from_state": "INSTITUTION_COMPLIANCE",
+        "to_state": "RE_SCRUTINY",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "responded_deficiencies"
+        ],
+        "side_effects": [
+          "verify_deficiencies"
+        ],
+        "requires": "deficiency_id",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Verify the listed deficiencies",
+        "description": "Re-Scrutiny checks only the deficiencies that were communicated.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "re_scrutiny_verify",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "RE_SCRUTINY",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "responded_deficiencies"
+        ],
+        "side_effects": [
+          "verify_deficiencies"
+        ],
+        "requires": "deficiency_id",
+        "tone": "secondary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Verify another listed deficiency",
+        "description": "Remaining deficiencies are verified one by one in Re-Scrutiny.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "constitute_evc"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Close Re-Scrutiny and constitute the EVC",
+        "description": "All deficiencies are closed; the file moves to the EVC.",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_not_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "scrutiny_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Close Re-Scrutiny without an EVC",
+        "description": "All deficiencies are closed; this route has no EVC.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "submit_evc_video",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "EVC_MEMBER"
+        ],
+        "guard_expr": [
+          "is_evc_member"
+        ],
+        "side_effects": [
+          "submit_evc_video"
+        ],
+        "requires": "video",
+        "tone": "secondary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Upload the EVC video",
+        "description": "The visit video must be at least 30 minutes long (APH 1.9f-g).",
+        "apH_clause": "APH 1.9f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "evc_report",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "EVC_DONE",
+        "allowed_roles": [
+          "EVC_MEMBER"
+        ],
+        "guard_expr": [
+          "is_evc_member",
+          "video_uploaded"
+        ],
+        "side_effects": [
+          "evc_report"
+        ],
+        "requires": "inspection_report",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Submit the EVC report",
+        "description": "Record findings only after the 30-minute video is uploaded.",
+        "apH_clause": "APH 1.9",
+        "needs_verification": false
+      },
+      {
+        "action": "observations",
+        "from_state": "EVC_DONE",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "observations"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Place Regulation Bureau observations",
+        "description": "The Bureau places observations before the EC.",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "EC_DECISION",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the Executive Committee",
+        "description": "The case is placed on the EC agenda.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "LOA_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_loa",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_loa"
+        ],
+        "requires": "decision",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Decide to approve (LoA)",
+        "description": "The EC records an approval decision; no conditional approval exists.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "LOD_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_lod",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_lod"
+        ],
+        "requires": "decision",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Decide a Letter of Deficiency",
+        "description": "The EC records deficiencies rather than rejecting outright.",
+        "apH_clause": "APH 2.23.3",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "LOR_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_lor",
+          "ec_quorum_met",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "ec_decide_lor"
+        ],
+        "requires": "decision",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 2,
+        "label": "Decide to reject (LoR)",
+        "description": "The EC records a rejection with a Speaking Order.",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "action": "council_ratification",
+        "from_state": "EC_DECISION",
+        "to_state": "COUNCIL_RATIFICATION",
+        "allowed_roles": [
+          "SUPER_ADMIN"
+        ],
+        "guard_expr": [
+          "ec_decision_quorum_met"
+        ],
+        "side_effects": [
+          "council_ratification"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Ratify the EC decision (Council secretariat)",
+        "description": "Ratification requires an EC decision with a met quorum. The super admin has no operational approval or rejection power.",
+        "apH_clause": "APH 2.25a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_loa",
+        "from_state": "LOA_ISSUED",
+        "to_state": "SECURITY_DEPOSIT_PENDING",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_loa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Letter of Approval",
+        "description": "Issue the LoA and start the 15-day Security Deposit clock.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lod",
+        "from_state": "LOD_ISSUED",
+        "to_state": "APPEAL_WINDOW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "no_prior_appeal"
+        ],
+        "side_effects": [
+          "issue_lod"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Letter of Deficiency",
+        "description": "Issue the LoD and start the seven-day appeal clock.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lod",
+        "from_state": "LOD_ISSUED",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_prior_appeal"
+        ],
+        "side_effects": [
+          "issue_lod"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Issue the re-examined Letter of Deficiency",
+        "description": "The institution already used its single appeal, so the re-examined decision returns to the SAC for its final recommendation.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "LOR_ISSUED",
+        "to_state": "APPEAL_WINDOW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "no_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Speaking Order (LoR)",
+        "description": "Issue the LoR with the Speaking Order and appeal deadline.",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "LOR_ISSUED",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Issue the re-examined Speaking Order",
+        "description": "The institution already used its single appeal, so the re-examined decision returns to the SAC for its final recommendation.",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "COUNCIL_RATIFICATION",
+        "to_state": "LOA_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "ratified_outcome_loa"
+        ],
+        "side_effects": [
+          "confirm_loa"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Record the ratified approval",
+        "description": "The EC records the ratified decision without a second vote.",
+        "apH_clause": "APH 2.25a",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "COUNCIL_RATIFICATION",
+        "to_state": "LOD_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "ratified_outcome_lod"
+        ],
+        "side_effects": [
+          "confirm_lod"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Record the ratified deficiency letter",
+        "description": "The EC records the ratified deficiency decision.",
+        "apH_clause": "APH 2.25a",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "COUNCIL_RATIFICATION",
+        "to_state": "LOR_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "ratified_outcome_lor"
+        ],
+        "side_effects": [
+          "confirm_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 2,
+        "label": "Record the ratified rejection",
+        "description": "The EC records the ratified rejection.",
+        "apH_clause": "APH 2.25a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_loa",
+        "from_state": "FINAL_LOA",
+        "to_state": "SECURITY_DEPOSIT_PENDING",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_loa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the final Letter of Approval",
+        "description": "The final LoA starts the Security Deposit clock.",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "action": "file_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "within_appeal_window",
+          "no_prior_appeal"
+        ],
+        "side_effects": [
+          "file_appeal"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "File appeal with the SAC",
+        "description": "One appeal only, within the configured seven-day window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_loa"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Finalise without appeal (LoA)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lod"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Finalise without appeal (LoD)",
+        "description": "A deficiency decision becomes final after the appeal window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lor"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Finalise without appeal (LoR)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "send_back",
+        "from_state": "SAC_REVIEW",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [
+          "appeal_loop_available"
+        ],
+        "side_effects": [
+          "send_back"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Send the case back once",
+        "description": "The SAC may send the case back once; a second send-back is not allowed (Annexure-7).",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "action": "sac_recommend",
+        "from_state": "SAC_REVIEW",
+        "to_state": "COUNCIL_FINAL",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "sac_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Record the SAC recommendation",
+        "description": "The SAC recommends; the Council records the final decision.",
+        "apH_clause": "APH 1.11d",
+        "needs_verification": false
+      },
+      {
+        "action": "council_final",
+        "from_state": "COUNCIL_FINAL",
+        "to_state": "REGIONAL_ENDORSEMENT",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "council_final"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Record the Council's final decision",
+        "description": "The Council decision is final. The EC member records it in the Council secretariat capacity; the super admin only ratifies EC decisions.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_loa"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Endorse the final approval",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lod"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Endorse the final deficiency letter",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lor"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Endorse the final rejection",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "pay_security_deposit",
+        "from_state": "SECURITY_DEPOSIT_PENDING",
+        "to_state": "ACTIVE_LOA",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "deposit_payable"
+        ],
+        "side_effects": [
+          "pay_security_deposit"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Pay Security Deposit and file Affidavit 3",
+        "description": "Proof and Affidavit 3 are due within 15 days; the deposit is 10% penalised to 31 May and 20% to 31 July.",
+        "apH_clause": "APH 2.25f",
+        "needs_verification": false
+      },
+      {
+        "action": "apply_deposit_penalty",
+        "from_state": "SECURITY_DEPOSIT_PENDING",
+        "to_state": "SECURITY_DEPOSIT_PENDING",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "deposit_penalty_due"
+        ],
+        "side_effects": [
+          "apply_deposit_penalty"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Apply the Security Deposit penalty",
+        "description": "Scheduler action: 10% to 31 May, 20% to 31 July.",
+        "apH_clause": "APH 2.25f",
+        "needs_verification": false
+      },
+      {
+        "action": "apply_deposit_penalty",
+        "from_state": "SECURITY_DEPOSIT_PENDING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "deposit_forfeited"
+        ],
+        "side_effects": [
+          "forfeit_deposit"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Withdraw approval after the final deposit date",
+        "description": "After 31 July the approval may be withdrawn (APH 2.25f).",
+        "apH_clause": "APH 2.25f",
+        "needs_verification": false
+      },
+      {
+        "action": "expire_loa",
+        "from_state": "ACTIVE_LOA",
+        "to_state": "CANCELLED",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "loa_expired"
+        ],
+        "side_effects": [
+          "expire_loa"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Cancel the LoA after two academic years",
+        "description": "An LoA is valid for two academic years; the next year is EoA.",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SUBMITTED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SCRUTINY",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SUBMITTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SCRUTINY",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "INSTITUTION_COMPLIANCE",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EVC_DONE",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_DECISION",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "LOA_ISSUED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "LOD_ISSUED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "LOR_ISSUED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SAC_REVIEW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SECURITY_DEPOSIT_PENDING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ]
+  },
+  {
+    "key": "TRACK_B",
+    "label": "Track B - EoA by self-disclosure",
+    "track": "TRACK_B",
+    "description": "Existing institution: automatic self-disclosure Deficiency Report, optional random EVC, compliance window, EC listing and EoA.",
+    "apH_clause": "APH 2.3.5; 2.25",
+    "needs_verification": false,
+    "is_active": true,
+    "config": {
+      "appeal_start_event": "DECISION_UPLOADED",
+      "security_deposit": false,
+      "random_evc_percent": 10,
+      "core_branches_required": 3
+    },
+    "states": [
+      {
+        "code": "DRAFT",
+        "label": "Draft",
+        "stage": "APPLICATION",
+        "is_initial": true,
+        "is_terminal": false,
+        "sort_order": 0,
+        "description": "",
+        "apH_clause": "APH 1.4",
+        "needs_verification": false
+      },
+      {
+        "code": "SUBMITTED",
+        "label": "Submitted (locked, TER paid, portal number issued)",
+        "stage": "APPLICATION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 1,
+        "description": "",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "code": "SELF_DISCLOSURE_CHECK",
+        "label": "Self-disclosure check",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 2,
+        "description": "",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "code": "COMPLIANCE_WINDOW",
+        "label": "Compliance window",
+        "stage": "DEFICIENCY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 3,
+        "description": "",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "code": "RANDOM_EVC",
+        "label": "Random Expert Visit Committee",
+        "stage": "INSPECTION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 4,
+        "description": "",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_LISTING",
+        "label": "Listed before the Executive Committee",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 5,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_DECISION",
+        "label": "Executive Committee decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 6,
+        "description": "",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "code": "EOA_ISSUED",
+        "label": "Extension of Approval recorded",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 7,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "ACTIVE_EOA",
+        "label": "Active EoA",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 8,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "SPEAKING_ORDER",
+        "label": "Speaking Order",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 9,
+        "description": "",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "code": "APPEAL_WINDOW",
+        "label": "Seven-day appeal window (SAC)",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 10,
+        "description": "",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "code": "SAC_REVIEW",
+        "label": "Standing Appellate Committee",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 11,
+        "description": "",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "code": "COUNCIL_FINAL",
+        "label": "Council final decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 12,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "REGIONAL_ENDORSEMENT",
+        "label": "Regional Officer endorsement",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 13,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOA",
+        "label": "Final Letter of Approval",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 14,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOD",
+        "label": "Final Letter of Deficiency",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 15,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOR",
+        "label": "Final Letter of Rejection",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 16,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "WITHDRAWN",
+        "label": "Withdrawn",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 17,
+        "description": "",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ],
+    "transitions": [
+      {
+        "action": "submit",
+        "from_state": "DRAFT",
+        "to_state": "SUBMITTED",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "submit",
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Submit application",
+        "description": "TER paid, data locked and a portal number issued.",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "action": "pay_ter",
+        "from_state": "DRAFT",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "pay_ter"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Confirm TER payment",
+        "description": "No EoA can be processed before the TER is paid.",
+        "apH_clause": "APH 1.4.2h",
+        "needs_verification": false
+      },
+      {
+        "action": "run_self_disclosure_check",
+        "from_state": "SUBMITTED",
+        "to_state": "SELF_DISCLOSURE_CHECK",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "run_self_disclosure_check"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Run the self-disclosure check",
+        "description": "Generate the automatic Deficiency Report; a Nil Deficiency declaration is required before the EC can list the case.",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "action": "communicate_deficiency",
+        "from_state": "SELF_DISCLOSURE_CHECK",
+        "to_state": "COMPLIANCE_WINDOW",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "open_deficiencies"
+        ],
+        "side_effects": [
+          "communicate_deficiency"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DEFICIENCY",
+        "priority": 0,
+        "label": "Communicate the Deficiency Report",
+        "description": "Open the compliance window for every deficiency found.",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "action": "submit_compliance",
+        "from_state": "COMPLIANCE_WINDOW",
+        "to_state": "SELF_DISCLOSURE_CHECK",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "open_deficiencies"
+        ],
+        "side_effects": [
+          "record_responses"
+        ],
+        "requires": "responses",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Submit compliance evidence",
+        "description": "Respond to every open deficiency; the Bureau re-runs the check.",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "action": "re_scrutiny_verify",
+        "from_state": "SELF_DISCLOSURE_CHECK",
+        "to_state": "SELF_DISCLOSURE_CHECK",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "responded_deficiencies"
+        ],
+        "side_effects": [
+          "verify_deficiencies"
+        ],
+        "requires": "deficiency_id",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Verify a responded deficiency",
+        "description": "The Bureau verifies each responded self-disclosure deficiency before the case can be cleared (APH 1.8, 2.4).",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SELF_DISCLOSURE_CHECK",
+        "to_state": "RANDOM_EVC",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "no_open_deficiencies",
+          "random_evc_selected"
+        ],
+        "side_effects": [
+          "record_random_evc"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Select a random EVC",
+        "description": "A configurable percentage of self-disclosure cases get a random EVC.",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SELF_DISCLOSURE_CHECK",
+        "to_state": "EC_LISTING",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "no_open_deficiencies",
+          "random_evc_not_selected"
+        ],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Clear the self-disclosure check",
+        "description": "Nil Deficiency or all deficiencies closed; list before the EC.",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "action": "evc_report",
+        "from_state": "RANDOM_EVC",
+        "to_state": "EC_LISTING",
+        "allowed_roles": [
+          "EVC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "evc_report",
+          "list_for_ec"
+        ],
+        "requires": "inspection_report",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Submit the random EVC report",
+        "description": "Record the visit findings and list the case before the EC.",
+        "apH_clause": "APH 2.3.5a",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "EC_LISTING",
+        "to_state": "EC_DECISION",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the Executive Committee",
+        "description": "The consolidated list records the Approved Intake.",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "EOA_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_eoa",
+          "eoa_before_last_date",
+          "no_pending_investigation",
+          "core_branches_ok",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_eoa"
+        ],
+        "requires": "decision",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Decide to extend approval (EoA)",
+        "description": "EoA requires the last-date check, no pending investigation and three core branches for Engineering & Technology.",
+        "apH_clause": "APH 2.25j",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "SPEAKING_ORDER",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_lor",
+          "speaking_order_present",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_lor"
+        ],
+        "requires": "decision",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Decide to reject with a Speaking Order",
+        "description": "The EC records a rejection with reasons.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "EOA_ISSUED",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the Extension of Approval",
+        "description": "Publish the EoA letter and mark the approval active.",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "APPEAL_WINDOW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "no_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Speaking Order",
+        "description": "Publish the LoR and start the seven-day appeal clock.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Issue the re-examined Speaking Order",
+        "description": "The institution already used its single appeal, so the re-examined decision returns to the SAC for its final recommendation.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "FINAL_LOA",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the final approval after appeal",
+        "description": "The Council decision is final; publish the EoA letter.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "file_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "within_appeal_window",
+          "no_prior_appeal"
+        ],
+        "side_effects": [
+          "file_appeal"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "File appeal with the SAC",
+        "description": "One appeal only, within the configured seven-day window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_loa"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Finalise without appeal (LoA)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lod"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Finalise without appeal (LoD)",
+        "description": "A deficiency decision becomes final after the appeal window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lor"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Finalise without appeal (LoR)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "send_back",
+        "from_state": "SAC_REVIEW",
+        "to_state": "SELF_DISCLOSURE_CHECK",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [
+          "appeal_loop_available"
+        ],
+        "side_effects": [
+          "send_back"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Send the case back once",
+        "description": "The SAC may send the case back once; a second send-back is not allowed (Annexure-7).",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "action": "sac_recommend",
+        "from_state": "SAC_REVIEW",
+        "to_state": "COUNCIL_FINAL",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "sac_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Record the SAC recommendation",
+        "description": "The SAC recommends; the Council records the final decision.",
+        "apH_clause": "APH 1.11d",
+        "needs_verification": false
+      },
+      {
+        "action": "council_final",
+        "from_state": "COUNCIL_FINAL",
+        "to_state": "REGIONAL_ENDORSEMENT",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "council_final"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Record the Council's final decision",
+        "description": "The Council decision is final. The EC member records it in the Council secretariat capacity; the super admin only ratifies EC decisions.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_loa"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Endorse the final approval",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lod"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Endorse the final deficiency letter",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lor"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Endorse the final rejection",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SUBMITTED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SUBMITTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_DECISION",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_LISTING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SAC_REVIEW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ]
+  },
+  {
+    "key": "TRACK_C",
+    "label": "Track C - existing institution changes",
+    "track": "TRACK_C",
+    "description": "Chapter II changes: Track A scrutiny edges, optional EVC, one SHC compliance hearing, EC listing and EoA/Speaking Order.",
+    "apH_clause": "APH 2.3; 2.23.3",
+    "needs_verification": false,
+    "is_active": true,
+    "config": {
+      "appeal_start_event": "DECISION_UPLOADED",
+      "security_deposit": false
+    },
+    "states": [
+      {
+        "code": "DRAFT",
+        "label": "Draft",
+        "stage": "APPLICATION",
+        "is_initial": true,
+        "is_terminal": false,
+        "sort_order": 0,
+        "description": "",
+        "apH_clause": "APH 1.4",
+        "needs_verification": false
+      },
+      {
+        "code": "SUBMITTED",
+        "label": "Submitted (locked, TER paid, portal number issued)",
+        "stage": "APPLICATION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 1,
+        "description": "",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "code": "SCRUTINY",
+        "label": "Scrutiny Committee",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 2,
+        "description": "",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "code": "DEFICIENCY_COMMUNICATED",
+        "label": "Deficiency communicated (LoD)",
+        "stage": "DEFICIENCY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 3,
+        "description": "",
+        "apH_clause": "APH 2.3.3b",
+        "needs_verification": false
+      },
+      {
+        "code": "INSTITUTION_COMPLIANCE",
+        "label": "Institution response received",
+        "stage": "DEFICIENCY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 4,
+        "description": "",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "code": "RE_SCRUTINY",
+        "label": "Re-Scrutiny of listed deficiencies",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 5,
+        "description": "",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "code": "EVC_CONSTITUTED",
+        "label": "Expert Visit Committee constituted",
+        "stage": "INSPECTION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 6,
+        "description": "",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "code": "EVC_DONE",
+        "label": "EVC report received",
+        "stage": "INSPECTION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 7,
+        "description": "",
+        "apH_clause": "APH 1.9",
+        "needs_verification": false
+      },
+      {
+        "code": "REGULATION_BUREAU_OBSERVATIONS",
+        "label": "Regulation Bureau observations",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 8,
+        "description": "",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "code": "SHC_HEARING",
+        "label": "Standing Hearing Committee",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 9,
+        "description": "",
+        "apH_clause": "APH 2.23.3",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_LISTING",
+        "label": "Listed before the Executive Committee",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 10,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_DECISION",
+        "label": "Executive Committee decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 11,
+        "description": "",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "code": "EOA_ISSUED",
+        "label": "Extension of Approval recorded",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 12,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "ACTIVE_EOA",
+        "label": "Active EoA",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 13,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "SPEAKING_ORDER",
+        "label": "Speaking Order",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 14,
+        "description": "",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "code": "APPEAL_WINDOW",
+        "label": "Seven-day appeal window (SAC)",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 15,
+        "description": "",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "code": "SAC_REVIEW",
+        "label": "Standing Appellate Committee",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 16,
+        "description": "",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "code": "COUNCIL_FINAL",
+        "label": "Council final decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 17,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "REGIONAL_ENDORSEMENT",
+        "label": "Regional Officer endorsement",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 18,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOA",
+        "label": "Final Letter of Approval",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 19,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOD",
+        "label": "Final Letter of Deficiency",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 20,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOR",
+        "label": "Final Letter of Rejection",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 21,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "WITHDRAWN",
+        "label": "Withdrawn",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 22,
+        "description": "",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ],
+    "transitions": [
+      {
+        "action": "submit",
+        "from_state": "DRAFT",
+        "to_state": "SUBMITTED",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "submit",
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Submit application",
+        "description": "TER paid, data locked and a portal number issued (APH 1.4.3).",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "action": "pay_ter",
+        "from_state": "DRAFT",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "pay_ter"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Confirm TER payment",
+        "description": "Verify that the computed TER has been paid before submission.",
+        "apH_clause": "APH 1.4.2h",
+        "needs_verification": false
+      },
+      {
+        "action": "assign_scrutiny",
+        "from_state": "SUBMITTED",
+        "to_state": "SCRUTINY",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Assign the Scrutiny Committee",
+        "description": "Regulation Bureau assigns a scrutiny member and opens scrutiny.",
+        "apH_clause": "APH 1.8a",
+        "needs_verification": false
+      },
+      {
+        "action": "communicate_deficiency",
+        "from_state": "SCRUTINY",
+        "to_state": "DEFICIENCY_COMMUNICATED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_deficiencies"
+        ],
+        "side_effects": [
+          "create_deficiencies"
+        ],
+        "requires": "deficiencies",
+        "tone": "primary",
+        "sla_stage": "DEFICIENCY",
+        "priority": 0,
+        "label": "Communicate deficiencies (LoD)",
+        "description": "Issue the Deficiency Report and pause the application.",
+        "apH_clause": "APH 2.3.3b",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SCRUTINY",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "constitute_evc"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Recommend an Expert Visit Committee",
+        "description": "Scrutiny is clear; the Regional Officer constitutes the EVC.",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SCRUTINY",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_not_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "scrutiny_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Clear scrutiny without an EVC",
+        "description": "This route does not require an Expert Visit Committee.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "submit_compliance",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "INSTITUTION_COMPLIANCE",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "open_deficiencies"
+        ],
+        "side_effects": [
+          "record_responses"
+        ],
+        "requires": "responses",
+        "tone": "primary",
+        "sla_stage": "DEFICIENCY",
+        "priority": 0,
+        "label": "Submit compliance",
+        "description": "Respond to every open deficiency with evidence.",
+        "apH_clause": "APH 2.4",
+        "needs_verification": false
+      },
+      {
+        "action": "re_scrutiny_verify",
+        "from_state": "INSTITUTION_COMPLIANCE",
+        "to_state": "RE_SCRUTINY",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "responded_deficiencies"
+        ],
+        "side_effects": [
+          "verify_deficiencies"
+        ],
+        "requires": "deficiency_id",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Verify the listed deficiencies",
+        "description": "Re-Scrutiny checks only the deficiencies that were communicated.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "re_scrutiny_verify",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "RE_SCRUTINY",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "responded_deficiencies"
+        ],
+        "side_effects": [
+          "verify_deficiencies"
+        ],
+        "requires": "deficiency_id",
+        "tone": "secondary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Verify another listed deficiency",
+        "description": "Remaining deficiencies are verified one by one in Re-Scrutiny.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "constitute_evc"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Close Re-Scrutiny and constitute the EVC",
+        "description": "All deficiencies are closed; the file moves to the EVC.",
+        "apH_clause": "APH 1.9a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "route_not_requires_evc",
+          "no_open_deficiencies"
+        ],
+        "side_effects": [
+          "scrutiny_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Close Re-Scrutiny without an EVC",
+        "description": "All deficiencies are closed; this route has no EVC.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "submit_evc_video",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "EVC_MEMBER"
+        ],
+        "guard_expr": [
+          "is_evc_member"
+        ],
+        "side_effects": [
+          "submit_evc_video"
+        ],
+        "requires": "video",
+        "tone": "secondary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Upload the EVC video",
+        "description": "The visit video must be at least 30 minutes long (APH 1.9f-g).",
+        "apH_clause": "APH 1.9f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "evc_report",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "EVC_DONE",
+        "allowed_roles": [
+          "EVC_MEMBER"
+        ],
+        "guard_expr": [
+          "is_evc_member",
+          "video_uploaded"
+        ],
+        "side_effects": [
+          "evc_report"
+        ],
+        "requires": "inspection_report",
+        "tone": "primary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Submit the EVC report",
+        "description": "Record findings only after the 30-minute video is uploaded.",
+        "apH_clause": "APH 1.9",
+        "needs_verification": false
+      },
+      {
+        "action": "observations",
+        "from_state": "EVC_DONE",
+        "to_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "observations"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Place Regulation Bureau observations",
+        "description": "The Bureau places observations before the EC.",
+        "apH_clause": "APH 1.10",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "EC_DECISION",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the Executive Committee",
+        "description": "The case is placed on the EC agenda.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "shc_hearing",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "SHC_HEARING",
+        "allowed_roles": [
+          "SHC_MEMBER"
+        ],
+        "guard_expr": [
+          "route_requires_hearing"
+        ],
+        "side_effects": [
+          "shc_hearing"
+        ],
+        "requires": "shc_outcome",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Hold the SHC compliance hearing",
+        "description": "A single hearing stage with a recorded outcome (APH 2.23.3).",
+        "apH_clause": "APH 2.23.3",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "EC_LISTING",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "route_not_requires_hearing"
+        ],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "List before the EC without an SHC",
+        "description": "This route does not require a Standing Hearing Committee.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "SHC_HEARING",
+        "to_state": "EC_LISTING",
+        "allowed_roles": [
+          "SHC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the EC after the SHC",
+        "description": "The SHC outcome is placed before the Executive Committee.",
+        "apH_clause": "APH 2.23.3",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "EC_LISTING",
+        "to_state": "EC_DECISION",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the Executive Committee",
+        "description": "The consolidated list records the Approved Intake.",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "EOA_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_eoa",
+          "core_branches_ok",
+          "eoa_before_last_date",
+          "no_pending_investigation",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_eoa"
+        ],
+        "requires": "decision",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Decide to grant an EoA",
+        "description": "Existing-institution change approved subject to both checks.",
+        "apH_clause": "APH 2.6e",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "SPEAKING_ORDER",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_lor",
+          "speaking_order_present",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_lor"
+        ],
+        "requires": "decision",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Reject with a Speaking Order",
+        "description": "Record the rejection with reasons and an appeal clock.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "EOA_ISSUED",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the EoA",
+        "description": "Publish the EoA letter.",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "APPEAL_WINDOW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "no_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Speaking Order",
+        "description": "Publish the LoR and start the appeal clock.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Issue the re-examined Speaking Order",
+        "description": "The institution already used its single appeal, so the re-examined decision returns to the SAC for its final recommendation.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "FINAL_LOA",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the final approval after appeal",
+        "description": "Publish the EoA letter after the Council decision.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "file_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "within_appeal_window",
+          "no_prior_appeal"
+        ],
+        "side_effects": [
+          "file_appeal"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "File appeal with the SAC",
+        "description": "One appeal only, within the configured seven-day window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_loa"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Finalise without appeal (LoA)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lod"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Finalise without appeal (LoD)",
+        "description": "A deficiency decision becomes final after the appeal window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lor"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Finalise without appeal (LoR)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "send_back",
+        "from_state": "SAC_REVIEW",
+        "to_state": "EVC_CONSTITUTED",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [
+          "appeal_loop_available"
+        ],
+        "side_effects": [
+          "send_back"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "INSPECTION",
+        "priority": 0,
+        "label": "Send the case back once",
+        "description": "The SAC may send the case back once; a second send-back is not allowed (Annexure-7).",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "action": "sac_recommend",
+        "from_state": "SAC_REVIEW",
+        "to_state": "COUNCIL_FINAL",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "sac_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Record the SAC recommendation",
+        "description": "The SAC recommends; the Council records the final decision.",
+        "apH_clause": "APH 1.11d",
+        "needs_verification": false
+      },
+      {
+        "action": "council_final",
+        "from_state": "COUNCIL_FINAL",
+        "to_state": "REGIONAL_ENDORSEMENT",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "council_final"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Record the Council's final decision",
+        "description": "The Council decision is final. The EC member records it in the Council secretariat capacity; the super admin only ratifies EC decisions.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_loa"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Endorse the final approval",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lod"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Endorse the final deficiency letter",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lor"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Endorse the final rejection",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SUBMITTED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SCRUTINY",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SUBMITTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SCRUTINY",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "DEFICIENCY_COMMUNICATED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "INSTITUTION_COMPLIANCE",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "RE_SCRUTINY",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EVC_CONSTITUTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EVC_DONE",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "REGULATION_BUREAU_OBSERVATIONS",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SHC_HEARING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_DECISION",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_LISTING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SAC_REVIEW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ]
+  },
+  {
+    "key": "TRACK_D",
+    "label": "Track D - year-round scrutiny-only changes",
+    "track": "TRACK_D",
+    "description": "Closure, bank details, trust name and course changes: scrutiny, EC listing and decision. A failed closure gives an EoA with zero intake.",
+    "apH_clause": "APH 2.3.3h; 2.3.4",
+    "needs_verification": false,
+    "is_active": true,
+    "config": {
+      "appeal_start_event": "DECISION_UPLOADED",
+      "security_deposit": false
+    },
+    "states": [
+      {
+        "code": "DRAFT",
+        "label": "Draft",
+        "stage": "APPLICATION",
+        "is_initial": true,
+        "is_terminal": false,
+        "sort_order": 0,
+        "description": "",
+        "apH_clause": "APH 1.4",
+        "needs_verification": false
+      },
+      {
+        "code": "SUBMITTED",
+        "label": "Submitted (locked, TER paid, portal number issued)",
+        "stage": "APPLICATION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 1,
+        "description": "",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "code": "SCRUTINY",
+        "label": "Scrutiny Committee",
+        "stage": "SCRUTINY",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 2,
+        "description": "",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_LISTING",
+        "label": "Listed before the Executive Committee",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 3,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "EC_DECISION",
+        "label": "Executive Committee decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 4,
+        "description": "",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "code": "EOA_ISSUED",
+        "label": "Extension of Approval recorded",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 5,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "ACTIVE_EOA",
+        "label": "Active EoA",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 6,
+        "description": "",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "code": "SPEAKING_ORDER",
+        "label": "Speaking Order",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 7,
+        "description": "",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "code": "APPEAL_WINDOW",
+        "label": "Seven-day appeal window (SAC)",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 8,
+        "description": "",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "code": "SAC_REVIEW",
+        "label": "Standing Appellate Committee",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 9,
+        "description": "",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "code": "COUNCIL_FINAL",
+        "label": "Council final decision",
+        "stage": "DECISION",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 10,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "REGIONAL_ENDORSEMENT",
+        "label": "Regional Officer endorsement",
+        "stage": "COMMITTEE_REVIEW",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 11,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOA",
+        "label": "Final Letter of Approval",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": false,
+        "sort_order": 12,
+        "description": "",
+        "apH_clause": "APH 1.10b",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOD",
+        "label": "Final Letter of Deficiency",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 13,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "FINAL_LOR",
+        "label": "Final Letter of Rejection",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 14,
+        "description": "",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "code": "WITHDRAWN",
+        "label": "Withdrawn",
+        "stage": "COMPLETED",
+        "is_initial": false,
+        "is_terminal": true,
+        "sort_order": 15,
+        "description": "",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ],
+    "transitions": [
+      {
+        "action": "submit",
+        "from_state": "DRAFT",
+        "to_state": "SUBMITTED",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "submit",
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Submit application",
+        "description": "Year-round application; TER rules come from the route row.",
+        "apH_clause": "APH 1.4.3",
+        "needs_verification": false
+      },
+      {
+        "action": "pay_ter",
+        "from_state": "DRAFT",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "pay_ter"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Confirm TER payment",
+        "description": "Some year-round types are exempt from TER.",
+        "apH_clause": "APH 1.4.2h",
+        "needs_verification": false
+      },
+      {
+        "action": "assign_scrutiny",
+        "from_state": "SUBMITTED",
+        "to_state": "SCRUTINY",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "assign_scrutiny"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Assign scrutiny",
+        "description": "Regulation Bureau opens scrutiny.",
+        "apH_clause": "APH 1.8a",
+        "needs_verification": false
+      },
+      {
+        "action": "scrutiny_recommend",
+        "from_state": "SCRUTINY",
+        "to_state": "EC_LISTING",
+        "allowed_roles": [
+          "SCRUTINY_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Clear scrutiny and list before the EC",
+        "description": "Year-round changes are scrutiny-only.",
+        "apH_clause": "APH 1.8",
+        "needs_verification": false
+      },
+      {
+        "action": "list_for_ec",
+        "from_state": "EC_LISTING",
+        "to_state": "EC_DECISION",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "list_for_ec"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "List before the Executive Committee",
+        "description": "The case is placed on the EC agenda.",
+        "apH_clause": "APH 1.10a",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "EOA_ISSUED",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_eoa",
+          "closure_outcome_present",
+          "eoa_before_last_date",
+          "no_pending_investigation",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_eoa",
+          "zero_intake_if_closure_failed"
+        ],
+        "requires": "decision",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Decide the year-round change",
+        "description": "A failed closure still produces an EoA with zero intake (APH 2.3.3h). A pending court case or charge sheet blocks the change.",
+        "apH_clause": "APH 2.3.3h",
+        "needs_verification": false
+      },
+      {
+        "action": "ec_decide",
+        "from_state": "EC_DECISION",
+        "to_state": "SPEAKING_ORDER",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "decision_lor",
+          "speaking_order_present",
+          "ec_quorum_met"
+        ],
+        "side_effects": [
+          "ec_decide_lor"
+        ],
+        "requires": "decision",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 1,
+        "label": "Reject the change with a Speaking Order",
+        "description": "Record the rejection with reasons.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "EOA_ISSUED",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the EoA",
+        "description": "Publish the EoA letter.",
+        "apH_clause": "APH 2.25",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "APPEAL_WINDOW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "no_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Issue the Speaking Order",
+        "description": "Publish the LoR and start the appeal clock.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_lor",
+        "from_state": "SPEAKING_ORDER",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [
+          "has_prior_appeal",
+          "speaking_order_present"
+        ],
+        "side_effects": [
+          "issue_lor"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 1,
+        "label": "Issue the re-examined Speaking Order",
+        "description": "The institution already used its single appeal, so the re-examined decision returns to the SAC for its final recommendation.",
+        "apH_clause": "APH 2.24a",
+        "needs_verification": false
+      },
+      {
+        "action": "issue_eoa",
+        "from_state": "FINAL_LOA",
+        "to_state": "ACTIVE_EOA",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "issue_eoa"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Issue the final approval after appeal",
+        "description": "Publish the EoA letter after the Council decision.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "file_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "SAC_REVIEW",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [
+          "within_appeal_window",
+          "no_prior_appeal"
+        ],
+        "side_effects": [
+          "file_appeal"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "File appeal with the SAC",
+        "description": "One appeal only, within the configured seven-day window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_loa"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Finalise without appeal (LoA)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lod"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Finalise without appeal (LoD)",
+        "description": "A deficiency decision becomes final after the appeal window.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "finalize_no_appeal",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "appeal_window_closed",
+          "appeal_letter_lor"
+        ],
+        "side_effects": [
+          "finalize_no_appeal"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Finalise without appeal (LoR)",
+        "description": "If no appeal is filed, the decision becomes final automatically.",
+        "apH_clause": "APH 1.11a",
+        "needs_verification": false
+      },
+      {
+        "action": "send_back",
+        "from_state": "SAC_REVIEW",
+        "to_state": "SCRUTINY",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [
+          "appeal_loop_available"
+        ],
+        "side_effects": [
+          "send_back"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "SCRUTINY",
+        "priority": 0,
+        "label": "Send the case back once",
+        "description": "The SAC may send the case back once; a second send-back is not allowed (Annexure-7).",
+        "apH_clause": "APH 1.11c",
+        "needs_verification": false
+      },
+      {
+        "action": "sac_recommend",
+        "from_state": "SAC_REVIEW",
+        "to_state": "COUNCIL_FINAL",
+        "allowed_roles": [
+          "SAC_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "sac_recommend"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "DECISION",
+        "priority": 0,
+        "label": "Record the SAC recommendation",
+        "description": "The SAC recommends; the Council records the final decision.",
+        "apH_clause": "APH 1.11d",
+        "needs_verification": false
+      },
+      {
+        "action": "council_final",
+        "from_state": "COUNCIL_FINAL",
+        "to_state": "REGIONAL_ENDORSEMENT",
+        "allowed_roles": [
+          "EXECUTIVE_COMMITTEE_MEMBER"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "council_final"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMMITTEE_REVIEW",
+        "priority": 0,
+        "label": "Record the Council's final decision",
+        "description": "The Council decision is final. The EC member records it in the Council secretariat capacity; the super admin only ratifies EC decisions.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOA",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_loa"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "primary",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Endorse the final approval",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOD",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lod"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "secondary",
+        "sla_stage": "COMPLETED",
+        "priority": 1,
+        "label": "Endorse the final deficiency letter",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "endorse_decision",
+        "from_state": "REGIONAL_ENDORSEMENT",
+        "to_state": "FINAL_LOR",
+        "allowed_roles": [
+          "REGIONAL_OFFICER"
+        ],
+        "guard_expr": [
+          "final_outcome_lor"
+        ],
+        "side_effects": [
+          "endorse_decision"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 2,
+        "label": "Endorse the final rejection",
+        "description": "The Regional Officer endorses; they do not approve or reject.",
+        "apH_clause": "APH 1.11e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SUBMITTED",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "reopen_once",
+        "from_state": "SCRUTINY",
+        "to_state": "DRAFT",
+        "allowed_roles": [
+          "REGULATION_BUREAU_OFFICER"
+        ],
+        "guard_expr": [
+          "reopen_available"
+        ],
+        "side_effects": [
+          "reopen_once"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "APPLICATION",
+        "priority": 0,
+        "label": "Reopen a wrongly submitted application (once)",
+        "description": "Reopen once, after a fresh TER and late penalty, so the institution can correct the data (APH 2.3.3d-e).",
+        "apH_clause": "APH 2.3.3d-e",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SUBMITTED",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SCRUTINY",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_DECISION",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "EC_LISTING",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "APPEAL_WINDOW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      },
+      {
+        "action": "withdraw_application",
+        "from_state": "SAC_REVIEW",
+        "to_state": "WITHDRAWN",
+        "allowed_roles": [
+          "INSTITUTION_ADMIN"
+        ],
+        "guard_expr": [],
+        "side_effects": [
+          "withdraw_application"
+        ],
+        "requires": "none",
+        "tone": "danger",
+        "sla_stage": "COMPLETED",
+        "priority": 0,
+        "label": "Withdraw application",
+        "description": "Withdraw without discarding the workflow history.",
+        "apH_clause": "APH 2.3.3f-g",
+        "needs_verification": false
+      }
+    ]
+  }
+]

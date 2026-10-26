@@ -21,6 +21,7 @@ from app.models.deadline import DeadlineRule, Timer
 from app.models.decision import CouncilRatification, Decision, DecisionLetter
 from app.models.deficiency import Deficiency
 from app.models.document import Document
+from app.models.document_sequence import DecisionLetterSequence
 from app.models.enums import (
     AlertChannel,
     AlertStatus,
@@ -72,6 +73,11 @@ from app.models.security_deposit_schedule import SecurityDepositSchedule
 from app.models.sla import SLAConfig
 from app.models.user import User
 from app.models.workflow import WorkflowEvent
+from app.models.workflow_definition import (
+    WorkflowDefinition,
+    WorkflowState,
+    WorkflowTransition,
+)
 
 __all__ = [
     "AcademicCalendarEvent",
@@ -110,6 +116,7 @@ __all__ = [
     "Decision",
     "DecisionBody",
     "DecisionLetter",
+    "DecisionLetterSequence",
     "DecisionLetterType",
     "DecisionOutcome",
     "DecisionType",
@@ -149,6 +156,9 @@ __all__ = [
     "TimerStatus",
     "User",
     "WorkflowAction",
+    "WorkflowDefinition",
     "WorkflowEvent",
     "WorkflowStage",
+    "WorkflowState",
+    "WorkflowTransition",
 ]

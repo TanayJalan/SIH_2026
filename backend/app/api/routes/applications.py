@@ -27,8 +27,14 @@ from app.services.fees import ter_selector_rate
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 _CLOSED_STATUSES = (
+    ApplicationStatus.ACTIVE_LOA,
+    ApplicationStatus.ACTIVE_EOA,
+    ApplicationStatus.CANCELLED,
+    ApplicationStatus.FINAL_LOD,
+    ApplicationStatus.FINAL_LOR,
+    ApplicationStatus.WITHDRAWN,
+    # Legacy pre-APH outcomes kept for historical rows.
     ApplicationStatus.APPROVED,
-    ApplicationStatus.CONDITIONALLY_APPROVED,
     ApplicationStatus.REJECTED,
 )
 

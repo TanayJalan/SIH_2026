@@ -513,9 +513,10 @@ class FeeService:
             raise FeeError(409, "An application can be reopened only once (APH 2.3.3d-e).")
         if application.status not in {
             ApplicationStatus.SUBMITTED,
-            ApplicationStatus.DOCUMENT_VERIFICATION,
             ApplicationStatus.SCRUTINY,
-            ApplicationStatus.DEFICIENCY_RAISED,
+            ApplicationStatus.DEFICIENCY_COMMUNICATED,
+            ApplicationStatus.INSTITUTION_COMPLIANCE,
+            ApplicationStatus.RE_SCRUTINY,
         }:
             raise FeeError(409, "Only a submitted application can be reopened.")
         if not payload.late_penalty_acknowledged:

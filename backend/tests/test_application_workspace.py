@@ -388,7 +388,7 @@ def test_complete_application_submits_with_sla_and_workflow_event(
     submitted = api_client.post(f"/applications/{application_id}/submit", headers=headers)
     assert submitted.status_code == 200, submitted.text
     body = submitted.json()
-    assert body["application"]["status"] == "DOCUMENT_VERIFICATION"
+    assert body["application"]["status"] == "SUBMITTED"
     assert body["application"]["assigned_officer_id"] == str(
         test_data.users["scrutiny"].id
     )
@@ -399,13 +399,13 @@ def test_complete_application_submits_with_sla_and_workflow_event(
     with SessionLocal() as db:
         application = db.get(Application, uuid.UUID(application_id))
         assert application is not None
-        assert application.status == ApplicationStatus.DOCUMENT_VERIFICATION
+        assert application.status == ApplicationStatus.SUBMITTED
         assert application.assigned_officer_id == test_data.users["scrutiny"].id
         assert application.submitted_at is not None
         assert application.stage_entered_at is not None
         assert application.sla_due_at is not None
         sla = db.scalar(
-            select(SLAConfig).where(SLAConfig.stage == WorkflowStage.DOCUMENT_VERIFICATION)
+            select(SLAConfig).where(SLAConfig.stage == WorkflowStage.APPLICATION)
         )
         assert sla is not None
         assert application.sla_due_at == application.stage_entered_at + timedelta(
@@ -418,9 +418,8 @@ def test_complete_application_submits_with_sla_and_workflow_event(
         ).all()
         assert [event.to_status for event in events] == [
             ApplicationStatus.SUBMITTED,
-            ApplicationStatus.DOCUMENT_VERIFICATION,
         ]
-        assert [event.action for event in events] == ["submit", "auto_assign"]
+        assert [event.action for event in events] == ["submit"]
 
     duplicate = api_client.post(f"/applications/{application_id}/submit", headers=headers)
     assert duplicate.status_code == 409

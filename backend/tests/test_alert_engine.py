@@ -17,6 +17,7 @@ from app.main import create_app
 from app.models.alert import Alert, AlertRule, AlertTriggerCatalogue
 from app.models.application import Application
 from app.models.audit import AuditLog
+from app.models.deadline import DeadlineRule, Timer
 from app.models.deficiency import Deficiency
 from app.models.document import Document
 from app.models.enums import (
@@ -27,6 +28,7 @@ from app.models.enums import (
     DeficiencyStatus,
     InspectionStatus,
     Severity,
+    TimerStatus,
     WorkflowStage,
 )
 from app.models.inspection import Inspection
@@ -267,6 +269,97 @@ def test_periodic_scans_create_each_trigger_once(test_data: TestData) -> None:
     assert len(dedupe_rows) == len(set(dedupe_rows))
 
 
+def test_appeal_and_deposit_timers_warn_the_institution(
+    test_data: TestData,
+) -> None:
+    """The statutory clocks use their own triggers and reach the applicant.
+
+    The appeal window (APH 1.11a) and the Security Deposit clock (APH 2.25f)
+    are ``Timer`` rows started by the decision letter, not the stage SLA, so
+    they must not be reported as a deadline-approaching alert.
+    """
+    clock = SimulatedClock()
+    now = clock.now()
+    with SessionLocal() as db:
+        application = _make_application(
+            db,
+            test_data,
+            due_days=10,
+            status=ApplicationStatus.APPEAL_WINDOW,
+            stage=WorkflowStage.DECISION,
+        )
+        appeal_rule = db.scalar(
+            select(DeadlineRule).where(DeadlineRule.code == "APPEAL_WINDOW")
+        )
+        deposit_rule = db.scalar(
+            select(DeadlineRule).where(DeadlineRule.code == "SECURITY_DEPOSIT")
+        )
+        assert appeal_rule is not None
+        assert deposit_rule is not None
+        db.add_all(
+            [
+                Timer(
+                    application_id=application.id,
+                    deadline_rule_id=appeal_rule.id,
+                    started_at=now,
+                    due_at=now + timedelta(days=2),
+                    status=TimerStatus.PENDING,
+                ),
+                Timer(
+                    application_id=application.id,
+                    deadline_rule_id=deposit_rule.id,
+                    started_at=now,
+                    due_at=now + timedelta(days=5),
+                    status=TimerStatus.PENDING,
+                ),
+            ]
+        )
+        db.commit()
+        application_id = application.id
+
+        first = _scan(db, clock)
+        counts = dict(
+            db.execute(
+                select(Alert.type, func.count())
+                .where(Alert.application_id == application_id)
+                .group_by(Alert.type)
+            ).all()
+        )
+        _scan(db, clock)
+        counts_again = dict(
+            db.execute(
+                select(Alert.type, func.count())
+                .where(Alert.application_id == application_id)
+                .group_by(Alert.type)
+            ).all()
+        )
+        appeal_alert = db.scalar(
+            select(Alert).where(
+                Alert.application_id == application_id,
+                Alert.type == "APPEAL_WINDOW_CLOSING",
+            )
+        )
+        deposit_alert = db.scalar(
+            select(Alert).where(
+                Alert.application_id == application_id,
+                Alert.type == "DEPOSIT_DUE",
+            )
+        )
+
+    assert first.alerts_created >= 2
+    assert counts["APPEAL_WINDOW_CLOSING"] == 1
+    assert counts["DEPOSIT_DUE"] == 1
+    assert "DEADLINE_APPROACHING" not in counts
+    assert counts_again == counts
+    assert appeal_alert is not None
+    assert deposit_alert is not None
+    assert appeal_alert.title.startswith("Appeal window closing")
+    assert "7 day" in deposit_alert.message or "Security Deposit" in deposit_alert.message
+    expected_admin = test_data.users["institution_admin_west"].id
+    assert appeal_alert.recipient_user_id == expected_admin
+    assert deposit_alert.recipient_user_id == expected_admin
+
+
 def test_escalation_chain_raises_severity_and_records_workflow_events(
     test_data: TestData,
 ) -> None:
@@ -481,9 +574,9 @@ def test_workflow_notifier_creates_status_and_inspection_alerts_once(
         inspection_event = WorkflowEvent(
             application_id=application.id,
             from_status=ApplicationStatus.SCRUTINY,
-            to_status=ApplicationStatus.INSPECTION_SCHEDULED,
+            to_status=ApplicationStatus.EVC_CONSTITUTED,
             actor_id=actor.id,
-            action="schedule_inspection",
+            action="constitute_evc",
             comment="Fictional inspection",
             details={"inspection_id": str(inspection.id)},
             apH_clause="APH 1.8a",
@@ -814,7 +907,7 @@ def test_debug_time_replays_deadline_breach_and_escalation(
 
 
 def test_existing_alert_rules_resolve_through_trigger_catalogue() -> None:
-    """The eight legacy trigger codes keep their handler after the CHECK is removed."""
+    """Every seeded trigger code keeps a handler and at least one rule."""
     expected = {
         "DEADLINE_APPROACHING",
         "SLA_BREACHED",
@@ -824,6 +917,8 @@ def test_existing_alert_rules_resolve_through_trigger_catalogue() -> None:
         "COMPLIANCE_RED",
         "APPLICATION_STATUS_CHANGED",
         "INSPECTION_SCHEDULED",
+        "APPEAL_WINDOW_CLOSING",
+        "DEPOSIT_DUE",
     }
     with SessionLocal() as db:
         catalogue = {

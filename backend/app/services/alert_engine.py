@@ -29,6 +29,7 @@ from app.core.config import Settings, get_settings
 from app.db.session import SessionLocal
 from app.models.alert import Alert, AlertRule
 from app.models.application import Application
+from app.models.deadline import DeadlineRule, Timer
 from app.models.deficiency import Deficiency
 from app.models.document import Document
 from app.models.enums import (
@@ -40,6 +41,7 @@ from app.models.enums import (
     InspectionStatus,
     Role,
     Severity,
+    TimerStatus,
 )
 from app.models.inspection import Inspection
 from app.models.institution import Institution
@@ -62,8 +64,14 @@ _ESCALATION_ROLES = frozenset(
 logger = logging.getLogger("app.alerts")
 
 TERMINAL_STATUSES = {
+    ApplicationStatus.ACTIVE_LOA,
+    ApplicationStatus.ACTIVE_EOA,
+    ApplicationStatus.CANCELLED,
+    ApplicationStatus.FINAL_LOD,
+    ApplicationStatus.FINAL_LOR,
+    ApplicationStatus.WITHDRAWN,
+    # Legacy pre-APH outcomes kept for historical rows.
     ApplicationStatus.APPROVED,
-    ApplicationStatus.CONDITIONALLY_APPROVED,
     ApplicationStatus.REJECTED,
 }
 SEVERITY_RANK = {
@@ -72,6 +80,14 @@ SEVERITY_RANK = {
     Severity.HIGH: 2,
     Severity.CRITICAL: 3,
 }
+
+# Statutory clocks that get their own warning trigger instead of the stage-SLA
+# one. The key is the ``deadline_rules.code`` value; the value is the engine
+# handler (see ``alert_trigger_catalogue``).
+_TIMER_ALERTS = (
+    ("APPEAL_WINDOW", AlertTrigger.APPEAL_WINDOW_CLOSING),
+    ("SECURITY_DEPOSIT", AlertTrigger.DEPOSIT_DUE),
+)
 SEVERITY_RAISED = {
     Severity.LOW: Severity.MEDIUM,
     Severity.MEDIUM: Severity.HIGH,
@@ -278,6 +294,7 @@ class AlertEngine:
         """Run every periodic trigger once and return a summary."""
         started_at = self._now()
         self._scan_deadlines()
+        self._scan_timers()
         self._scan_slas()
         self._scan_deficiencies()
         self._scan_documents()
@@ -507,6 +524,71 @@ class AlertEngine:
                 title=title,
                 application=application,
             )
+
+    def _scan_timers(self) -> None:
+        """Warn the institution before the appeal and Security Deposit clocks close.
+
+        These two statutory clocks are ``Timer`` rows started by the decision
+        letter (APH 1.11a, 2.25f). They are separate from the stage SLA, so
+        they have their own triggers and go to the institution admin who has to
+        act on them.
+        """
+        today = self._now().date()
+        for rule_code, trigger in _TIMER_ALERTS:
+            rules = self._rules(trigger)
+            if not rules:
+                continue
+            timers = self._db.scalars(
+                select(Timer)
+                .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
+                .options(
+                    joinedload(Timer.application).joinedload(Application.institution),
+                    joinedload(Timer.application).joinedload(
+                        Application.assigned_officer
+                    ),
+                )
+                .where(
+                    DeadlineRule.code == rule_code,
+                    Timer.status.in_((TimerStatus.PENDING, TimerStatus.DUE)),
+                )
+            ).unique().all()
+            for timer in timers:
+                application = timer.application
+                if application is None or self._is_inactive(application):
+                    continue
+                days_until = (timer.due_at.date() - today).days
+                if days_until < 0:
+                    continue
+                rule = self._window_rule(rules, days_until)
+                if rule is None:
+                    continue
+                recipients = (
+                    self._institution_admin_recipients(application)
+                    or self._initial_recipients(application)
+                )
+                context = self._context(
+                    application=application,
+                    due_date=timer.due_at,
+                    days_remaining=days_until,
+                )
+                title = (
+                    "Appeal window closing: "
+                    f"{context['application_reference']}"
+                    if trigger is AlertTrigger.APPEAL_WINDOW_CLOSING
+                    else f"Security Deposit due: {context['institution']}"
+                )
+                self._create_alert(
+                    rule=rule,
+                    trigger=trigger,
+                    recipients=recipients,
+                    context=context,
+                    dedupe_base=(
+                        f"{trigger.value.lower()}:{timer.id}:{rule.days_before}:"
+                        f"{timer.due_at.date().isoformat()}"
+                    ),
+                    title=title,
+                    application=application,
+                )
 
     def _scan_slas(self) -> None:
         rules = self._rules(AlertTrigger.SLA_BREACHED)
@@ -1133,8 +1215,12 @@ def notify_workflow_event(
     engine = AlertEngine(db, clock, notifications=notifications)
     created: list[Alert] = []
 
-    if event.action == "schedule_inspection":
-        inspection_id = (event.details or {}).get("inspection_id")
+    inspection_id = (event.details or {}).get("inspection_id")
+    scheduled = event.to_status in {
+        ApplicationStatus.EVC_CONSTITUTED,
+        ApplicationStatus.RANDOM_EVC,
+    }
+    if scheduled:
         if inspection_id:
             try:
                 parsed_id = uuid.UUID(str(inspection_id))
@@ -1168,14 +1254,14 @@ def notify_workflow_event(
                             application=application,
                         )
     elif event.from_status is not None and event.from_status != event.to_status:
-        if event.action == "auto_assign":
+        if event.action == "assign_scrutiny":
             # Assignment is recorded on the submit notification rather than
             # producing a second, noisy status alert.
             pass
         else:
             rules = engine._rules(AlertTrigger.APPLICATION_STATUS_CHANGED)  # noqa: SLF001
             if rules:
-                if event.action == "raise_deficiency":
+                if event.action == "communicate_deficiency":
                     recipients = (
                         engine._institution_admin_recipients(  # noqa: SLF001
                             application
@@ -1192,13 +1278,19 @@ def notify_workflow_event(
                         "action": event.action or "",
                     },
                 )
+                letter_number = (event.details or {}).get("letter_number")
+                title = (
+                    f"Decision letter issued: {letter_number}"
+                    if letter_number
+                    else f"Status updated: {context['application_reference']}"
+                )
                 created = engine._create_alert(  # noqa: SLF001
                     rule=rules[0],
                     trigger=AlertTrigger.APPLICATION_STATUS_CHANGED,
                     recipients=recipients,
                     context=context,
                     dedupe_base=f"status_changed:{event.id}",
-                    title=f"Status updated: {context['application_reference']}",
+                    title=title,
                     application=application,
                 )
 

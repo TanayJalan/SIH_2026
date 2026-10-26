@@ -190,3 +190,48 @@ def refresh_timer_status(timer: Timer, now: datetime) -> TimerStatus:
     """Set and return the timer status for ``now``."""
     timer.status = timer_status_at(timer, now)
     return timer.status
+
+
+def complete_timers(
+    db: Session,
+    application: Application,
+    *,
+    rule_code: str,
+    status: TimerStatus = TimerStatus.COMPLETED,
+    audit: AuditService | None = None,
+) -> int:
+    """Close every open timer of ``rule_code`` for ``application``.
+
+    Used when the obligation is met before the clock runs out: filing the
+    appeal stops the seven-day window (APH 1.11a) and paying the Security
+    Deposit stops the deposit clock (APH 2.25f).
+    """
+    timers = list(
+        db.scalars(
+            select(Timer)
+            .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
+            .where(
+                Timer.application_id == application.id,
+                DeadlineRule.code == rule_code,
+                Timer.status.in_((TimerStatus.PENDING, TimerStatus.DUE)),
+            )
+        ).all()
+    )
+    for timer in timers:
+        before = {"status": timer.status.value}
+        timer.status = status
+        if audit is not None:
+            audit.log(
+                None,
+                f"timer.{status.value.lower()}",
+                "Timer",
+                timer.id,
+                before=before,
+                after={
+                    "application_id": str(application.id),
+                    "deadline_rule": rule_code,
+                    "status": status.value,
+                },
+            )
+    db.flush()
+    return len(timers)

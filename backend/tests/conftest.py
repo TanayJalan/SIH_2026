@@ -27,6 +27,7 @@ from app.models import (
 )
 from app.models.alert import Alert
 from app.models.audit import AuditLog
+from app.models.security_deposit import SecurityDeposit
 from app.services.audit import AuditService
 from tests.support import TestData, TestUser
 
@@ -82,6 +83,11 @@ def workspace_applications() -> Generator[list[uuid.UUID], None, None]:
     if not application_ids:
         return
     with SessionLocal() as db:
+        db.execute(
+            delete(SecurityDeposit).where(
+                SecurityDeposit.application_id.in_(application_ids)
+            )
+        )
         db.execute(delete(Application).where(Application.id.in_(application_ids)))
         db.commit()
 
@@ -185,8 +191,8 @@ def test_data() -> Generator[TestData, None, None]:
             application_type="EOA_SELF_DISCLOSURE",
             category=ApplicationCategory.CAT1_CUTOFF,
             academic_year="2026-27",
-            status=ApplicationStatus.DOCUMENT_VERIFICATION,
-            current_stage=WorkflowStage.DOCUMENT_VERIFICATION,
+            status=ApplicationStatus.SUBMITTED,
+            current_stage=WorkflowStage.APPLICATION,
             assigned_officer_id=None,
             submitted_at=submitted_at,
             locked_at=submitted_at,
