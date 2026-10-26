@@ -1907,6 +1907,8 @@ def seed() -> None:
         "expert_pool": 0,
         "sla_configs": 0,
         "alert_rules": 0,
+        "deadline_rules": 0,
+        "workflow_definitions": 0,
         "compliance_rules": 0,
         "compliance_config": 0,
         "compliance_snapshots": 0,
@@ -2225,7 +2227,7 @@ def seed() -> None:
 
         reference_counts = _ensure_aph_reference_data(db, audit)
         for key, value in reference_counts.items():
-            created[key] += value
+            created[key] = created.get(key, 0) + value
 
         west_application, made = _get_or_create_application(
             db,
