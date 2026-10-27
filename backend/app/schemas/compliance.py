@@ -342,7 +342,7 @@ class RagBreakpointsConfig(BaseModel):
 
 
 class BandwidthTierConfig(BaseModel):
-    """One row of the internet-bandwidth table (APH 7.3).
+    """One row of the internet-bandwidth table (APH Annexure-4).
 
     ``max_intake=None`` is the catch-all top tier.
     """

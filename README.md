@@ -459,7 +459,7 @@ before/after values.
 > Process Handbook before an approval decision relies on it. Ambiguous readings are listed in
 > `docs/OPEN_QUESTIONS.md` (OQ-38 … OQ-50).
 
-### Calculators (APH 7.1, 6.14, 6.17, Annexure-3, Annexure-4)
+### Calculators (APH 6.14, 6.17, 6.19, Annexure-3, Annexure-4)
 
 Calculators are pure functions with unit tests built from the worked examples in `APH_SPEC.md`:
 
@@ -474,11 +474,16 @@ Calculators are pure functions with unit tests built from the worked examples in
 | `pc_requirement` | Students ÷ students-per-computer ratio, with a 20-PC floor and printers at 5%. |
 | `bandwidth_requirement` | 100 / 300 / 500 / 1000 Mbps tiers by sanctioned intake. |
 | `lease_compliance`, `plot_compliance` | 30-year lease, live lease ≥ longest course, at most three plots within 2 km. |
-| `reduced_enrolment_trigger`, `excess_admission` | Five-year admission ledger checks (APH 7.2, 7.4g). |
+| `reduced_enrolment_trigger`, `excess_admission` | Five-year admission ledger checks (APH 6.12a, 7.4g). |
 
 The numeric inputs above live in `area_norms`, `fsr_ratios`, `cadre_ratios`, `library_norms`,
 `pc_ratios` and `bandwidth_tiers` rows of `compliance_config`, so the **Norm calculators** tab can
 correct them without a code change.
+
+Each rule cites the handbook clause that *states the norm* — Chapter VI (`6.11`–`6.54`) or an
+Annexure — not the chapter that punishes a breach. Chapter VII (`7.1`–`7.13`) is penal action, so
+only `7.4a`–`7.4n` (the violation codes behind the suggested actions) may appear as a rule clause;
+a test fails the build if a rule cites `7.1`, `7.2` or `7.3`.
 
 ### Rules and operators
 
@@ -519,6 +524,10 @@ editable in the admin UI.
 - Snapshots are append-only per institution and power the trend chart. Evaluation runs nightly
   through APScheduler, after application data writes and on demand from **Re-evaluate now**. Set
   `COMPLIANCE_MONITOR_HOUR` (0–23) or `COMPLIANCE_MONITOR_ENABLED=false` to change or disable it.
+- The monitor evaluates the institution's most recent application **that carries programme rows**
+  (the New/Extension case the norms apply to) and only falls back to the latest application when
+  none has any. A year-round request such as a change of site carries no programme detail and would
+  otherwise report nothing but missing data.
 - A worsening to RED creates in-app alerts for the Regional Officer and super administrator.
 
 ### Penalty suggestions (APH 7.4 → 7.3)

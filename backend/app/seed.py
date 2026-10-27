@@ -702,7 +702,7 @@ def _get_or_create_application(
     return application, True
 
 
-DEMO_FACULTY_APH_CLAUSE = "APH 7.1"
+DEMO_FACULTY_APH_CLAUSE = "APH 6.14"
 
 
 def _ensure_programmes(

@@ -734,7 +734,7 @@ def _faculty_metrics(
         counts[member.cadre] = counts.get(member.cadre, 0) + 1
     active_total = len(active)
 
-    # APH 7.1 places the Principal/Director in the first Professor slot, so the
+    # Annexure-5 places the Principal/Director in the first Professor slot, so the
     # head counts towards the Professor tier when checking the 1:2:6 cadre.
     professors_effective = (
         counts[FacultyCadre.PROFESSOR] + counts[FacultyCadre.PRINCIPAL_DIRECTOR]
@@ -2186,7 +2186,7 @@ def _monitored_application(
 ) -> Application | None:
     """Return the application the monitor should evaluate for an institution.
 
-    Compliance norms are programme-scoped (APH 7.1, Annexure-3), so the monitor
+    Compliance norms are programme-scoped (APH 6.14, Annexure-3), so the monitor
     prefers the most recent application that carries programme rows: the
     New/Extension of Approval case in the MVP flow. A year-round request such as
     a change of site or a closure is recorded without programme detail and would

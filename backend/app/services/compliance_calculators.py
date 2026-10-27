@@ -249,7 +249,7 @@ def cadre_split(required: int, weights: Sequence[int] = (1, 2, 6)) -> tuple[int,
     rounded down and the remainder is assigned to Assistant Professors, so the
     total always equals ``required``. A non-empty establishment always keeps at
     least one Professor because every programme needs one (APH 6.14f); a
-    qualified Associate Professor may substitute (APH 7.1).
+    qualified Associate Professor may substitute (APH 6.14, Annexure-5).
     """
     if required <= 0:
         return (0, 0, 0)
@@ -298,7 +298,7 @@ def faculty_requirement(
 
     ``average_admission_pct`` is the three-year average admissions as a
     percentage of sanctioned intake. At or below 50% the requirement is
-    reduced by 25% (APH 7.1).
+    reduced by 25% (APH 6.14).
     """
     groups: dict[str, dict[str, Any]] = {}
     for programme in programmes:
@@ -371,7 +371,7 @@ def faculty_requirement(
         group["level"] != "DIPLOMA" and group["total_intake"] > 0
         for group in groups.values()
     ) else 0
-    # APH 7.1 lists the Principal/Director as the first Professor slot, not as
+    # Annexure-5 lists the Principal/Director as the first Professor slot, not as
     # an extra post, so S/ratio already funds it. Diploma counts it inside
     # S/25. ``principal_director`` is therefore reported, not added.
     return FacultyRequirement(
@@ -397,7 +397,7 @@ def cadre_compliance(
     """True when the actual cadre mix is at least the required 1:2:6 split.
 
     Upward substitution is allowed: a surplus of Professors may cover an
-    Associate Professor vacancy, because APH 7.1 lets a qualified Associate
+    Associate Professor vacancy, because Annexure-5 lets a qualified Associate
     Professor substitute for a Professor and a stronger senior cadre is never a
     shortfall. The establishment must still meet the total and each cumulative
     tier.

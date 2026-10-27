@@ -10,7 +10,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "ENGINEERING_TECHNOLOGY",
     "applies_to_level": "UG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "ENGINEERING_TECHNOLOGY",
       "level": "UG"
@@ -31,7 +31,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "ENGINEERING_TECHNOLOGY",
     "applies_to_level": "PG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "ENGINEERING_TECHNOLOGY",
       "level": "PG"
@@ -51,7 +51,7 @@
     "threshold": 25,
     "severity": "CRITICAL",
     "applies_to_level": "DIPLOMA",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "level": "DIPLOMA"
     },
@@ -71,7 +71,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "PLANNING",
     "applies_to_level": "UG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "PLANNING",
       "level": "UG"
@@ -91,7 +91,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "MANAGEMENT",
     "applies_to_level": "UG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "MANAGEMENT",
       "level": "UG"
@@ -111,7 +111,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "MANAGEMENT",
     "applies_to_level": "PG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "MANAGEMENT",
       "level": "PG"
@@ -131,7 +131,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "COMPUTER_APPLICATIONS",
     "applies_to_level": "UG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "COMPUTER_APPLICATIONS",
       "level": "UG"
@@ -151,7 +151,7 @@
     "severity": "CRITICAL",
     "applies_to_family": "COMPUTER_APPLICATIONS",
     "applies_to_level": "PG",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "metric_params": {
       "family": "COMPUTER_APPLICATIONS",
       "level": "PG"
@@ -169,7 +169,7 @@
     "operator": "RATIO",
     "threshold": 1,
     "severity": "CRITICAL",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "unit": "ratio",
     "metric_params": {
       "numerator": "faculty.total",
@@ -190,7 +190,7 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "HIGH",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "explanation_template": "The appointed cadre mix is {result} with the 1:2:6 requirement in {clause}.",
     "penalty_codes": [
       "7.4c"
@@ -215,13 +215,13 @@
     "code": "APH-FAC-HOD-DIPLOMA",
     "name": "Head of Department for each Diploma department",
     "category": "Faculty",
-    "description": "Diploma institutions must have one Head of Department per department (APH 7.1).",
+    "description": "Diploma institutions must have one Head of Department per department (APH 6.14, Annexure-5).",
     "metric_key": "faculty.hod_present",
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "HIGH",
     "applies_to_level": "DIPLOMA",
-    "apH_clause": "APH 7.1",
+    "apH_clause": "APH 6.14, Annexure-5",
     "penalty_codes": [
       "7.4c"
     ]
@@ -596,7 +596,7 @@
     "operator": "<=",
     "threshold": 0,
     "severity": "HIGH",
-    "apH_clause": "APH 7.3",
+    "apH_clause": "APH Annexure-4",
     "unit": "Mbps",
     "penalty_codes": [
       "7.4d"
@@ -611,7 +611,7 @@
     "operator": "<=",
     "threshold": 0,
     "severity": "MEDIUM",
-    "apH_clause": "APH 7.3",
+    "apH_clause": "APH Annexure-4",
     "unit": "count",
     "penalty_codes": [
       "7.4d"
@@ -979,7 +979,7 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "MEDIUM",
-    "apH_clause": "APH 7.3",
+    "apH_clause": "APH 6.53(q)",
     "penalty_codes": [
       "7.4e"
     ]
@@ -1039,9 +1039,7 @@
     "severity": "HIGH",
     "apH_clause": "APH 6.12a",
     "unit": "%",
-    "penalty_codes": [
-      "7.4g"
-    ]
+    "penalty_codes": []
   },
   {
     "code": "APH-DOC-AFFIDAVIT2",
@@ -1052,7 +1050,7 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "CRITICAL",
-    "apH_clause": "APH 8",
+    "apH_clause": "APH 6.39",
     "penalty_codes": [
       "7.4a"
     ]
@@ -1066,7 +1064,7 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "HIGH",
-    "apH_clause": "APH 8",
+    "apH_clause": "APH 6.39",
     "penalty_codes": [
       "7.4a"
     ]
@@ -1095,9 +1093,9 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "CRITICAL",
-    "apH_clause": "APH Annexure-2.1(iv)",
+    "apH_clause": "APH Annexure-2.1(v)",
     "penalty_codes": [
-      "7.4j"
+      "7.4a"
     ]
   },
   {
@@ -1111,7 +1109,7 @@
     "severity": "HIGH",
     "apH_clause": "APH 6.17h",
     "penalty_codes": [
-      "7.4j"
+      "7.4a"
     ]
   },
   {
@@ -1138,7 +1136,7 @@
     "operator": "=",
     "threshold": 0,
     "severity": "HIGH",
-    "apH_clause": "APH 8",
+    "apH_clause": "APH 2.3.4a",
     "unit": "count",
     "penalty_codes": [
       "7.4a"

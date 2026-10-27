@@ -99,7 +99,7 @@ def _rule(
         threshold_max=Decimal(threshold_max) if threshold_max else None,
         severity=severity,
         applies_to="ALL",
-        apH_clause="APH 7.1",
+        apH_clause="APH 6.14",
         needs_verification=False,
         mandatory=mandatory,
         illustrative=illustrative,
@@ -134,7 +134,7 @@ def _preview(
 
 
 # ---------------------------------------------------------------------------
-# Faculty (APH 7.1, 6.14)
+# Faculty (APH 6.14, Annexure-5)
 # ---------------------------------------------------------------------------
 
 
@@ -314,7 +314,7 @@ def test_built_up_area_uses_configurable_norms() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Library, computing and internet (APH 7.3, Annexure-4)
+# Library, computing and internet (APH Annexure-4)
 # ---------------------------------------------------------------------------
 
 
@@ -463,6 +463,24 @@ def test_rule_operators_and_aggregate_operands_are_known() -> None:
         if operator in {"SUM", "COUNT"}:
             metrics = params.get("metrics") or [row["metric_key"]]
             assert isinstance(metrics, list) and metrics, row["code"]
+
+
+def test_rules_cite_a_norm_clause_not_the_penal_action_chapter() -> None:
+    """Chapter VII is penal action, not a norm.
+
+    ``7.1`` introduces penal actions, ``7.2`` covers unapproved programmes and
+    ``7.3`` lists the actions themselves. A compliance rule must cite the norm
+    it enforces (for example APH 6.14 for faculty, APH Annexure-4 for library
+    and computing), never the chapter that punishes a breach. ``7.4a``-``7.4n``
+    are allowed because some rules enforce those violations directly.
+    """
+    penal_chapter = ("APH 7.1", "APH 7.2", "APH 7.3")
+    offenders = [
+        (str(row["code"]), str(row["apH_clause"]))
+        for row in _seed_rules()
+        if str(row["apH_clause"]).startswith(penal_chapter)
+    ]
+    assert not offenders, f"rules citing the penal-action chapter: {offenders}"
 
 
 def test_rule_penalty_codes_map_to_aph_7_3_actions() -> None:
@@ -657,7 +675,7 @@ def test_exists_rules_report_a_value_and_a_plain_language_result() -> None:
     assert passing.observed_value == 1.0
     assert passing.message == (
         "Occupancy/Completion Certificate: compliant. "
-        "APH 7.1 requires a valid certificate."
+        "APH 6.14 requires a valid certificate."
     )
 
     failing = _evaluate_rule(rule, False)

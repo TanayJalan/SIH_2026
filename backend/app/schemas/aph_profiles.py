@@ -88,7 +88,7 @@ class InfrastructureProfile(AphModel):
 
 
 class LibraryProfile(AphModel):
-    """Library holdings and reading-room capacity (APH 7.3, Annexure-4)."""
+    """Library holdings and reading-room capacity (APH 6.19, Annexure-4)."""
 
     titles: int | None = Field(default=None, ge=0)
     volumes: int | None = Field(default=None, ge=0)
@@ -100,7 +100,7 @@ class LibraryProfile(AphModel):
 
 
 class ComputingProfile(AphModel):
-    """Computing, internet and laboratory capacity (APH 7.3)."""
+    """Computing, internet and laboratory capacity (APH Annexure-4)."""
 
     pcs: int | None = Field(default=None, ge=0)
     pc_student_ratio: float | None = Field(default=None, ge=0)
