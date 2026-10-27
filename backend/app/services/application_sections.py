@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.application import Application
 from app.models.document import Document
+from app.models.enums import DocumentVerificationStatus
 from app.models.required_document import RequiredDocument
 from app.schemas.application import (
     ApplicationChecklistRead,
@@ -263,9 +264,18 @@ def _document_checklist(
 
     for rule in rules:
         document = latest.get(rule.doc_type)
+        complete = (
+            document is not None
+            and document.signed_with_dsc
+            and document.verification_status
+            not in {
+                DocumentVerificationStatus.REJECTED,
+                DocumentVerificationStatus.FLAGGED,
+            }
+        )
         if rule.mandatory:
             required_count += 1
-            if document is not None and document.signed_with_dsc:
+            if complete:
                 uploaded_count += 1
         documents.append(
             ChecklistDocument(
@@ -274,6 +284,7 @@ def _document_checklist(
                 label=document_label(rule.doc_type),
                 mandatory=rule.mandatory,
                 uploaded=document is not None,
+                complete=complete,
                 document_id=document.id if document is not None else None,
                 filename=document.filename if document is not None else None,
                 content_type=document.content_type if document is not None else None,
@@ -282,12 +293,35 @@ def _document_checklist(
                 signed_with_dsc=(
                     document.signed_with_dsc if document is not None else None
                 ),
+                signer_name=document.signer_name if document is not None else None,
+                valid_until=document.valid_until if document is not None else None,
                 verification_status=(
                     document.verification_status if document is not None else None
                 ),
                 verification_reason=(
                     verification_reason(document.verification_notes)
                     if document is not None
+                    else None
+                ),
+                rejection_reason_code=(
+                    document.rejection_reason_code if document is not None else None
+                ),
+                rejection_comment=(
+                    document.rejection_comment if document is not None else None
+                ),
+                rejected_at=document.rejected_at if document is not None else None,
+                apH_clause=document.apH_clause if document is not None else None,
+                related_deficiency_id=(
+                    document.related_deficiency_id if document is not None else None
+                ),
+                deficiency_status=(
+                    document.related_deficiency.status.value
+                    if document is not None and document.related_deficiency is not None
+                    else None
+                ),
+                deficiency_due_date=(
+                    document.related_deficiency.due_date
+                    if document is not None and document.related_deficiency is not None
                     else None
                 ),
                 uploaded_at=document.created_at if document is not None else None,
@@ -341,6 +375,42 @@ def build_application_checklist(
                     message=(
                         f"Re-upload {document.label} with a valid digital signature (DSC). "
                         "APH 1.4.6 does not allow an unsigned document."
+                    ),
+                )
+            )
+        elif (
+            document.mandatory
+            and document.uploaded
+            and document.verification_status == DocumentVerificationStatus.REJECTED
+        ):
+            reason = (
+                document.rejection_comment
+                or document.verification_reason
+                or "a reviewer rejected this document"
+            )
+            missing.append(
+                MissingItem(
+                    code=f"document.{document.doc_type}.rejected",
+                    section="Documents",
+                    message=(
+                        f"Replace {document.label}: {reason} "
+                        f"({document.apH_clause or 'APH 1.8f'})."
+                    ),
+                )
+            )
+        elif (
+            document.mandatory
+            and document.uploaded
+            and document.verification_status == DocumentVerificationStatus.FLAGGED
+        ):
+            missing.append(
+                MissingItem(
+                    code=f"document.{document.doc_type}.flagged",
+                    section="Documents",
+                    message=(
+                        f"Replace {document.label} with a legible copy: "
+                        f"{document.verification_reason or 'the document was flagged'} "
+                        "(APH 1.8f)."
                     ),
                 )
             )

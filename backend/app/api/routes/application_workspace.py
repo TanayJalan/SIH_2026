@@ -32,7 +32,7 @@ from app.api.dependencies import (
 from app.core.config import Settings
 from app.models.application import Application, ApplicationProgram
 from app.models.document import Document
-from app.models.enums import Role
+from app.models.enums import DocumentVerificationStatus, Role
 from app.models.user import User
 from app.schemas.application import (
     ApplicationChecklistRead,
@@ -45,6 +45,8 @@ from app.schemas.application import (
     ApplicationUpdate,
     DocumentChecklistRead,
     DocumentRead,
+    DocumentRejectRequest,
+    DocumentVerifyRequest,
 )
 from app.schemas.common import ErrorResponse
 from app.schemas.compliance import CompliancePreviewRead, CompliancePreviewRequest
@@ -59,6 +61,7 @@ from app.schemas.fees import (
     ReopenResultRead,
     SecurityDepositQuoteRead,
 )
+from app.services.alert_engine import NotificationService
 from app.services.application_sections import (
     build_application_checklist,
     build_document_checklist,
@@ -71,6 +74,13 @@ from app.services.deficiency_report import (
     build_deficiency_report,
     render_deficiency_report_pdf,
 )
+from app.services.document_review import (
+    DocumentReviewError,
+    DocumentReviewService,
+    document_allowed_actions,
+    replacement_block_reason,
+    reupload_count,
+)
 from app.services.document_shells import build_document_shell, shell_codes
 from app.services.document_verification import verification_reason
 from app.services.fees import FeeService
@@ -80,6 +90,15 @@ router = APIRouter(prefix="/applications", tags=["application workspace"])
 InstitutionAdminUser = Annotated[
     User,
     Depends(require_roles(Role.INSTITUTION_ADMIN)),
+]
+ReviewerUser = Annotated[
+    User,
+    Depends(
+        require_roles(
+            Role.SCRUTINY_COMMITTEE_MEMBER,
+            Role.REGULATION_BUREAU_OFFICER,
+        )
+    ),
 ]
 
 
@@ -128,20 +147,56 @@ def _workspace(
     return ApplicationWorkspaceService(db, audit, settings, clock)
 
 
-def _document_read(document: Document) -> DocumentRead:
+def _document_read(
+    document: Document,
+    *,
+    db: Session,
+    application: Application,
+    actor: User,
+    settings: Settings,
+) -> DocumentRead:
+    deficiency = document.related_deficiency
     return DocumentRead(
         id=document.id,
         application_id=document.application_id,
         doc_type=document.doc_type,
         doc_code=document.doc_code,
         signed_with_dsc=document.signed_with_dsc,
+        signer_name=document.signer_name,
+        valid_until=document.valid_until,
         filename=document.filename,
         content_type=document.content_type,
         size_bytes=document.size_bytes,
         version=document.version,
+        is_latest=document.superseded_by is None,
         verification_status=document.verification_status,
         verification_reason=verification_reason(document.verification_notes),
+        rejection_reason_code=document.rejection_reason_code,
+        rejection_comment=document.rejection_comment,
+        rejected_by=document.rejected_by,
+        rejected_by_name=(
+            document.rejector.name if document.rejector is not None else None
+        ),
+        rejected_at=document.rejected_at,
+        apH_clause=document.apH_clause,
+        superseded_by=document.superseded_by,
+        related_deficiency_id=document.related_deficiency_id,
+        deficiency_status=deficiency.status.value if deficiency is not None else None,
+        deficiency_due_date=deficiency.due_date if deficiency is not None else None,
+        reupload_count=reupload_count(db, document),
+        max_reuploads=settings.max_reuploads_per_document,
+        allowed_actions=document_allowed_actions(
+            db, application, actor, document, settings
+        ),
+        replacement_block_reason=(
+            replacement_block_reason(db, application, document, settings)
+            if actor.role == Role.INSTITUTION_ADMIN
+            else None
+        ),
         uploaded_by=document.uploaded_by,
+        uploaded_by_name=(
+            document.uploader.name if document.uploader is not None else None
+        ),
         created_at=document.created_at,
         download_url=(
             f"/applications/{document.application_id}/documents/{document.id}/download"
@@ -313,17 +368,94 @@ def preview_compliance(
 )
 def list_documents(
     application_id: uuid.UUID,
+    request: Request,
     current_user: CurrentUser,
     db: DbSession,
+    only_to_recheck: bool = False,
 ) -> list[DocumentRead]:
-    """Return every uploaded version, newest document type first."""
+    """Return every uploaded version, newest document type first.
+
+    ``only_to_recheck`` is the Re-Scrutiny view: it keeps only the latest version
+    of each type that a reviewer rejected or that the institution re-uploaded and
+    is waiting for verification (APH 1.8g).
+    """
     application = _readable_application(db, current_user, application_id)
+    settings: Settings = request.app.state.settings
     documents = db.scalars(
         select(Document)
         .where(Document.application_id == application.id)
         .order_by(Document.doc_type.asc(), Document.version.desc())
     ).all()
-    return [_document_read(document) for document in documents]
+    if only_to_recheck:
+        documents = [
+            document
+            for document in documents
+            if document.superseded_by is None
+            and (
+                document.verification_status == DocumentVerificationStatus.REJECTED
+                or (
+                    document.version > 1
+                    and document.verification_status == DocumentVerificationStatus.PENDING
+                )
+            )
+        ]
+    return [
+        _document_read(
+            document,
+            db=db,
+            application=application,
+            actor=current_user,
+            settings=settings,
+        )
+        for document in documents
+    ]
+
+
+@router.get(
+    "/{application_id}/documents/{document_id}/versions",
+    response_model=list[DocumentRead],
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="List every version of one document",
+)
+def list_document_versions(
+    application_id: uuid.UUID,
+    document_id: uuid.UUID,
+    request: Request,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> list[DocumentRead]:
+    """Return the full history of a document so earlier files stay downloadable."""
+    application = _readable_application(db, current_user, application_id)
+    document = db.scalar(
+        select(Document).where(
+            Document.id == document_id,
+            Document.application_id == application.id,
+        )
+    )
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    settings: Settings = request.app.state.settings
+    versions = db.scalars(
+        select(Document)
+        .where(
+            Document.application_id == application.id,
+            Document.doc_type == document.doc_type,
+        )
+        .order_by(Document.version.desc())
+    ).all()
+    return [
+        _document_read(
+            version,
+            db=db,
+            application=application,
+            actor=current_user,
+            settings=settings,
+        )
+        for version in versions
+    ]
 
 
 @router.post(
@@ -350,6 +482,8 @@ async def upload_document(
     doc_type: Annotated[str, Form(min_length=1, max_length=100)],
     file: Annotated[UploadFile, File()],
     signed_with_dsc: Annotated[bool, Form()] = False,
+    signer_name: Annotated[str | None, Form(max_length=255)] = None,
+    valid_until: Annotated[date | None, Form()] = None,
 ) -> DocumentRead:
     """Store a PDF, JPG or PNG up to 10 MB as the next version for its type."""
     application = _owned_application(db, current_user, application_id)
@@ -359,8 +493,179 @@ async def upload_document(
         doc_type=doc_type,
         upload=file,
         signed_with_dsc=signed_with_dsc,
+        signer_name=signer_name,
+        valid_until=valid_until,
     )
-    return _document_read(document)
+    return _document_read(
+        document,
+        db=db,
+        application=application,
+        actor=current_user,
+        settings=request.app.state.settings,
+    )
+
+
+@router.post(
+    "/{application_id}/documents/{document_id}/reupload",
+    response_model=DocumentRead,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {"model": ErrorResponse},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Replace a rejected or flagged document",
+)
+async def reupload_document(
+    application_id: uuid.UUID,
+    document_id: uuid.UUID,
+    request: Request,
+    current_user: CurrentUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+    file: Annotated[UploadFile, File()],
+    signed_with_dsc: Annotated[bool, Form()] = False,
+    signer_name: Annotated[str | None, Form(max_length=255)] = None,
+    valid_until: Annotated[date | None, Form()] = None,
+) -> DocumentRead:
+    """Create version N+1 for a rejected/flagged document inside a compliance window."""
+    application = _load_application(db, application_id)
+    if application is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Application not found")
+    document = db.scalar(
+        select(Document).where(
+            Document.id == document_id,
+            Document.application_id == application.id,
+        )
+    )
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    replacement, warnings = await _workspace(db, request, audit, clock).reupload_document(
+        current_user,
+        application,
+        document,
+        upload=file,
+        signed_with_dsc=signed_with_dsc,
+        signer_name=signer_name,
+        valid_until=valid_until,
+    )
+    read = _document_read(
+        replacement,
+        db=db,
+        application=application,
+        actor=current_user,
+        settings=request.app.state.settings,
+    )
+    read.warnings = warnings
+    return read
+
+
+@router.post(
+    "/{application_id}/documents/{document_id}/reject",
+    response_model=DocumentRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Reject a document and ask the institution for a replacement",
+)
+def reject_document(
+    application_id: uuid.UUID,
+    document_id: uuid.UUID,
+    payload: DocumentRejectRequest,
+    request: Request,
+    current_user: ReviewerUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> DocumentRead:
+    """Reject one document, link a deficiency and notify the institution (APH 1.8f)."""
+    application = _readable_application(db, current_user, application_id)
+    document = db.scalar(
+        select(Document).where(
+            Document.id == document_id,
+            Document.application_id == application.id,
+        )
+    )
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    settings: Settings = request.app.state.settings
+    service = DocumentReviewService(
+        db,
+        audit,
+        clock,
+        settings,
+        notifications=NotificationService.from_settings(settings),
+    )
+    try:
+        rejected, _ = service.reject(current_user, application, document, payload)
+    except DocumentReviewError as exc:
+        raise HTTPException(exc.status_code, exc.detail) from exc
+    return _document_read(
+        rejected,
+        db=db,
+        application=application,
+        actor=current_user,
+        settings=settings,
+    )
+
+
+@router.post(
+    "/{application_id}/documents/{document_id}/verify",
+    response_model=DocumentRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse},
+    },
+    summary="Mark a re-uploaded document as verified",
+)
+def verify_document(
+    application_id: uuid.UUID,
+    document_id: uuid.UUID,
+    payload: DocumentVerifyRequest,
+    request: Request,
+    current_user: ReviewerUser,
+    db: DbSession,
+    audit: AuditDep,
+    clock: ClockDep,
+) -> DocumentRead:
+    """Verify a replacement so Re-Scrutiny can close the listed deficiency (APH 1.8g)."""
+    application = _readable_application(db, current_user, application_id)
+    document = db.scalar(
+        select(Document).where(
+            Document.id == document_id,
+            Document.application_id == application.id,
+        )
+    )
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    settings: Settings = request.app.state.settings
+    service = DocumentReviewService(
+        db,
+        audit,
+        clock,
+        settings,
+        notifications=NotificationService.from_settings(settings),
+    )
+    try:
+        verified = service.verify(current_user, application, document, payload)
+    except DocumentReviewError as exc:
+        raise HTTPException(exc.status_code, exc.detail) from exc
+    return _document_read(
+        verified,
+        db=db,
+        application=application,
+        actor=current_user,
+        settings=settings,
+    )
 
 
 @router.get(

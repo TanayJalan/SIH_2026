@@ -219,6 +219,40 @@ def no_open_deficiencies(ctx: TransitionContext) -> str | None:
     return f"{remaining} deficiency item(s) must be closed first (APH 2.4)."
 
 
+def documents_reuploaded(ctx: TransitionContext) -> str | None:
+    """Pass when no rejected document still awaits a replacement version.
+
+    A reviewer rejection opens a document deficiency. Compliance cannot be
+    submitted until the institution replaces every rejected document, because
+    Re-Scrutiny only verifies the listed deficiencies (APH 1.8f, 1.8g, 2.4).
+    """
+    from app.models.document import Document
+    from app.models.enums import DocumentVerificationStatus
+
+    rows = ctx.db.scalars(
+        select(Document).where(Document.application_id == ctx.application.id)
+    ).all()
+    newest: dict[str, Document] = {}
+    for document in rows:
+        current = newest.get(document.doc_type)
+        if current is None or document.version > current.version:
+            newest[document.doc_type] = document
+    rejected = [
+        document
+        for document in newest.values()
+        if document.verification_status == DocumentVerificationStatus.REJECTED
+        and document.superseded_by is None
+    ]
+    if not rejected:
+        return None
+    labels = ", ".join(sorted(document.doc_type for document in rejected))
+    return (
+        f"Re-upload the rejected document(s) before submitting compliance: {labels} "
+        "(APH 1.8f, 2.4)."
+    )
+
+
+
 # ---------------------------------------------------------------------------
 # Inspection / EVC
 # ---------------------------------------------------------------------------
@@ -659,6 +693,7 @@ GUARDS: dict[str, Guard] = {
         "open_deficiencies",
         "responded_deficiencies",
         "no_open_deficiencies",
+        "documents_reuploaded",
         "is_evc_member",
         "video_uploaded",
         "shc_outcome_present",

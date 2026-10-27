@@ -7,6 +7,7 @@ import {
   ApiError,
   getAlerts,
   getApplicationCompliance,
+  listApplicationDocuments,
   type AllowedAction,
   type ApplicationDetail,
   type CompliancePreview,
@@ -290,6 +291,58 @@ function RiskExplanationPanel({
   );
 }
 
+function DocumentWaitingPanel({
+  applicationId,
+  token,
+}: {
+  applicationId: string;
+  token: string;
+}) {
+  const documentsQuery = useQuery({
+    queryKey: ["document-records", applicationId, "all"],
+    queryFn: () => listApplicationDocuments(token, applicationId),
+    enabled: Boolean(token && applicationId),
+    retry: false,
+  });
+
+  const outstanding = (documentsQuery.data ?? []).filter(
+    (document) =>
+      document.is_latest &&
+      document.superseded_by === null &&
+      document.verification_status === "REJECTED",
+  );
+  if (outstanding.length === 0) {
+    return null;
+  }
+  const due = outstanding
+    .map((document) => document.deficiency_due_date)
+    .filter((value): value is string => Boolean(value))
+    .sort()[0];
+
+  return (
+    <Panel title="Document replacement">
+      <p className="text-13 leading-5 text-ink-700">
+        Waiting for the institution to re-upload {outstanding.length}{" "}
+        {outstanding.length === 1 ? "document" : "documents"}
+        {due ? ` (due ${formatDate(due)}` : " ("}
+        {due ? ", APH 1.8f / 2.4)" : "APH 1.8f / 2.4)"}.
+      </p>
+      <dl className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line pt-3 text-13">
+        <div>
+          <dt className="text-12 font-medium text-ink-500">Owner</dt>
+          <dd className="mt-0.5 text-ink">Institution admin</dd>
+        </div>
+        <div>
+          <dt className="text-12 font-medium text-ink-500">Due</dt>
+          <dd className="mt-0.5 tabular-nums text-ink">
+            {due ? formatDate(due) : "No deadline set"}
+          </dd>
+        </div>
+      </dl>
+    </Panel>
+  );
+}
+
 function RelatedAlerts({
   applicationId,
   token,
@@ -381,6 +434,7 @@ export default function CaseSidebar({
   return (
     <aside className="min-w-0 space-y-6 self-start xl:sticky xl:top-6">
       <NextStepPanel application={application} actions={sortedActions} />
+      <DocumentWaitingPanel applicationId={application.id} token={token} />
       <RiskExplanationPanel
         explanation={explanation}
         pending={complianceQuery.isPending}

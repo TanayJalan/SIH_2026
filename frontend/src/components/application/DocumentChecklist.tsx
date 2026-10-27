@@ -1,9 +1,21 @@
 import { useMemo, useRef, useState, type DragEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Download, FileCheck2, FileUp, History, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  Download,
+  FileCheck2,
+  FileUp,
+  History,
+  Loader2,
+  UploadCloud,
+} from "lucide-react";
 
 import { Button, ProgressBar, useToast } from "@/components/ui";
-import DocumentVerificationBadge from "@/components/application/DocumentVerificationBadge";
+import DocumentStatusChip from "@/components/documents/DocumentStatusChip";
+import DocumentVersionDrawer from "@/components/documents/DocumentVersionDrawer";
+import ReuploadDialog, {
+  type ReuploadTarget,
+} from "@/components/documents/ReuploadDialog";
 import {
   DOCUMENT_ACCEPT,
   MAX_DOCUMENT_BYTES,
@@ -73,14 +85,53 @@ function DocumentRow({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [downloadingVersionId, setDownloadingVersionId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [lastVerification, setLastVerification] = useState<VerificationSnapshot | null>(null);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [reuploadOpen, setReuploadOpen] = useState(false);
 
+  const latest = versions[0];
   const verificationStatus = lastVerification?.status ?? document.verification_status;
   const verificationReason = lastVerification?.reason ?? document.verification_reason;
+  const needsReviewerReplacement =
+    verificationStatus === "REJECTED" || verificationStatus === "FLAGGED";
+  const canReupload = latest?.allowed_actions.includes("reupload") ?? false;
+  const showReupload = document.uploaded && (needsReviewerReplacement || canReupload);
+
+  const reuploadTarget: ReuploadTarget | null =
+    latest && document.document_id
+      ? {
+          id: latest.id,
+          docType: document.doc_type,
+          label: document.label,
+          version: document.version,
+          rejectionReasonCode: document.rejection_reason_code,
+          rejectionComment: document.rejection_comment,
+          apHclause: document.apH_clause,
+          rejectedAt: document.rejected_at,
+          dueDate: document.deficiency_due_date,
+          maxReuploads: latest.max_reuploads,
+          reuploadCount: latest.reupload_count,
+        }
+      : null;
+
+  const refreshAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["document-versions", applicationId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["document-checklist", applicationId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["document-records", applicationId],
+      }),
+      queryClient.invalidateQueries({ queryKey: ["deficiencies", applicationId] }),
+    ]);
+    onUploaded();
+  };
 
   const handleFile = async (file: File | undefined) => {
     if (!file || disabled || uploading) {
@@ -108,10 +159,7 @@ function DocumentRow({
         status: uploaded.verification_status,
         reason: uploaded.verification_reason,
       });
-      await queryClient.invalidateQueries({
-        queryKey: ["document-versions", applicationId],
-      });
-      onUploaded();
+      await refreshAll();
 
       const verified = uploaded.verification_status === "VERIFIED";
       toast({
@@ -151,7 +199,7 @@ function DocumentRow({
     setDownloading(true);
     setError(null);
     try {
-      await downloadApplicationDocument(token, document);
+      await downloadApplicationDocument(token, latest ?? document);
     } catch (downloadError) {
       setError(
         downloadError instanceof ApiError
@@ -163,26 +211,12 @@ function DocumentRow({
     }
   };
 
-  const handleVersionDownload = async (version: DocumentRecord) => {
-    setDownloadingVersionId(version.id);
-    setError(null);
-    try {
-      await downloadApplicationDocument(token, version);
-    } catch (downloadError) {
-      setError(
-        downloadError instanceof ApiError
-          ? downloadError.message
-          : "The document version could not be downloaded.",
-      );
-    } finally {
-      setDownloadingVersionId(null);
-    }
-  };
-
   const handleDrop = (event: DragEvent<HTMLLIElement>) => {
     event.preventDefault();
     setDragActive(false);
-    void handleFile(event.dataTransfer.files?.[0]);
+    if (!needsReviewerReplacement) {
+      void handleFile(event.dataTransfer.files?.[0]);
+    }
   };
 
   const handleDragLeave = (event: DragEvent<HTMLLIElement>) => {
@@ -192,6 +226,8 @@ function DocumentRow({
     setDragActive(false);
   };
 
+  const resubmitted = (document.version ?? 1) > 1;
+
   return (
     <li
       className={cn(
@@ -200,13 +236,13 @@ function DocumentRow({
       )}
       onDragEnter={(event) => {
         event.preventDefault();
-        if (!disabled && !uploading) {
+        if (!disabled && !uploading && !needsReviewerReplacement) {
           setDragActive(true);
         }
       }}
       onDragOver={(event) => {
         event.preventDefault();
-        if (!disabled && !uploading) {
+        if (!disabled && !uploading && !needsReviewerReplacement) {
           setDragActive(true);
         }
       }}
@@ -242,6 +278,11 @@ function DocumentRow({
               >
                 {document.mandatory ? "Mandatory" : "Optional"}
               </span>
+              {resubmitted ? (
+                <span className="rounded-pill bg-info-soft px-2 py-0.5 text-11 font-medium text-info-strong">
+                  Resubmitted (v{document.version})
+                </span>
+              ) : null}
             </div>
             {document.uploaded ? (
               <p className="mt-1 break-all text-12 text-ink-500">
@@ -257,9 +298,7 @@ function DocumentRow({
               <p
                 className={cn(
                   "mt-1 text-12",
-                  document.signed_with_dsc
-                    ? "text-ok-strong"
-                    : "text-breach-strong",
+                  document.signed_with_dsc ? "text-ok-strong" : "text-breach-strong",
                 )}
               >
                 {document.signed_with_dsc
@@ -273,11 +312,18 @@ function DocumentRow({
                 Uploading version {(document.version ?? 0) + 1}…
               </p>
             ) : null}
-            <DocumentVerificationBadge
+            <DocumentStatusChip
               status={verificationStatus}
-              reason={verificationReason}
+              rejectionReasonCode={document.rejection_reason_code}
+              rejectionComment={document.rejection_comment}
+              apHclause={document.apH_clause}
+              rejectedAt={document.rejected_at}
+              dueDate={document.deficiency_due_date}
               className="mt-2"
             />
+            {verificationStatus === "FLAGGED" && verificationReason ? (
+              <p className="mt-1 text-12 text-ink-700">{verificationReason}</p>
+            ) : null}
             {uploading ? (
               <ProgressBar
                 label="Uploading"
@@ -296,107 +342,90 @@ function DocumentRow({
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
           {document.uploaded && document.document_id ? (
-            <Button
-              variant="quiet"
-              size="sm"
-              onClick={() => void handleDownload()}
-              disabled={downloading || uploading}
-            >
-              {downloading ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <Download aria-hidden="true" className="size-4" />
-              )}
-              View
-            </Button>
+            <>
+              <Button
+                variant="quiet"
+                size="sm"
+                onClick={() => void handleDownload()}
+                disabled={downloading || uploading}
+              >
+                {downloading ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Download aria-hidden="true" className="size-4" />
+                )}
+                View
+              </Button>
+              {versions.length > 0 ? (
+                <Button variant="quiet" size="sm" onClick={() => setVersionsOpen(true)}>
+                  <History aria-hidden="true" className="size-4" />
+                  Version history ({versions.length})
+                </Button>
+              ) : null}
+            </>
           ) : null}
-          <input
-            ref={inputRef}
-            id={`document-file-${document.doc_type}`}
-            type="file"
-            accept={DOCUMENT_ACCEPT}
-            className="hidden"
-            aria-hidden="true"
-            tabIndex={-1}
-            disabled={disabled || uploading}
-            onChange={(event) => void handleFile(event.target.files?.[0])}
-          />
-          <Button
-            id={`document-upload-${document.doc_type}`}
-            variant={document.uploaded ? "secondary" : "primary"}
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            disabled={disabled || uploading}
-          >
-            {uploading ? (
-              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-            ) : (
-              <FileUp aria-hidden="true" className="size-4" />
-            )}
-            {uploading ? "Uploading…" : document.uploaded ? "Replace" : "Upload"}
-          </Button>
+
+          {showReupload ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setReuploadOpen(true)}
+              disabled={disabled || uploading}
+            >
+              <UploadCloud aria-hidden="true" className="size-4" />
+              Re-upload
+            </Button>
+          ) : (
+            <>
+              <input
+                ref={inputRef}
+                id={`document-file-${document.doc_type}`}
+                type="file"
+                accept={DOCUMENT_ACCEPT}
+                className="hidden"
+                aria-hidden="true"
+                tabIndex={-1}
+                disabled={disabled || uploading}
+                onChange={(event) => void handleFile(event.target.files?.[0])}
+              />
+              <Button
+                id={`document-upload-${document.doc_type}`}
+                variant={document.uploaded ? "secondary" : "primary"}
+                size="sm"
+                onClick={() => inputRef.current?.click()}
+                disabled={disabled || uploading}
+              >
+                {uploading ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <FileUp aria-hidden="true" className="size-4" />
+                )}
+                {uploading ? "Uploading…" : document.uploaded ? "Replace" : "Upload"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {versions.length > 1 ? (
-        <details className="group mt-4 rounded-input border border-line bg-paper">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-12 font-medium text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus [&::-webkit-details-marker]:hidden">
-            <span className="flex items-center gap-1.5">
-              <History aria-hidden="true" className="size-3.5 text-ink-500" />
-              Version history ({versions.length})
-            </span>
-            <ChevronDown
-              aria-hidden="true"
-              className="size-3.5 text-ink-500 transition-transform group-open:rotate-180"
-            />
-          </summary>
-          <ul className="divide-y divide-line border-t border-line px-3">
-            {versions.map((version) => {
-              const isLatest = version.id === document.document_id;
-              return (
-                <li
-                  key={version.id}
-                  className="flex flex-wrap items-center justify-between gap-2 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-1.5 text-12 font-medium text-ink">
-                      Version {version.version}
-                      {isLatest ? (
-                        <span className="rounded-pill bg-ok-soft px-1.5 py-0.5 text-10 font-semibold uppercase tracking-wide text-ok-strong">
-                          Latest
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="mt-0.5 break-all text-11 text-ink-500">
-                      {version.filename} · {formatBytes(version.size_bytes)} ·{" "}
-                      {formatDateTime(version.created_at)}
-                    </p>
-                    <DocumentVerificationBadge
-                      status={version.verification_status}
-                      reason={version.verification_reason}
-                      compact
-                      className="mt-1"
-                    />
-                  </div>
-                  <Button
-                    variant="quiet"
-                    size="sm"
-                    onClick={() => void handleVersionDownload(version)}
-                    disabled={downloadingVersionId === version.id}
-                  >
-                    {downloadingVersionId === version.id ? (
-                      <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
-                    ) : (
-                      <Download aria-hidden="true" className="size-3.5" />
-                    )}
-                    Download
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-        </details>
-      ) : null}
+      <ReuploadDialog
+        open={reuploadOpen}
+        onOpenChange={setReuploadOpen}
+        token={token}
+        applicationId={applicationId}
+        document={reuploadTarget}
+        onReuploaded={() => {
+          setReuploadOpen(false);
+          void refreshAll();
+        }}
+      />
+      <DocumentVersionDrawer
+        open={versionsOpen}
+        onOpenChange={setVersionsOpen}
+        token={token}
+        applicationId={applicationId}
+        documentId={document.document_id}
+        label={document.label}
+      />
     </li>
   );
 }
@@ -455,7 +484,8 @@ export default function DocumentChecklist({
       </div>
       <p className="text-12 leading-5 text-ink-500">
         Drag a file directly onto a document row, or use the upload button. Replacing a required
-        document creates a new version and keeps the earlier files available.
+        document creates a new version and keeps the earlier files available. A document the
+        reviewer rejected must be re-uploaded with its DSC attestation and effective date.
       </p>
       <ul className="space-y-3">
         {documents.map((document) => (
@@ -471,6 +501,10 @@ export default function DocumentChecklist({
           />
         ))}
       </ul>
+      <p className="flex items-center gap-1.5 text-11 text-ink-500">
+        <ChevronDown aria-hidden="true" className="size-3.5" />
+        Earlier versions stay downloadable from the version history (APH 1.4.3).
+      </p>
     </div>
   );
 }

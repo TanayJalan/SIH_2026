@@ -11,3 +11,6 @@ PyJWT==2.10.1
 APScheduler==3.10.4
 Jinja2>=3.1.4
 reportlab==4.2.5
+# Text extraction for the upload readability check (APH 1.4.3). pytesseract is
+# optional and only used when the host installs it.
+pdfplumber==0.11.10

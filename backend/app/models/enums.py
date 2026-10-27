@@ -271,6 +271,22 @@ class DocumentVerificationStatus(StrEnum):
     REJECTED = "REJECTED"
 
 
+class DocumentRejectionReason(StrEnum):
+    """Reason a reviewer rejected a document (APH 1.8f, 1.8g).
+
+    The vocabulary is stored on the document and copied into the linked
+    deficiency so the institution knows exactly what to replace.
+    """
+
+    UNREADABLE = "UNREADABLE"
+    NO_DSC = "NO_DSC"
+    EXPIRED = "EXPIRED"
+    WRONG_DOCUMENT = "WRONG_DOCUMENT"
+    NAME_MISMATCH = "NAME_MISMATCH"
+    INCOMPLETE = "INCOMPLETE"
+    OTHER = "OTHER"
+
+
 class DeficiencyStatus(StrEnum):
     """Lifecycle of a deficiency raised against an application."""
 

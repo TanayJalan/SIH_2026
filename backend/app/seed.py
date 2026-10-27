@@ -268,6 +268,21 @@ ALERT_RULES = (
         Role.REGIONAL_OFFICER,
     ),
     (
+        "DEFICIENCY-DUE-1",
+        "Deficiency response due tomorrow",
+        "Final reminder one day before a deficiency response deadline.",
+        AlertTrigger.DEFICIENCY_DUE,
+        1,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The response from {institution} for application "
+            "{application_reference} is due on {due_date} (1 day remaining). "
+            "Detail: {deficiency}"
+        ),
+        Role.REGIONAL_OFFICER,
+    ),
+    (
         "DOCUMENT-EXPIRING-30",
         "Document expiring in 30 days",
         "Early warning for a document that will expire soon.",

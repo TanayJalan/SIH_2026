@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.models.appeal import Appeal
 from app.models.application import ApplicationProgram
@@ -83,10 +84,15 @@ def _route(ctx: TransitionContext) -> ApplicationTypeRoute | None:
     )
 
 
-def _deficiency_due_date(ctx: TransitionContext) -> date:
-    config = ctx.db.scalar(select(SLAConfig).where(SLAConfig.stage == WorkflowStage.DEFICIENCY))
+def deficiency_due_date(db: Session, now: datetime) -> date:
+    """Return the configurable due date for a new deficiency response (APH 2.4)."""
+    config = db.scalar(select(SLAConfig).where(SLAConfig.stage == WorkflowStage.DEFICIENCY))
     days = config.duration_days if config is not None else 7
-    return (ctx.now + timedelta(days=days)).date()
+    return (now + timedelta(days=days)).date()
+
+
+def _deficiency_due_date(ctx: TransitionContext) -> date:
+    return deficiency_due_date(ctx.db, ctx.now)
 
 
 def _open_deficiencies(ctx: TransitionContext) -> list[Deficiency]:
@@ -238,17 +244,28 @@ def communicate_deficiency(ctx: TransitionContext) -> str | None:
 
 
 def record_responses(ctx: TransitionContext) -> str | None:
-    """Record the institution's response to every open deficiency."""
+    """Record the institution's response to every open deficiency.
+
+    A document rejection can already have marked its deficiency ``RESPONDED``
+    when the institution re-uploaded the replacement (APH 1.8f, 2.4). Those items
+    are accepted as answered; the payload only supplies text for the still-open
+    items.
+    """
     open_items = {
-        item.id: item for item in _open_deficiencies(ctx)
+        item.id: item
+        for item in _open_deficiencies(ctx)
+        if item.status == DeficiencyStatus.OPEN
     }
-    if not open_items:
+    responded_items = {
+        item.id: item
+        for item in _open_deficiencies(ctx)
+        if item.status == DeficiencyStatus.RESPONDED
+    }
+    if not open_items and not responded_items:
         raise WorkflowValidationError("There are no open deficiencies to respond to.")
-    if not ctx.payload.responses:
-        raise WorkflowValidationError("A response is required for every open deficiency.")
 
     response_map: dict[uuid.UUID, Any] = {}
-    for response in ctx.payload.responses:
+    for response in ctx.payload.responses or []:
         if response.deficiency_id in response_map:
             raise WorkflowValidationError("Each deficiency can only be answered once.")
         response_map[response.deficiency_id] = response
@@ -288,7 +305,9 @@ def record_responses(ctx: TransitionContext) -> str | None:
     ctx.db.flush()
     ctx.add_detail("deficiency_ids", [str(item) for item in response_map])
     ctx.add_detail("document_ids", document_ids)
-    return f"Institution responded to {len(response_map)} deficiency item(s)."
+    ctx.add_detail("already_responded", [str(item) for item in responded_items])
+    total = len(response_map) + len(responded_items)
+    return f"Institution responded to {total} deficiency item(s)."
 
 
 def verify_deficiencies(ctx: TransitionContext) -> str | None:

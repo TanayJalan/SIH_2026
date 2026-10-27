@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     compliance_monitor_hour: int = Field(default=2, ge=0, le=23)
     """Battery-local hour the nightly compliance job runs at."""
 
+    max_reuploads_per_document: int = Field(default=5, ge=1)
+    """Replacements allowed per document after a reviewer rejection.
+
+    APH does not state a cap; this is a project safeguard recorded in
+    ``docs/OPEN_QUESTIONS.md`` (OQ-53).
+    """
+
     seed_admin_email: str = "admin@example.edu"
     seed_admin_password: SecretStr = SecretStr("ChangeMe123!")
     seed_admin_name: str = "Demo Super Admin"

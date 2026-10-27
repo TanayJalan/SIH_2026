@@ -426,7 +426,8 @@
           "INSTITUTION_ADMIN"
         ],
         "guard_expr": [
-          "open_deficiencies"
+          "open_deficiencies",
+          "documents_reuploaded"
         ],
         "side_effects": [
           "record_responses"
@@ -1885,7 +1886,8 @@
           "INSTITUTION_ADMIN"
         ],
         "guard_expr": [
-          "open_deficiencies"
+          "open_deficiencies",
+          "documents_reuploaded"
         ],
         "side_effects": [
           "record_responses"
@@ -2893,7 +2895,8 @@
           "INSTITUTION_ADMIN"
         ],
         "guard_expr": [
-          "open_deficiencies"
+          "open_deficiencies",
+          "documents_reuploaded"
         ],
         "side_effects": [
           "record_responses"

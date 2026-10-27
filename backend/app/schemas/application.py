@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -14,6 +14,7 @@ from app.models.enums import (
     ApplicationStatus,
     ApplicationTrack,
     DecisionType,
+    DocumentRejectionReason,
     DocumentVerificationStatus,
     Role,
     WorkflowStage,
@@ -153,7 +154,12 @@ class ApplicationDetailRead(ApplicationRead):
 
 
 class DocumentRead(BaseModel):
-    """Metadata for one uploaded document version."""
+    """Metadata for one uploaded document version.
+
+    Rejection fields and ``allowed_actions`` drive the reviewer and institution
+    UI: only a document the server says may be rejected or replaced shows the
+    corresponding button (APH 1.8f, 2.4).
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -162,15 +168,67 @@ class DocumentRead(BaseModel):
     doc_type: str
     doc_code: str | None = None
     signed_with_dsc: bool = False
+    signer_name: str | None = None
+    valid_until: date | None = None
     filename: str
     content_type: str
     size_bytes: int
     version: int
+    is_latest: bool = True
     verification_status: DocumentVerificationStatus
     verification_reason: str | None = None
+    rejection_reason_code: DocumentRejectionReason | None = None
+    rejection_comment: str | None = None
+    rejected_by: uuid.UUID | None = None
+    rejected_by_name: str | None = None
+    rejected_at: datetime | None = None
+    apH_clause: str | None = None
+    superseded_by: uuid.UUID | None = None
+    related_deficiency_id: uuid.UUID | None = None
+    deficiency_status: str | None = None
+    deficiency_due_date: date | None = None
+    reupload_count: int = 0
+    max_reuploads: int = 5
+    allowed_actions: list[str] = Field(default_factory=list)
+    replacement_block_reason: str | None = None
+    warnings: list[str] = Field(default_factory=list)
     uploaded_by: uuid.UUID
+    uploaded_by_name: str | None = None
     created_at: datetime
     download_url: str
+
+
+class DocumentReviewRequest(BaseModel):
+    """Reviewer decision on one document version."""
+
+    reason_code: DocumentRejectionReason | None = None
+    comment: str | None = Field(default=None, max_length=2000)
+    apH_clause: str | None = Field(default=None, max_length=64)
+
+    @field_validator("comment")
+    @classmethod
+    def _trim_comment(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
+class DocumentRejectRequest(DocumentReviewRequest):
+    """Reject one document and open (or link) a deficiency."""
+
+    reason_code: DocumentRejectionReason
+
+    @field_validator("comment")
+    @classmethod
+    def _require_comment_present(cls, value: str | None) -> str | None:
+        if value is None:
+            raise ValueError("Explain the rejection so the institution can comply.")
+        return value
+
+
+class DocumentVerifyRequest(DocumentReviewRequest):
+    """Mark a re-uploaded document as verified."""
 
 
 class ChecklistDocument(BaseModel):
@@ -181,16 +239,27 @@ class ChecklistDocument(BaseModel):
     label: str
     mandatory: bool
     uploaded: bool
+    complete: bool = True
     document_id: uuid.UUID | None = None
     filename: str | None = None
     content_type: str | None = None
     size_bytes: int | None = None
     version: int | None = None
     signed_with_dsc: bool | None = None
+    signer_name: str | None = None
+    valid_until: date | None = None
     verification_status: DocumentVerificationStatus | None = None
     verification_reason: str | None = None
+    rejection_reason_code: DocumentRejectionReason | None = None
+    rejection_comment: str | None = None
+    rejected_at: datetime | None = None
+    apH_clause: str | None = None
+    related_deficiency_id: uuid.UUID | None = None
+    deficiency_status: str | None = None
+    deficiency_due_date: date | None = None
     uploaded_at: datetime | None = None
     download_url: str | None = None
+
 
 
 class DocumentChecklistRead(BaseModel):

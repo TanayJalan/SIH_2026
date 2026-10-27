@@ -60,7 +60,9 @@ class Deficiency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     application: Mapped[Application] = relationship(back_populates="deficiencies")
     raised_by_user: Mapped[User] = relationship(back_populates="raised_deficiencies")
-    response_document: Mapped[Document | None] = relationship("Document")
+    response_document: Mapped[Document | None] = relationship(
+        "Document", foreign_keys=[response_document_id]
+    )
 
     @property
     def raised_by_name(self) -> str | None:

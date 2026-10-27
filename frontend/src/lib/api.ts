@@ -347,19 +347,50 @@ export type DocumentVerificationStatus =
   | "FLAGGED"
   | "REJECTED";
 
+/** Controlled reviewer vocabulary for a rejection (APH 1.8f). */
+export type DocumentRejectionReason =
+  | "UNREADABLE"
+  | "NO_DSC"
+  | "EXPIRED"
+  | "WRONG_DOCUMENT"
+  | "NAME_MISMATCH"
+  | "INCOMPLETE"
+  | "OTHER";
+
+export type DocumentAllowedAction = "reject" | "verify" | "reupload";
+
 export interface DocumentRecord {
   id: string;
   application_id: string;
   doc_type: string;
   doc_code: string | null;
   signed_with_dsc: boolean;
+  signer_name: string | null;
+  valid_until: string | null;
   filename: string;
   content_type: string;
   size_bytes: number;
   version: number;
+  is_latest: boolean;
   verification_status: DocumentVerificationStatus;
   verification_reason: string | null;
+  rejection_reason_code: DocumentRejectionReason | null;
+  rejection_comment: string | null;
+  rejected_by: string | null;
+  rejected_by_name: string | null;
+  rejected_at: string | null;
+  apH_clause: string | null;
+  superseded_by: string | null;
+  related_deficiency_id: string | null;
+  deficiency_status: DeficiencyStatus | null;
+  deficiency_due_date: string | null;
+  reupload_count: number;
+  max_reuploads: number;
+  allowed_actions: DocumentAllowedAction[];
+  replacement_block_reason: string | null;
+  warnings: string[];
   uploaded_by: string;
+  uploaded_by_name: string | null;
   created_at: string;
   download_url: string;
 }
@@ -370,14 +401,24 @@ export interface ChecklistDocument {
   label: string;
   mandatory: boolean;
   uploaded: boolean;
+  complete: boolean;
   document_id: string | null;
   filename: string | null;
   content_type: string | null;
   size_bytes: number | null;
   version: number | null;
   signed_with_dsc: boolean | null;
+  signer_name: string | null;
+  valid_until: string | null;
   verification_status: DocumentVerificationStatus | null;
   verification_reason: string | null;
+  rejection_reason_code: DocumentRejectionReason | null;
+  rejection_comment: string | null;
+  rejected_at: string | null;
+  apH_clause: string | null;
+  related_deficiency_id: string | null;
+  deficiency_status: DeficiencyStatus | null;
+  deficiency_due_date: string | null;
   uploaded_at: string | null;
   download_url: string | null;
 }
@@ -1305,6 +1346,32 @@ function buildApiError(status: number, payload: unknown): ApiError {
   );
 }
 
+/**
+ * Return the per-field messages a structured ``{detail: {errors}}`` error carries.
+ *
+ * The strict document-replacement contract reports one message per form field so
+ * the dialog can show inline errors instead of a single banner.
+ */
+export function apiFieldErrors(error: unknown): Record<string, string> {
+  if (!(error instanceof ApiError) || typeof error.detail !== "object" || error.detail === null) {
+    return {};
+  }
+  const detail = (error.detail as { detail?: unknown }).detail;
+  if (typeof detail !== "object" || detail === null || !("errors" in detail)) {
+    return {};
+  }
+  const errors = (detail as { errors?: unknown }).errors;
+  if (typeof errors !== "object" || errors === null) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(errors as Record<string, unknown>).map(([field, message]) => [
+      field,
+      String(message),
+    ]),
+  );
+}
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   token?: string | null;
@@ -1610,8 +1677,69 @@ export async function downloadDocumentShell(
 export function listApplicationDocuments(
   token: string,
   applicationId: string,
+  options: { onlyToRecheck?: boolean } = {},
 ): Promise<DocumentRecord[]> {
-  return request<DocumentRecord[]>(`/applications/${applicationId}/documents`, { token });
+  const query = options.onlyToRecheck ? "?only_to_recheck=true" : "";
+  return request<DocumentRecord[]>(
+    `/applications/${applicationId}/documents${query}`,
+    { token },
+  );
+}
+
+export function listDocumentVersions(
+  token: string,
+  applicationId: string,
+  documentId: string,
+): Promise<DocumentRecord[]> {
+  return request<DocumentRecord[]>(
+    `/applications/${applicationId}/documents/${documentId}/versions`,
+    { token },
+  );
+}
+
+export interface DocumentRejectInput {
+  reasonCode: DocumentRejectionReason;
+  comment: string;
+  apHclause?: string;
+}
+
+export function rejectApplicationDocument(
+  token: string,
+  applicationId: string,
+  documentId: string,
+  input: DocumentRejectInput,
+): Promise<DocumentRecord> {
+  return request<DocumentRecord>(
+    `/applications/${applicationId}/documents/${documentId}/reject`,
+    {
+      method: "POST",
+      token,
+      body: {
+        reason_code: input.reasonCode,
+        comment: input.comment,
+        apH_clause: input.apHclause ?? "APH 1.8f",
+      },
+    },
+  );
+}
+
+export function verifyApplicationDocument(
+  token: string,
+  applicationId: string,
+  documentId: string,
+  input: { comment?: string; apHclause?: string } = {},
+): Promise<DocumentRecord> {
+  return request<DocumentRecord>(
+    `/applications/${applicationId}/documents/${documentId}/verify`,
+    {
+      method: "POST",
+      token,
+      body: {
+        comment: input.comment,
+        apH_clause: input.apHclause ?? "APH 1.8g",
+      },
+    },
+  );
 }
 
 export function getCompliancePreview(
@@ -1924,6 +2052,70 @@ export function uploadApplicationDocument(
     formData.append("doc_type", docType);
     formData.append("file", file);
     formData.append("signed_with_dsc", String(signedWithDsc));
+    xhr.send(formData);
+  });
+}
+
+export interface ReuploadDocumentOptions {
+  signedWithDsc: boolean;
+  signerName: string;
+  validUntil?: string | null;
+}
+
+/**
+ * Replace a rejected or flagged document with version N+1.
+ *
+ * Sent with XHR so the dialog can show upload progress and per-field errors
+ * from the strict replacement contract (APH 1.4.3, 1.8f, 2.4).
+ */
+export function reuploadApplicationDocument(
+  token: string,
+  applicationId: string,
+  documentId: string,
+  file: File,
+  options: ReuploadDocumentOptions,
+  onProgress?: (percent: number) => void,
+): Promise<DocumentRecord> {
+  return new Promise<DocumentRecord>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+      "POST",
+      `${API_BASE_URL}/applications/${applicationId}/documents/${documentId}/reupload`,
+    );
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    xhr.onerror = () => {
+      reject(new ApiError(0, "The API is unreachable. Check that the backend is running."));
+    };
+    xhr.onload = () => {
+      let payload: unknown = null;
+      if (xhr.responseText) {
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {
+          payload = null;
+        }
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(payload as DocumentRecord);
+        return;
+      }
+      reject(buildApiError(xhr.status, payload));
+    };
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("signed_with_dsc", String(options.signedWithDsc));
+    formData.append("signer_name", options.signerName);
+    if (options.validUntil) {
+      formData.append("valid_until", options.validUntil);
+    }
     xhr.send(formData);
   });
 }

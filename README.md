@@ -265,6 +265,18 @@ make test
 This applies migrations and runs the backend test suite in an isolated Compose one-off container.
 Tests create uniquely named fictional records and remove them afterwards.
 
+The frontend has one Playwright acceptance flow for the document re-upload cycle. It creates its
+own case through the API, so the demo data does not need a case in Scrutiny:
+
+```bash
+cd frontend
+npx playwright install chromium   # first run only
+npm run test:e2e
+```
+
+The stack must be running (`make dev`) and the browser test targets `http://localhost:5173` and
+`http://localhost:8000` by default; set `E2E_BASE_URL` / `E2E_API_URL` to point elsewhere.
+
 ### Useful commands
 
 ```bash
@@ -399,7 +411,23 @@ submission; the acceptance gate counts required section fields and mandatory doc
 
 - `POST /applications/{id}/documents` — multipart form with `doc_type` and `file`.
 - `GET /applications/{id}/documents` — every uploaded version for the application.
+  `?only_to_recheck=true` is the Re-Scrutiny view: only rejected documents and
+  replacements still awaiting verification (APH 1.8g).
 - `GET /applications/{id}/documents/{document_id}/download` — authenticated file stream.
+- `GET /applications/{id}/documents/{document_id}/versions` — every version with its
+  uploader, review status and download URL.
+- `POST /applications/{id}/documents/{document_id}/reject` — reviewer rejection with a
+  reason code (`UNREADABLE`, `NO_DSC`, `EXPIRED`, `WRONG_DOCUMENT`, `NAME_MISMATCH`,
+  `INCOMPLETE`, `OTHER`), a mandatory comment and the APH clause. It sets the document to
+  `REJECTED`, opens or links a deficiency item, moves the case into the compliance
+  window and notifies the institution (APH 1.8f, 2.3.3b).
+- `POST /applications/{id}/documents/{document_id}/reupload` — institution replacement
+  (multipart: `file`, `signed_with_dsc`, `signer_name`, `valid_until`). It creates version
+  N+1, marks the old row `superseded_by`, resets verification to `PENDING`, marks the
+  linked deficiency `RESPONDED`, notifies the reviewer and writes an audit and workflow
+  event (APH 1.4.3, 1.8f, 2.4).
+- `POST /applications/{id}/documents/{document_id}/verify` — reviewer confirmation of a
+  replacement (APH 1.8g).
 
 Uploads must be PDF, JPEG or PNG, no larger than 10 MB. The service verifies the file signature
 rather than trusting the browser MIME type, and the `doc_type` must exist in the database checklist
@@ -407,6 +435,25 @@ for the application type. Files are stored under `STORAGE_DIR` (the Compose name
 `backend_storage` mounted at `/storage`) as `<application_id>/<doc_type>/<uuid>.<ext>`. There is no
 public file URL: every download passes through the authenticated API. Re-uploading a document type
 creates the next version and a new audit row; earlier versions remain available in the file list.
+
+#### Rejection and replacement (APH 1.8f, 1.8g, 2.4)
+
+A submitted application is locked (APH 1.4.3), but the institution may replace a document a
+reviewer rejected or flagged while the case is in `DEFICIENCY_COMMUNICATED`,
+`INSTITUTION_COMPLIANCE`, `COMPLIANCE_WINDOW` or `RE_SCRUTINY`. In `DRAFT` any document can be
+replaced. Every other attempt returns HTTP `409` with the reason, and the UI hides the button.
+
+Replacements run the strict contract before anything is stored: a DSC attestation with the
+signer's name, a non-expired `valid_until` for fire, occupancy and structural certificates, a
+readable PDF (blank or image-only scans are refused through `pdfplumber`), the accepted file types
+and the 10 MB limit. Per-field messages come back as
+`{"detail": {"message": ..., "errors": {"file": ..., "valid_until": ...}}}` so the dialog can show
+them inline. `MAX_REUPLOADS_PER_DOCUMENT` (default `5`, see OQ-53) caps replacements.
+
+`submit_compliance` carries the `documents_reuploaded` guard, so compliance cannot be submitted
+while any rejected document still awaits its replacement. The institution is notified when a
+document is rejected and reminded before the deficiency due date; the reviewer is notified when a
+replacement arrives.
 
 ### Submission
 

@@ -6,6 +6,7 @@ import copy
 import logging
 import re
 import uuid
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -17,16 +18,20 @@ from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.models.application import Application, ApplicationProgram
 from app.models.application_type_route import ApplicationTypeRoute
+from app.models.deficiency import Deficiency
 from app.models.document import Document
 from app.models.enums import (
     ApplicationStatus,
     ApplicationTrack,
+    DeficiencyStatus,
     DocumentVerificationStatus,
+    Role,
     WorkflowAction,
     WorkflowStage,
 )
 from app.models.required_document import RequiredDocument
 from app.models.user import User
+from app.models.workflow import WorkflowEvent
 from app.schemas.application import (
     ApplicationChecklistRead,
     ApplicationCreate,
@@ -40,7 +45,13 @@ from app.services.alert_engine import NotificationService
 from app.services.application_sections import build_application_checklist
 from app.services.audit import AuditService
 from app.services.compliance import evaluate_application
-from app.services.document_verification import verify_document
+from app.services.document_review import replacement_block_reason
+from app.services.document_verification import (
+    certificate_requires_validity,
+    name_mismatch_warning,
+    pdf_readability_error,
+    verify_document,
+)
 from app.services.fees import FeeService
 from app.services.portal_number import next_portal_application_no
 
@@ -324,14 +335,94 @@ class ApplicationWorkspaceService:
         doc_type: str,
         upload: UploadFile,
         signed_with_dsc: bool = True,
+        signer_name: str | None = None,
+        valid_until: date | None = None,
     ) -> Document:
-        """Validate, store and version an uploaded document.
+        """Validate, store and version a draft document.
 
         A document without a DSC is still stored for reference, but it is marked
         ``REJECTED`` so the checklist and submission gate treat it as invalid
         (APH 1.4.3, 1.4.6).
         """
         self._ensure_draft(application)
+        document, _ = await self._store_document(
+            actor,
+            application,
+            doc_type=doc_type,
+            upload=upload,
+            signed_with_dsc=signed_with_dsc,
+            signer_name=signer_name,
+            valid_until=valid_until,
+            strict=False,
+        )
+        return document
+
+    async def reupload_document(
+        self,
+        actor: User,
+        application: Application,
+        document: Document,
+        *,
+        upload: UploadFile,
+        signed_with_dsc: bool,
+        signer_name: str | None,
+        valid_until: date | None,
+    ) -> tuple[Document, list[str]]:
+        """Replace a rejected or flagged document in a compliance window.
+
+        Only the owning institution administrator may replace a document. The
+        replacement becomes version N+1, the old row is superseded but kept
+        downloadable, verification resets to ``PENDING`` and the linked
+        deficiency is marked responded (APH 1.4.3, 1.8f, 2.4).
+        """
+        if (
+            actor.role != Role.INSTITUTION_ADMIN
+            or actor.institution_id is None
+            or actor.institution_id != application.institution_id
+        ):
+            raise DocumentUploadError(
+                409,
+                "Only the institution administrator of the owning institution may "
+                "replace a document.",
+            )
+        block = replacement_block_reason(
+            self._db, application, document, self._settings
+        )
+        if block is not None:
+            raise DocumentUploadError(409, block)
+
+        replacement, warnings = await self._store_document(
+            actor,
+            application,
+            doc_type=document.doc_type,
+            upload=upload,
+            signed_with_dsc=signed_with_dsc,
+            signer_name=signer_name,
+            valid_until=valid_until,
+            strict=True,
+            supersedes=document,
+        )
+        deficiency = self._respond_to_deficiency(actor, application, document, replacement)
+        self._write_reupload_event(actor, application, replacement, deficiency)
+        self._commit()
+        self._notify_reupload(actor, application, replacement)
+        self._reevaluate_compliance(application)
+        return replacement, warnings
+
+    async def _store_document(
+        self,
+        actor: User,
+        application: Application,
+        *,
+        doc_type: str,
+        upload: UploadFile,
+        signed_with_dsc: bool,
+        signer_name: str | None,
+        valid_until: date | None,
+        strict: bool,
+        supersedes: Document | None = None,
+    ) -> tuple[Document, list[str]]:
+        """Run upload validation and persist one new document version."""
         normalised_doc_type = doc_type.strip().upper()
         if not _SAFE_DOC_TYPE.fullmatch(normalised_doc_type):
             raise DocumentUploadError(422, "Document type is not valid")
@@ -358,6 +449,29 @@ class ApplicationWorkspaceService:
         if media_type is None:
             raise DocumentUploadError(415, "Only PDF, JPG or PNG documents are accepted")
 
+        today = self._clock.now().date()
+        if strict:
+            errors = self._replacement_field_errors(
+                doc_type=normalised_doc_type,
+                doc_code=rule.doc_code,
+                signed_with_dsc=signed_with_dsc,
+                signer_name=signer_name,
+                valid_until=valid_until,
+                today=today,
+            )
+            if media_type == "application/pdf":
+                pdf_error = pdf_readability_error(data)
+                if pdf_error is not None:
+                    errors["file"] = pdf_error
+            if errors:
+                raise DocumentUploadError(
+                    422,
+                    {
+                        "message": "The replacement document failed validation.",
+                        "errors": errors,
+                    },
+                )
+
         original_filename = self._safe_filename(upload.filename, media_type)
         verification = verify_document(
             doc_type=normalised_doc_type,
@@ -365,13 +479,45 @@ class ApplicationWorkspaceService:
             data=data,
         )
         verification_status = verification.status
-        verification_reason = verification.reason
-        if not signed_with_dsc:
+        verification_reason_text = verification.reason
+        verification_notes: dict[str, object] = {
+            "engine": "document-check-v1",
+            "reason": verification_reason_text,
+            "matched_terms": list(verification.matched_terms),
+            "signed_with_dsc": signed_with_dsc,
+        }
+        if strict:
+            verification_status = DocumentVerificationStatus.PENDING
+            verification_reason_text = (
+                "Replacement received. Awaiting reviewer verification (APH 1.8g)."
+            )
+            verification_notes = {
+                "engine": "document-check-v1",
+                "reason": verification_reason_text,
+                "automated_status": verification.status.value,
+                "automated_reason": verification.reason,
+                "matched_terms": list(verification.matched_terms),
+                "signed_with_dsc": signed_with_dsc,
+                "signer_name": signer_name,
+                "valid_until": valid_until.isoformat() if valid_until else None,
+            }
+        elif not signed_with_dsc:
             verification_status = DocumentVerificationStatus.REJECTED
-            verification_reason = (
+            verification_reason_text = (
                 "The upload is not digitally signed (DSC). APH 1.4.6 requires every "
                 "document to be DSC-signed; an unsigned document cannot be used for submission."
             )
+            verification_notes["reason"] = verification_reason_text
+
+        warnings: list[str] = []
+        warning = name_mismatch_warning(
+            application.institution.name,
+            filename=original_filename,
+            data=data,
+        )
+        if warning is not None:
+            warnings.append(warning)
+
         storage_root = self._settings.storage_dir.resolve()
         relative_dir = Path(str(application.id)) / normalised_doc_type
         target = storage_root / relative_dir / f"{uuid.uuid4().hex}{_MEDIA_TYPES[media_type]}"
@@ -393,6 +539,8 @@ class ApplicationWorkspaceService:
                 doc_type=normalised_doc_type,
                 doc_code=rule.doc_code,
                 signed_with_dsc=signed_with_dsc,
+                signer_name=signer_name,
+                valid_until=valid_until,
                 filename=original_filename,
                 content_type=media_type,
                 size_bytes=len(data),
@@ -400,18 +548,23 @@ class ApplicationWorkspaceService:
                 uploaded_by=actor.id,
                 version=max_version + 1,
                 verification_status=verification_status,
-                verification_notes={
-                    "engine": "document-check-v1",
-                    "reason": verification_reason,
-                    "matched_terms": list(verification.matched_terms),
-                    "signed_with_dsc": signed_with_dsc,
-                },
+                verification_notes=verification_notes,
+                related_deficiency_id=(
+                    supersedes.related_deficiency_id if supersedes is not None else None
+                ),
             )
             self._db.add(document)
             self._db.flush()
+            if supersedes is not None:
+                supersedes.superseded_by = document.id
+                self._db.flush()
             self._audit.log(
                 actor,
-                "application.document.upload",
+                (
+                    "application.document.reupload"
+                    if supersedes is not None
+                    else "application.document.upload"
+                ),
                 "Document",
                 document.id,
                 after={
@@ -419,22 +572,150 @@ class ApplicationWorkspaceService:
                     "doc_type": document.doc_type,
                     "doc_code": document.doc_code,
                     "signed_with_dsc": document.signed_with_dsc,
+                    "signer_name": document.signer_name,
+                    "valid_until": (
+                        document.valid_until.isoformat() if document.valid_until else None
+                    ),
                     "filename": document.filename,
                     "content_type": document.content_type,
                     "size_bytes": document.size_bytes,
                     "version": document.version,
                     "verification_status": document.verification_status.value,
-                    "verification_reason": verification_reason,
+                    "verification_reason": verification_reason_text,
+                    "supersedes": str(supersedes.id) if supersedes is not None else None,
+                    "related_deficiency_id": (
+                        str(document.related_deficiency_id)
+                        if document.related_deficiency_id is not None
+                        else None
+                    ),
+                    "apH_clause": "APH 1.4.3" if supersedes is not None else None,
                 },
             )
-            self._commit()
+            self._db.flush()
         except Exception:
             self._db.rollback()
             target.unlink(missing_ok=True)
             raise
 
-        self._reevaluate_compliance(application)
-        return document
+        if supersedes is None:
+            self._commit()
+            self._reevaluate_compliance(application)
+        return document, warnings
+
+    def _replacement_field_errors(
+        self,
+        *,
+        doc_type: str,
+        doc_code: str | None,
+        signed_with_dsc: bool,
+        signer_name: str | None,
+        valid_until: date | None,
+        today: date,
+    ) -> dict[str, str]:
+        """Return per-field messages the re-upload dialog can show inline."""
+        errors: dict[str, str] = {}
+        if not signed_with_dsc:
+            errors["signed_with_dsc"] = (
+                "Tick the DSC attestation. Every upload must be digitally signed "
+                "(APH 1.4.3)."
+            )
+        if not (signer_name or "").strip():
+            errors["signer_name"] = "Enter the name of the person who signed the document."
+        if certificate_requires_validity(doc_type, doc_code):
+            if valid_until is None:
+                errors["valid_until"] = (
+                    "Enter the certificate's validity date (APH Annexure-2.1)."
+                )
+            elif valid_until < today:
+                errors["valid_until"] = (
+                    "The certificate has already expired. Upload a current certificate "
+                    "(APH Annexure-2.1)."
+                )
+        return errors
+
+    def _respond_to_deficiency(
+        self,
+        actor: User,
+        application: Application,
+        previous: Document,
+        replacement: Document,
+    ) -> Deficiency | None:
+        """Mark the linked deficiency responded with the replacement as evidence."""
+        if replacement.related_deficiency_id is None:
+            return None
+        deficiency = self._db.get(Deficiency, replacement.related_deficiency_id)
+        if deficiency is None or deficiency.application_id != application.id:
+            return None
+        deficiency.response_text = (
+            f"Re-uploaded {replacement.doc_type} as version {replacement.version} "
+            f"(APH 2.4)."
+        )
+        deficiency.response_document_id = replacement.id
+        deficiency.status = DeficiencyStatus.RESPONDED
+        deficiency.responded_at = self._clock.now()
+        deficiency.closed_at = None
+        self._audit.log(
+            actor,
+            "deficiency.respond",
+            "Deficiency",
+            deficiency.id,
+            before={"status": DeficiencyStatus.OPEN.value},
+            after={
+                "status": deficiency.status.value,
+                "response_document_id": str(replacement.id),
+                "superseded_document_id": str(previous.id),
+                "apH_clause": "APH 2.4",
+            },
+        )
+        return deficiency
+
+    def _write_reupload_event(
+        self,
+        actor: User,
+        application: Application,
+        replacement: Document,
+        deficiency: Deficiency | None,
+    ) -> None:
+        """Record the replacement on the case timeline (APH 1.8f, 2.4)."""
+        self._db.add(
+            WorkflowEvent(
+                application_id=application.id,
+                from_status=application.status,
+                to_status=application.status,
+                actor_id=actor.id,
+                action="reupload_document",
+                comment=(
+                    f"{replacement.doc_type} version {replacement.version} re-uploaded "
+                    "with DSC attestation."
+                ),
+                details={
+                    "document_id": str(replacement.id),
+                    "doc_type": replacement.doc_type,
+                    "version": replacement.version,
+                    "related_deficiency_id": (
+                        str(deficiency.id) if deficiency is not None else None
+                    ),
+                },
+                apH_clause="APH 2.4",
+                created_at=self._clock.now(),
+            )
+        )
+        self._db.flush()
+
+    def _notify_reupload(
+        self, actor: User, application: Application, replacement: Document
+    ) -> None:
+        from app.services.alert_engine import notify_document_reuploaded
+
+        notify_document_reuploaded(
+            self._db,
+            application=application,
+            document=replacement,
+            actor=actor,
+            notifications=NotificationService.from_settings(self._settings),
+            clock=self._clock,
+        )
+
 
     def submit(
         self,

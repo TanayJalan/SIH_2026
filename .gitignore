@@ -32,6 +32,10 @@ verification/
 /approved-final.png
 /casefile-approved-final.png
 /casefile-deficiency-blocked.png
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
 
 # Local databases and dumps
 *.db

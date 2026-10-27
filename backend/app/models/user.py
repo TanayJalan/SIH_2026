@@ -51,7 +51,12 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     assigned_applications: Mapped[list[Application]] = relationship(
         back_populates="assigned_officer"
     )
-    uploaded_documents: Mapped[list[Document]] = relationship(back_populates="uploader")
+    uploaded_documents: Mapped[list[Document]] = relationship(
+        back_populates="uploader", foreign_keys="Document.uploaded_by"
+    )
+    rejected_documents: Mapped[list[Document]] = relationship(
+        back_populates="rejector", foreign_keys="Document.rejected_by"
+    )
     workflow_events: Mapped[list[WorkflowEvent]] = relationship(back_populates="actor")
     raised_deficiencies: Mapped[list[Deficiency]] = relationship(back_populates="raised_by_user")
     inspections: Mapped[list[Inspection]] = relationship(back_populates="committee_member")

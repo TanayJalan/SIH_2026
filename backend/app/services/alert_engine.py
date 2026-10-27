@@ -1302,6 +1302,122 @@ def notify_workflow_event(
     return len(created)
 
 
+def _document_recipients(
+    application: Application, *, reviewer: bool
+) -> list[User]:
+    """Return the institution admins or the assigned reviewer for a document alert."""
+    if reviewer:
+        officer = application.assigned_officer
+        if officer is not None and officer.is_active:
+            return [officer]
+        return list(
+            {
+                user.id: user
+                for user in (
+                    application.institution.users
+                    if application.institution is not None
+                    else []
+                )
+                if user.role == Role.SCRUTINY_COMMITTEE_MEMBER and user.is_active
+            }.values()
+        )
+    return [user for user in application.institution.users if user.role == Role.INSTITUTION_ADMIN]
+
+
+def notify_document_rejected(
+    db: Session,
+    *,
+    application: Application,
+    document: Document,
+    actor: User,
+    notifications: NotificationService,
+    clock: SimulatedClock,
+) -> int:
+    """Tell the institution that a reviewer rejected a document (APH 1.8f)."""
+    engine = AlertEngine(db, clock, notifications=notifications)
+    recipients = _document_recipients(application, reviewer=False)
+    if not recipients:
+        return 0
+    deficiency = (
+        db.get(Deficiency, document.related_deficiency_id)
+        if document.related_deficiency_id is not None
+        else None
+    )
+    due = deficiency.due_date if deficiency is not None else None
+    reason = (
+        document.rejection_reason_code.value
+        if document.rejection_reason_code is not None
+        else "OTHER"
+    )
+    title = f"Document rejected: {application.institution.name}"
+    message = (
+        f"{document.doc_type} version {document.version} was rejected by {actor.name}. "
+        f"Reason: {reason}. "
+        f"{document.rejection_comment or ''} Re-upload a compliant version"
+        + (f" by {_format_due(due)}" if due is not None else "")
+        + " (APH 1.8f, 2.4)."
+    )
+    created = engine._create_alert(  # noqa: SLF001 - reuse the shared alert engine
+        rule=first_rule_for_handler(db, "DOCUMENT_REJECTED"),
+        trigger=None,
+        recipients=recipients,
+        context=engine._context(  # noqa: SLF001
+            application=application, due_date=due, document=document
+        ),
+        dedupe_base=f"document_rejected:{document.id}:{document.version}",
+        title=title,
+        message=message,
+        type_override="DOCUMENT_REJECTED",
+        severity=Severity.HIGH,
+        channels=[AlertChannel.IN_APP, AlertChannel.EMAIL],
+        application=application,
+    )
+    if created:
+        engine.deliver_pending(created)
+        db.commit()
+    return len(created)
+
+
+def notify_document_reuploaded(
+    db: Session,
+    *,
+    application: Application,
+    document: Document,
+    actor: User,
+    notifications: NotificationService,
+    clock: SimulatedClock,
+) -> int:
+    """Tell the reviewer that the institution re-uploaded a document (APH 2.4)."""
+    engine = AlertEngine(db, clock, notifications=notifications)
+    recipients = _document_recipients(application, reviewer=True)
+    if not recipients:
+        return 0
+    title = f"Document re-uploaded: {application.institution.name}"
+    message = (
+        f"{actor.name} re-uploaded {document.doc_type} as version {document.version} "
+        "after a rejection. Review the replacement (APH 1.8g, 2.4)."
+    )
+    created = engine._create_alert(  # noqa: SLF001 - reuse the shared alert engine
+        rule=first_rule_for_handler(db, "DOCUMENT_REUPLOADED"),
+        trigger=None,
+        recipients=recipients,
+        context=engine._context(  # noqa: SLF001
+            application=application, document=document
+        ),
+        dedupe_base=f"document_reuploaded:{document.id}",
+        title=title,
+        message=message,
+        type_override="DOCUMENT_REUPLOADED",
+        severity=Severity.MEDIUM,
+        channels=[AlertChannel.IN_APP, AlertChannel.EMAIL],
+        application=application,
+    )
+    if created:
+        engine.deliver_pending(created)
+        db.commit()
+    return len(created)
+
+
 def run_alert_scan(
     *,
     clock: SimulatedClock | None = None,
