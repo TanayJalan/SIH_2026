@@ -230,11 +230,37 @@ def monitored_institution(
             data={},
         )
         db.add(change_request)
+        # A stray legacy closure case that does carry a programme row, but whose
+        # application type is marked not_implemented. The monitor must not build
+        # its snapshot from a case the workflow refuses to process.
+        closure_request = Application(
+            institution_id=institution.id,
+            track=ApplicationTrack.NEW_INSTITUTION,
+            application_type=ApplicationType.CLOSURE_AND_NEW_INSTITUTION,
+            category=ApplicationCategory.CAT1_CUTOFF,
+            academic_year="2026-27",
+            status=ApplicationStatus.DRAFT,
+            current_stage=WorkflowStage.APPLICATION,
+            data={},
+        )
+        db.add(closure_request)
+        db.flush()
+        db.add(
+            ApplicationProgram(
+                application_id=closure_request.id,
+                program_name="Legacy",
+                level="UG",
+                intake=60,
+                faculty_count=4,
+                lab_count=1,
+            )
+        )
         db.commit()
         context = {
             "institution_id": institution.id,
             "application_id": application.id,
             "change_request_id": change_request.id,
+            "closure_request_id": closure_request.id,
         }
     try:
         yield context
@@ -250,7 +276,7 @@ def _application(db: Session, application_id: uuid.UUID) -> Application:
 
 
 def test_monitor_evaluates_the_programme_application(monitored_institution) -> None:
-    """A newer year-round request must not replace the compliance case."""
+    """A newer year-round or unimplemented case must not replace the live case."""
     with SessionLocal() as db:
         institution = db.get(Institution, monitored_institution["institution_id"])
         assert institution is not None
@@ -260,6 +286,7 @@ def test_monitor_evaluates_the_programme_application(monitored_institution) -> N
         assert preview is not None
         assert preview.application_id == monitored_institution["application_id"]
         assert preview.application_id != monitored_institution["change_request_id"]
+        assert preview.application_id != monitored_institution["closure_request_id"]
 
 
 def test_evaluate_application_persists_results_score_and_snapshot(

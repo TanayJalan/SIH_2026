@@ -524,10 +524,11 @@ editable in the admin UI.
 - Snapshots are append-only per institution and power the trend chart. Evaluation runs nightly
   through APScheduler, after application data writes and on demand from **Re-evaluate now**. Set
   `COMPLIANCE_MONITOR_HOUR` (0–23) or `COMPLIANCE_MONITOR_ENABLED=false` to change or disable it.
-- The monitor evaluates the institution's most recent application **that carries programme rows**
-  (the New/Extension case the norms apply to) and only falls back to the latest application when
-  none has any. A year-round request such as a change of site carries no programme detail and would
-  otherwise report nothing but missing data.
+- The monitor evaluates the institution's most recent application **that carries programme rows
+  and whose type is not marked `not_implemented` in `application_type_routes`** — the New/Extension
+  case the norms apply to. A year-round request such as a change of site carries no programme
+  detail, and a type the workflow refuses to process returns HTTP 503, so neither may decide a
+  snapshot. It falls back to the latest programme application, then to the latest application.
 - A worsening to RED creates in-app alerts for the Regional Officer and super administrator.
 
 ### Penalty suggestions (APH 7.4 → 7.3)

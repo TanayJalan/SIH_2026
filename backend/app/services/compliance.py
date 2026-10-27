@@ -33,6 +33,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.application import Application, ApplicationProgram
+from app.models.application_type_route import ApplicationTypeRoute
 from app.models.compliance import (
     ComplianceConfig,
     ComplianceResult,
@@ -2190,8 +2191,16 @@ def _monitored_application(
     prefers the most recent application that carries programme rows: the
     New/Extension of Approval case in the MVP flow. A year-round request such as
     a change of site or a closure is recorded without programme detail and would
-    otherwise report nothing but missing data. The latest application remains
-    the fallback so every institution still gets a snapshot.
+    otherwise report nothing but missing data.
+
+    Applications whose type is marked ``not_implemented`` in
+    ``application_type_routes`` are skipped first: the workflow refuses to
+    process them (HTTP 503), so a snapshot built from one describes a case an
+    officer cannot open. A stray legacy row of such a type would otherwise
+    outrank the live case.
+
+    The latest application remains the fallback so every institution still gets
+    a snapshot.
     """
     programme_count = (
         select(func.count(ApplicationProgram.id))
@@ -2207,6 +2216,20 @@ def _monitored_application(
         )
         .where(Application.institution_id == institution_id)
     )
+    application = db.scalar(
+        base.join(
+            ApplicationTypeRoute,
+            ApplicationTypeRoute.type == Application.application_type,
+        )
+        .where(
+            programme_count > 0,
+            ApplicationTypeRoute.not_implemented.is_(False),
+        )
+        .order_by(Application.created_at.desc())
+        .limit(1)
+    )
+    if application is not None:
+        return application
     application = db.scalar(
         base.where(programme_count > 0).order_by(Application.created_at.desc()).limit(1)
     )
