@@ -39,6 +39,7 @@ from app.models.required_document import RequiredDocument
 from app.models.user import User
 from app.services.compliance import (
     evaluate_application,
+    evaluate_institution,
     run_nightly_evaluation,
 )
 from tests.support import TestData
@@ -216,10 +217,24 @@ def monitored_institution(
             )
             for requirement in required_documents
         )
+        # A newer year-round request without any programme detail. The monitor
+        # must evaluate the institution's programme application, not this one.
+        change_request = Application(
+            institution_id=institution.id,
+            track=ApplicationTrack.EXISTING,
+            application_type=ApplicationType.CHANGE_OF_SITE,
+            category=ApplicationCategory.CAT2_YEAR_ROUND,
+            academic_year="2026-27",
+            status=ApplicationStatus.SUBMITTED,
+            current_stage=WorkflowStage.APPLICATION,
+            data={},
+        )
+        db.add(change_request)
         db.commit()
         context = {
             "institution_id": institution.id,
             "application_id": application.id,
+            "change_request_id": change_request.id,
         }
     try:
         yield context
@@ -232,6 +247,19 @@ def _application(db: Session, application_id: uuid.UUID) -> Application:
     application = db.get(Application, application_id)
     assert application is not None
     return application
+
+
+def test_monitor_evaluates_the_programme_application(monitored_institution) -> None:
+    """A newer year-round request must not replace the compliance case."""
+    with SessionLocal() as db:
+        institution = db.get(Institution, monitored_institution["institution_id"])
+        assert institution is not None
+        preview = evaluate_institution(
+            db, institution, evaluated_at=datetime.now(UTC)
+        )
+        assert preview is not None
+        assert preview.application_id == monitored_institution["application_id"]
+        assert preview.application_id != monitored_institution["change_request_id"]
 
 
 def test_evaluate_application_persists_results_score_and_snapshot(

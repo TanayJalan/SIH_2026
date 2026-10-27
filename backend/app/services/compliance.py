@@ -29,7 +29,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.application import Application, ApplicationProgram
@@ -2170,6 +2170,40 @@ def _create_red_alerts(
     )
 
 
+def _monitored_application(
+    db: Session, institution_id: uuid.UUID
+) -> Application | None:
+    """Return the application the monitor should evaluate for an institution.
+
+    Compliance norms are programme-scoped (APH 7.1, Annexure-3), so the monitor
+    prefers the most recent application that carries programme rows: the
+    New/Extension of Approval case in the MVP flow. A year-round request such as
+    a change of site or a closure is recorded without programme detail and would
+    otherwise report nothing but missing data. The latest application remains
+    the fallback so every institution still gets a snapshot.
+    """
+    programme_count = (
+        select(func.count(ApplicationProgram.id))
+        .where(ApplicationProgram.application_id == Application.id)
+        .correlate(Application)
+        .scalar_subquery()
+    )
+    base = (
+        select(Application)
+        .options(
+            selectinload(Application.programs),
+            selectinload(Application.documents),
+        )
+        .where(Application.institution_id == institution_id)
+    )
+    application = db.scalar(
+        base.where(programme_count > 0).order_by(Application.created_at.desc()).limit(1)
+    )
+    if application is not None:
+        return application
+    return db.scalar(base.order_by(Application.created_at.desc()).limit(1))
+
+
 def evaluate_institution(
     db: Session,
     institution: Institution,
@@ -2178,17 +2212,8 @@ def evaluate_institution(
     trigger: str = "nightly",
     commit: bool = True,
 ) -> CompliancePreviewRead | None:
-    """Evaluate an institution against its most recent application."""
-    application = db.scalar(
-        select(Application)
-        .options(
-            selectinload(Application.programs),
-            selectinload(Application.documents),
-        )
-        .where(Application.institution_id == institution.id)
-        .order_by(Application.created_at.desc())
-        .limit(1)
-    )
+    """Evaluate an institution against its most recent programme application."""
+    application = _monitored_application(db, institution.id)
     if application is None:
         logger.info(
             "Institution %s has no applications; skipped compliance evaluation.",
