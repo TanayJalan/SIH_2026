@@ -671,6 +671,45 @@ def test_exists_rules_report_a_value_and_a_plain_language_result() -> None:
     assert unassessed.message.startswith("Data missing: ")
 
 
+def test_missing_document_count_matches_codes_and_document_types() -> None:
+    """A checklist row without a code must still match an upload by doc_type."""
+    from app.models.document import Document
+    from app.models.enums import DocumentVerificationStatus
+    from app.models.required_document import RequiredDocument
+    from app.services.compliance import _document_metrics
+
+    required = [
+        RequiredDocument(
+            application_type="EOA_SELF_DISCLOSURE",
+            doc_type=doc_type,
+            doc_code=doc_code,
+            mandatory=True,
+            condition_expr=None,
+            apH_clause="APH Annexure-2.1",
+        )
+        for doc_type, doc_code in (
+            ("AFFIDAVIT_2", "AFFIDAVIT_2"),
+            ("LEGACY_LETTER", None),
+            ("FIRE_SAFETY_CERTIFICATE", "FIRE_SAFETY_CERTIFICATE"),
+        )
+    ]
+    documents = [
+        Document(
+            doc_code=doc_code,
+            doc_type=doc_type,
+            verification_status=DocumentVerificationStatus.PENDING,
+            signed_with_dsc=True,
+        )
+        for doc_code, doc_type in (
+            ("AFFIDAVIT_2", "AFFIDAVIT_2"),
+            (None, "LEGACY_LETTER"),
+        )
+    ]
+    metrics = _document_metrics(documents, required, date(2026, 10, 27))
+    assert metrics["document.annexure21.missing_count"] == 1.0
+    assert metrics["document.annexure21.missing_codes"] == "FIRE_SAFETY_CERTIFICATE"
+
+
 def test_missing_data_is_not_assessed_never_a_crash() -> None:
     rule = _rule(metric_key="faculty.required_total", operator=">=", threshold="1")
 

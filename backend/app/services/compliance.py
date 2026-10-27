@@ -1023,7 +1023,12 @@ def _document_metrics(
         sum(1 for document in documents if not document.signed_with_dsc)
     )
 
-    uploaded_codes = {str(code).upper() for code in index}
+    uploaded_codes = {
+        str(value).upper()
+        for document in documents
+        for value in (document.doc_code, document.doc_type)
+        if value
+    }
     missing = [
         requirement
         for requirement in required_documents
@@ -1604,7 +1609,13 @@ def _resolve_observed(
         if isinstance(value, date):
             return value, {"observed_date": value.isoformat()}
         return None, {"observed_date": value}
-    return _metric_for_scope(metrics, rule.metric_key, params), {}
+    observed = _metric_for_scope(metrics, rule.metric_key, params)
+    extra: dict[str, Any] = {}
+    if rule.metric_key == "document.annexure21.missing_count":
+        codes = metrics.get("document.annexure21.missing_codes")
+        if codes:
+            extra["missing_document_codes"] = str(codes).split(",")
+    return observed, extra
 
 
 def _evaluate_rule(

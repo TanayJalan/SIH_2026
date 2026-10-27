@@ -524,11 +524,23 @@ def monitor(
     by_institution = compliance_admin.group_latest_snapshots(
         db, [institution.id for institution in window]
     )
-    latest_application: dict[uuid.UUID, Application] = {}
-    for row in db.scalars(
-        select(Application).order_by(Application.created_at.desc())
-    ).all():
-        latest_application.setdefault(row.institution_id, row)
+    snapshot_application_ids = {
+        snapshot.application_id
+        for snapshot in by_institution.values()
+        if snapshot.application_id is not None
+    }
+    applications: dict[uuid.UUID, Application] = (
+        {
+            application.id: application
+            for application in db.scalars(
+                select(Application).where(
+                    Application.id.in_(snapshot_application_ids)
+                )
+            ).all()
+        }
+        if snapshot_application_ids
+        else {}
+    )
 
     items = [
         ComplianceMonitorRead(
@@ -544,10 +556,14 @@ def monitor(
             latest_missing_count=snapshot.missing_count if snapshot else None,
             latest_evaluated_at=snapshot.evaluated_at if snapshot else None,
             latest_trigger=snapshot.trigger if snapshot else None,
-            application_id=(
-                application.id if (application := latest_application.get(institution.id)) else None
+            application_id=snapshot.application_id if snapshot else None,
+            application_reference=(
+                applications[snapshot.application_id].reference
+                if snapshot
+                and snapshot.application_id is not None
+                and snapshot.application_id in applications
+                else None
             ),
-            application_reference=application.reference if application else None,
         )
         for institution in window
     ]
