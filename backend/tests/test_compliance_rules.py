@@ -10,7 +10,8 @@ still being an illustrative project threshold.
 from __future__ import annotations
 
 import json
-from datetime import date
+import uuid
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -708,6 +709,62 @@ def test_missing_document_count_matches_codes_and_document_types() -> None:
     metrics = _document_metrics(documents, required, date(2026, 10, 27))
     assert metrics["document.annexure21.missing_count"] == 1.0
     assert metrics["document.annexure21.missing_codes"] == "FIRE_SAFETY_CERTIFICATE"
+
+
+def test_deficiency_report_accepts_penal_suggestions_from_the_engine(monkeypatch) -> None:
+    """The report must serialise the suggestion models the engine already built."""
+    from types import SimpleNamespace
+
+    from app.schemas.compliance import (
+        CompliancePreviewRead,
+        PenalActionSuggestionRead,
+    )
+    from app.services import deficiency_report as report_service
+
+    preview_rule = _preview(status="FAIL")
+    preview_rule.unit = "count"
+    preview_rule.penal_action_suggestions = [
+        PenalActionSuggestionRead(
+            violation_code="APH 7.4c",
+            violation="Faculty deficiency",
+            action=PenalActionType.PROGRAMME_WITHDRAWAL,
+            action_label="Withdrawal of programme approval",
+            apH_clause="APH 7.3, 7.4c",
+        )
+    ]
+    preview = CompliancePreviewRead(
+        application_id=uuid.uuid4(),
+        evaluated_at=datetime(2026, 10, 27, tzinfo=UTC),
+        rules=[preview_rule],
+        passed_count=0,
+        failed_count=1,
+        not_assessed_count=0,
+        assessed_count=1,
+        score=0.0,
+        outcome="ATTENTION",
+        status="RED",
+        mandatory_failed_count=1,
+        nil_deficiency=False,
+        banner="Not Nil Deficiency",
+    )
+    monkeypatch.setattr(report_service, "evaluate_compliance", lambda *a, **k: preview)
+    report = report_service.build_deficiency_report(
+        None,  # type: ignore[arg-type] - the engine is stubbed
+        SimpleNamespace(
+            id=uuid.uuid4(),
+            data={},
+            portal_application_no="TEST/DEFICIENCY/0001",
+            academic_year="2026-27",
+        ),
+        evaluated_at=datetime(2026, 10, 27, tzinfo=UTC),
+    )
+    assert report.items[0].penal_action_suggestions[0].action == (
+        PenalActionType.PROGRAMME_WITHDRAWAL
+    )
+    assert report.items[0].penal_action_suggestions[0].hearing_required is True
+
+    pdf = report_service.render_deficiency_report_pdf(report)
+    assert pdf.getvalue().startswith(b"%PDF")
 
 
 def test_missing_data_is_not_assessed_never_a_crash() -> None:

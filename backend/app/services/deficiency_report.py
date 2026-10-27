@@ -76,7 +76,7 @@ def build_deficiency_report(
                 observed_value=rule.observed_value,
                 explanation=explanation,
                 penal_action_suggestions=[
-                    PenalActionSuggestionRead(**suggestion)
+                    PenalActionSuggestionRead.model_validate(suggestion)
                     for suggestion in rule.penal_action_suggestions
                 ],
             )
