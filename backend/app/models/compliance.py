@@ -40,7 +40,8 @@ class ComplianceRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "compliance_rules"
     __table_args__ = (
         CheckConstraint(
-            "operator IN ('<', '<=', '=', '==', '>=', '>', '!=', 'BETWEEN', 'EXISTS')",
+            "operator IN ('<', '<=', '=', '==', '>=', '>', '!=', 'BETWEEN', "
+            "'EXISTS', 'RATIO', 'SUM', 'COUNT', 'DATE_NOT_EXPIRED')",
             name="operator_allowed",
         ),
         Index("ix_compliance_rules_category_active", "category", "is_active"),
@@ -51,7 +52,7 @@ class ComplianceRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     category: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     metric_key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    operator: Mapped[str] = mapped_column(String(8), nullable=False)
+    operator: Mapped[str] = mapped_column(String(32), nullable=False)
     threshold: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
     """Lower bound (BETWEEN), the single bound for comparison operators, or the
     nominal marker for EXISTS."""
@@ -76,6 +77,30 @@ class ComplianceRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Boolean, nullable=False, default=False, server_default=text("false")
     )
     # Set when the clause could not be found in APH_SPEC; see OPEN_QUESTIONS.md.
+    mandatory: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    """A failed mandatory rule, or unassessed mandatory evidence, prevents Nil Deficiency."""
+    illustrative: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    """True for project-only demo thresholds that are not APH norms."""
+    weight: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    """Optional per-rule scoring weight; falls back to the severity weight."""
+    unit: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """Unit shown in explanations; falls back to the metric catalogue unit."""
+    explanation_template: Mapped[str | None] = mapped_column(Text, nullable=True)
+    """Template quoting the clause, for example
+    ``"Faculty:student ratio {observed} against {threshold} {unit} required"``."""
+    metric_params: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    """Operands for RATIO/SUM/COUNT and family/level scope, for example
+    ``{"numerator": "faculty.total", "denominator": "faculty.required"}``."""
+    penalty_codes: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
+    """APH 7.4 violation codes (a-n); mapped to APH 7.3 penal actions as suggestions."""
 
     results: Mapped[list[ComplianceResult]] = relationship(back_populates="rule")
 
@@ -145,7 +170,9 @@ class ComplianceConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "compliance_config"
     __table_args__ = (
         CheckConstraint(
-            "key IN ('severity_weights', 'rag_breakpoints', 'committee_compositions')",
+            "key IN ('severity_weights', 'rag_breakpoints', 'committee_compositions', "
+            "'fsr_ratios', 'cadre_ratios', 'area_norms', 'bandwidth_tiers', "
+            "'library_norms', 'pc_ratios', 'penalty_actions')",
             name="compliance_config_key_allowed",
         ),
     )

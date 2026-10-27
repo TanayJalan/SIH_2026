@@ -318,7 +318,7 @@ def test_case_file_compliance_maps_failed_rule_to_deficiency_text(
     ]
     assert len(failed) == 1
     assert failed[0]["status"] == "FAIL"
-    assert "configured rule requires at least" in failed[0]["message"]
+    assert "does not meet the requirement" in failed[0]["message"]
     assert failed[0]["message"].startswith("Land area: 500")
 
 

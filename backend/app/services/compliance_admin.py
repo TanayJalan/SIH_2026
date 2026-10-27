@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -19,10 +21,11 @@ from app.models.compliance import (
     ComplianceRule,
     ComplianceSnapshot,
 )
-from app.models.enums import ComplianceHealth, Severity
+from app.models.enums import ComplianceHealth
 from app.models.institution import Institution
 from app.schemas.application_sections import ApplicationData
 from app.schemas.compliance import (
+    BandwidthTierConfig,
     ComplianceConfigRead,
     ComplianceRuleCreate,
     RagBreakpointsConfig,
@@ -33,10 +36,10 @@ from app.services.compliance import (
     _DEFAULT_RAG_BREAKPOINTS,
     _DEFAULT_SEVERITY_WEIGHTS,
     _applies_to_application,
-    _evaluate_rule,
-    _rag_status,
-    _weighted_score,
-    application_metric_values,
+    _build_preview,
+    _evaluate_rule_from_metrics,
+    _scope_metrics,
+    build_rule_context,
 )
 
 _STATUS_RANK = {
@@ -63,8 +66,17 @@ def rule_snapshot(rule: ComplianceRule) -> dict[str, object]:
         ),
         "severity": rule.severity.value,
         "applies_to": rule.applies_to,
+        "applies_to_family": rule.applies_to_family,
+        "applies_to_level": rule.applies_to_level,
         "apH_clause": rule.apH_clause,
         "needs_verification": rule.needs_verification,
+        "mandatory": rule.mandatory,
+        "illustrative": rule.illustrative,
+        "weight": float(rule.weight) if rule.weight is not None else None,
+        "unit": rule.unit,
+        "explanation_template": rule.explanation_template,
+        "metric_params": dict(rule.metric_params or {}),
+        "penalty_codes": list(rule.penalty_codes or []),
         "is_active": rule.is_active,
     }
 
@@ -94,6 +106,47 @@ def get_compliance_config_read(db: Session) -> ComplianceConfigRead:
     breakpoints = RagBreakpointsConfig(
         **_load_config_row(db, "rag_breakpoints", dict(_DEFAULT_RAG_BREAKPOINTS))
     )
+    rows = {
+        row.key: row.value
+        for row in db.scalars(select(ComplianceConfig)).all()
+        if isinstance(row.value, (dict, list))
+    }
+
+    def mapping(key: str) -> dict[str, Any]:
+        value = rows.get(key)
+        return dict(value) if isinstance(value, dict) else {}
+
+    def floats(key: str) -> dict[str, float]:
+        return {
+            str(name): float(value)
+            for name, value in mapping(key).items()
+            if isinstance(value, (int, float))
+        }
+
+    def nested(key: str) -> dict[str, dict[str, float]]:
+        return {
+            str(name): {
+                str(level): float(ratio)
+                for level, ratio in value.items()
+                if isinstance(ratio, (int, float))
+            }
+            for name, value in mapping(key).items()
+            if isinstance(value, dict)
+        }
+
+    def cadre(key: str) -> dict[str, list[int]]:
+        return {
+            str(name): [int(part) for part in value]
+            for name, value in mapping(key).items()
+            if isinstance(value, list)
+        }
+
+    tiers = rows.get("bandwidth_tiers")
+    bandwidth = (
+        [BandwidthTierConfig(**tier) for tier in tiers]
+        if isinstance(tiers, list)
+        else []
+    )
     updated_at = db.scalar(
         select(ComplianceConfig.updated_at)
         .order_by(ComplianceConfig.updated_at.desc())
@@ -102,6 +155,12 @@ def get_compliance_config_read(db: Session) -> ComplianceConfigRead:
     return ComplianceConfigRead(
         severity_weights=weights,
         rag_breakpoints=breakpoints,
+        fsr_ratios=nested("fsr_ratios"),
+        cadre_ratios=cadre("cadre_ratios"),
+        area_norms=floats("area_norms"),
+        bandwidth_tiers=bandwidth,
+        library_norms=floats("library_norms"),
+        pc_ratios=nested("pc_ratios"),
         updated_at=updated_at,
     )
 
@@ -136,12 +195,9 @@ def preview_rule_impact(
     """Compare projected monitoring statuses with stored latest statuses.
 
     Returns ``(red_flips, amber_flips, improved, unchanged, affected)``.
-    Institutions without an application or without a stored snapshot cannot
+    institutions without an application or without a stored snapshot cannot
     be projected and are skipped: the stored latest snapshot is the baseline.
     """
-    from app.services.compliance import load_compliance_config
-
-    weights, breakpoints = load_compliance_config(db)
     active_rules = list(
         db.scalars(select(ComplianceRule).where(ComplianceRule.is_active.is_(True)))
     )
@@ -171,12 +227,11 @@ def preview_rule_impact(
             continue
 
         projected_status = _projected_status(
+            db=db,
             application=application,
             active_rules=active_rules,
             proposed=proposed,
             rule_id=rule_id,
-            weights=weights,
-            breakpoints=breakpoints,
         )
         current_rank = _STATUS_RANK[latest_status]
         projected_rank = _STATUS_RANK[projected_status]
@@ -204,34 +259,27 @@ def preview_rule_impact(
 
 def _projected_status(
     *,
+    db: Session,
     application: Application,
     active_rules: list[ComplianceRule],
     proposed: ComplianceRuleCreate,
     rule_id: uuid.UUID | None,
-    weights: dict[str, float],
-    breakpoints: dict[str, float],
 ) -> ComplianceHealth:
     """Evaluate the rule set as it would exist after the proposed change."""
     data = ApplicationData.model_validate(application.data or {})
-    metrics = application_metric_values(
-        data,
-        programs=list(application.programs),
-        documents=list(application.documents),
-    )
+    context = build_rule_context(db, application, data)
+    context.metrics.update(_scope_metrics(context))
 
-    severity_results: list[tuple[Severity, bool]] = []
-    failed_critical = 0
-    for rule in active_rules:
-        if rule_id is not None and rule.id == rule_id:
-            continue  # the proposed rule replaces this one
-        if not _applies_to_application(rule, application):
-            continue
-        preview = _evaluate_rule(rule, metrics.get(rule.metric_key))
-        if preview.status == "NOT_ASSESSED":
-            continue
-        severity_results.append((rule.severity, preview.status == "PASS"))
-        if preview.status == "FAIL" and rule.severity == Severity.CRITICAL:
-            failed_critical += 1
+    previews = [
+        _evaluate_rule_from_metrics(
+            rule,
+            context.metrics,
+            reference_date=context.reference_date,
+        )
+        for rule in active_rules
+        if (rule_id is None or rule.id != rule_id)
+        and _applies_to_application(rule, application)
+    ]
 
     if proposed.is_active:
         replacement = ComplianceRule(
@@ -249,20 +297,36 @@ def _projected_status(
             ),
             severity=proposed.severity,
             applies_to=proposed.applies_to,
+            applies_to_family=proposed.applies_to_family,
+            applies_to_level=proposed.applies_to_level,
             apH_clause=proposed.apH_clause,
             needs_verification=proposed.needs_verification,
+            mandatory=proposed.mandatory,
+            illustrative=proposed.illustrative,
+            weight=(
+                Decimal(str(proposed.weight))
+                if proposed.weight is not None
+                else None
+            ),
+            unit=proposed.unit,
+            explanation_template=proposed.explanation_template,
+            metric_params=dict(proposed.metric_params or {}),
+            penalty_codes=list(proposed.penalty_codes or []),
             is_active=True,
         )
         if _applies_to_application(replacement, application):
-            preview = _evaluate_rule(replacement, metrics.get(replacement.metric_key))
-            if preview.status != "NOT_ASSESSED":
-                severity_results.append((replacement.severity, preview.status == "PASS"))
-                if preview.status == "FAIL" and replacement.severity == Severity.CRITICAL:
-                    failed_critical += 1
+            previews.append(
+                _evaluate_rule_from_metrics(
+                    replacement,
+                    context.metrics,
+                    reference_date=context.reference_date,
+                )
+            )
 
-    score = _weighted_score(severity_results, weights)
-    return _rag_status(
-        failed_critical_count=failed_critical,
-        score=score,
-        breakpoints=breakpoints,
+    preview = _build_preview(
+        db,
+        application=application,
+        previews=previews,
+        evaluated_at=datetime.now(UTC),
     )
+    return ComplianceHealth(preview.status)

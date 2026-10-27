@@ -1,0 +1,72 @@
+{
+  "severity_weights": {
+    "CRITICAL": 25.0,
+    "HIGH": 15.0,
+    "MEDIUM": 8.0,
+    "LOW": 4.0
+  },
+  "rag_breakpoints": {
+    "red_below": 70.0,
+    "amber_below": 85.0
+  },
+  "fsr_ratios": {
+    "ENGINEERING_TECHNOLOGY": { "DIPLOMA": 25, "UG": 20, "PG": 15, "INTEGRATED": 20, "PG_DIPLOMA": 15 },
+    "PLANNING": { "DIPLOMA": 25, "UG": 16, "PG": 10, "INTEGRATED": 16, "PG_DIPLOMA": 10 },
+    "APPLIED_ARTS_CRAFTS": { "DIPLOMA": 25, "UG": 15, "PG": 15, "PG_DIPLOMA": 15 },
+    "DESIGN": { "DIPLOMA": 25, "UG": 15, "PG": 15, "PG_DIPLOMA": 15 },
+    "HMCT": { "DIPLOMA": 25, "UG": 20, "PG": 12, "PG_DIPLOMA": 12 },
+    "COMPUTER_APPLICATIONS": { "DIPLOMA": 25, "UG": 25, "PG": 20, "PG_DIPLOMA": 20 },
+    "MANAGEMENT": { "DIPLOMA": 25, "UG": 25, "PG": 20, "PG_DIPLOMA": 20 }
+  },
+  "cadre_ratios": {
+    "ENGINEERING_TECHNOLOGY|UG": [1, 2, 6],
+    "ENGINEERING_TECHNOLOGY|PG": [1, 1, 1],
+    "HMCT|PG": [1, 1, 1],
+    "COMPUTER_APPLICATIONS|PG": [1, 2, 6],
+    "MANAGEMENT|PG": [1, 2, 6],
+    "PLANNING|UG": [1, 2, 6],
+    "PLANNING|PG": [1, 1, 1],
+    "APPLIED_ARTS_CRAFTS|UG": [1, 2, 6],
+    "APPLIED_ARTS_CRAFTS|PG": [1, 1, 1],
+    "DESIGN|UG": [1, 2, 6],
+    "DESIGN|PG": [1, 1, 1]
+  },
+  "area_norms": {
+    "administrative_sqm": 750,
+    "amenities_sqm": 500,
+    "circulation_factor": 1.25,
+    "classroom_large_sqm": 66,
+    "classroom_small_sqm": 33,
+    "workshop_sqm": 200
+  },
+  "bandwidth_tiers": [
+    { "max_intake": 300, "mbps": 100 },
+    { "max_intake": 600, "mbps": 300 },
+    { "max_intake": 900, "mbps": 500 },
+    { "max_intake": null, "mbps": 1000 }
+  ],
+  "library_norms": {
+    "journals_per_course": 6,
+    "reading_seat_share_ug": 0.15,
+    "reading_seat_share_pg": 0.25,
+    "digital_library_pc_share": 0.1
+  },
+  "pc_ratios": {
+    "ENGINEERING_TECHNOLOGY": { "DIPLOMA": 10, "UG": 10, "PG": 4, "INTEGRATED": 10 },
+    "PLANNING": { "DIPLOMA": 6, "UG": 6, "PG": 4 },
+    "APPLIED_ARTS_CRAFTS": { "DIPLOMA": 6, "UG": 6, "PG": 4 },
+    "DESIGN": { "DIPLOMA": 6, "UG": 6, "PG": 4 },
+    "HMCT": { "DIPLOMA": 6, "UG": 6, "PG": 4 },
+    "COMPUTER_APPLICATIONS": { "DIPLOMA": 10, "UG": 10, "PG": 4 },
+    "MANAGEMENT": { "DIPLOMA": 10, "UG": 10, "PG": 6 }
+  },
+  "penalty_actions": {
+    "suggests_only": true,
+    "hearing_required": true,
+    "process_steps": [
+      "Issuing a show-cause notice and giving a hearing (APH 6.50h proviso)",
+      "Passing a detailed speaking order on the portal (APH 2.23.3, 7.10)",
+      "Allowing one appeal to the Standing Appellate Committee within 7 days (APH 1.11a, 2.24a)"
+    ]
+  }
+}

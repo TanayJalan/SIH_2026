@@ -18,7 +18,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -67,7 +67,10 @@ from app.services.application_workspace import ApplicationWorkspaceService
 from app.services.audit import AuditService
 from app.services.authorization import can_access_application
 from app.services.compliance import evaluate_compliance
-from app.services.deficiency_report import build_deficiency_report
+from app.services.deficiency_report import (
+    build_deficiency_report,
+    render_deficiency_report_pdf,
+)
 from app.services.document_shells import build_document_shell, shell_codes
 from app.services.document_verification import verification_reason
 from app.services.fees import FeeService
@@ -732,6 +735,39 @@ def get_deficiency_report(
         application,
         evaluated_at=clock.now(),
         include_not_assessed=include_not_assessed,
+    )
+
+
+@router.get(
+    "/{application_id}/deficiency-report.pdf",
+    responses={
+        status.HTTP_200_OK: {"content": {"application/pdf": {}}},
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Download the Deficiency Report as a PDF",
+)
+def download_deficiency_report_pdf(
+    application_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+    clock: ClockDep,
+    include_not_assessed: bool = True,
+) -> StreamingResponse:
+    """Render the Deficiency Report to PDF for the case file (APH 2.3.3b)."""
+    application = _readable_application(db, current_user, application_id)
+    report = build_deficiency_report(
+        db,
+        application,
+        evaluated_at=clock.now(),
+        include_not_assessed=include_not_assessed,
+    )
+    buffer = render_deficiency_report_pdf(report)
+    filename = f"deficiency-report-{application.portal_application_no or application.id}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

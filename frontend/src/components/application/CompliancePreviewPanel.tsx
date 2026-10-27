@@ -193,6 +193,21 @@ export default function CompliancePreviewPanel({
         <span className="text-20 font-serif font-semibold tabular-nums">{preview.score}%</span>
       </div>
 
+      <div
+        className={cn(
+          "mt-2 rounded-input border px-3 py-2 text-11 leading-4",
+          preview.nil_deficiency
+            ? "border-ok bg-ok-soft text-ok-strong"
+            : "border-watch bg-watch-soft text-watch-strong",
+        )}
+      >
+        <p className="font-semibold">{preview.banner}</p>
+        <p className="mt-0.5">
+          {preview.mandatory_failed_count} mandatory failure(s) ·{" "}
+          {preview.mandatory_missing_count} mandatory unassessed
+        </p>
+      </div>
+
       <ProgressBar
         label="Assessed rules passing"
         value={preview.score}
@@ -230,6 +245,27 @@ export default function CompliancePreviewPanel({
                     </span>
                   </div>
                   <p className="mt-1 text-11 leading-4 text-ink-500">{rule.message}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-10">
+                    <span className="rounded-pill border border-line bg-paper px-1.5 py-0.5 text-ink-700">
+                      {rule.apH_clause}
+                    </span>
+                    {rule.illustrative ? (
+                      <span className="rounded-pill bg-watch-soft px-1.5 py-0.5 text-watch-strong">
+                        Illustrative, not an AICTE norm
+                      </span>
+                    ) : null}
+                    {rule.needs_verification ? (
+                      <span className="rounded-pill bg-paper px-1.5 py-0.5 text-ink-500">
+                        Needs verification
+                      </span>
+                    ) : null}
+                    {rule.penal_action_suggestions.length > 0 ? (
+                      <span className="rounded-pill bg-paper px-1.5 py-0.5 text-ink-500">
+                        {rule.penal_action_suggestions.length} suggested APH 7.3 action
+                        {rule.penal_action_suggestions.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                  </div>
                   <p className={cn("mt-1 text-11 font-medium", status.className)}>
                     {status.label}
                   </p>
@@ -241,8 +277,9 @@ export default function CompliancePreviewPanel({
       </ul>
 
       <p className="mt-4 border-t border-line pt-3 text-10 leading-4 text-ink-500">
-        Rules are illustrative configuration data. Review thresholds against the current AICTE
-        Approval Process Handbook.
+        Each rule carries the APH clause it implements. Thresholds are editable configuration;
+        rows marked illustrative are project-only demo values, not AICTE norms. Verify every
+        figure against the current AICTE Approval Process Handbook.
       </p>
       {preview.failed_count > 0 ? (
         <p className="mt-2 flex items-start gap-1.5 text-11 leading-4 text-watch-strong">

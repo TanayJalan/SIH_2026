@@ -3,14 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   CheckCircle2,
+  Download,
   FileText,
   Loader2,
   Printer,
   RefreshCw,
+  Scale,
 } from "lucide-react";
 
 import { Button } from "@/components/ui";
-import { getDeficiencyReport, type DeficiencyReport } from "@/lib/api";
+import {
+  downloadDeficiencyReportPdf,
+  getDeficiencyReport,
+  type DeficiencyReport,
+} from "@/lib/api";
 import { formatDateTime, humanizeEnum } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +44,9 @@ function printableHtml(report: DeficiencyReport): string {
     .map(
       (item) => `
       <tr>
-        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.name)}${
+          item.illustrative ? " <em>(illustrative, not an AICTE norm)</em>" : ""
+        }</td>
         <td>${escapeHtml(item.severity)}</td>
         <td>${escapeHtml(item.status)}</td>
         <td>${escapeHtml(item.message)}</td>
@@ -69,14 +77,16 @@ function printableHtml(report: DeficiencyReport): string {
   <div class="banner"><strong>${escapeHtml(report.banner)}</strong></div>
   <p>Passed ${report.passed_count} · Failed ${report.failed_count} · Not assessed ${
     report.not_assessed_count
-  } · Clause ${escapeHtml(report.apH_clause)}</p>
+  } · Mandatory failures ${report.mandatory_failed_count} · Mandatory unassessed ${
+    report.mandatory_missing_count
+  }</p>
   <table>
     <thead>
       <tr><th>Requirement</th><th>Severity</th><th>Status</th><th>Finding</th><th>APH clause</th></tr>
     </thead>
     <tbody>${rows || '<tr><td colspan="5">No deficiencies found.</td></tr>'}</tbody>
   </table>
-  <p class="note">Generated from the compliance rules configured in this prototype. Threshold values are illustrative and must be verified against the current AICTE Approval Process Handbook.</p>
+  <p class="note">A Nil Deficiency result requires every mandatory rule to pass. Rows marked illustrative are project-only demo thresholds, not AICTE norms. Threshold values are configurable and must be verified against the current AICTE Approval Process Handbook.</p>
 </body>
 </html>`;
 }
@@ -100,6 +110,8 @@ export default function DeficiencyReportPanel({
 }: DeficiencyReportPanelProps) {
   const [requested, setRequested] = useState(autoLoad);
   const [includeNotAssessed, setIncludeNotAssessed] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const reportQuery = useQuery({
     queryKey: ["deficiency-report", applicationId, includeNotAssessed],
@@ -107,6 +119,18 @@ export default function DeficiencyReportPanel({
     enabled: Boolean(token && applicationId && requested),
     retry: false,
   });
+
+  async function downloadPdf() {
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      await downloadDeficiencyReportPdf(token, applicationId);
+    } catch {
+      setDownloadError("The PDF could not be generated.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   if (!requested) {
     return (
@@ -176,6 +200,19 @@ export default function DeficiencyReportPanel({
             <Printer aria-hidden="true" className="size-4" />
             Print
           </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => void downloadPdf()}
+            disabled={!report || downloading}
+          >
+            {downloading ? (
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            ) : (
+              <Download aria-hidden="true" className="size-4" />
+            )}
+            Download PDF
+          </Button>
         </div>
       </div>
 
@@ -207,11 +244,28 @@ export default function DeficiencyReportPanel({
               <p className="text-13 font-semibold">{report.banner}</p>
               <p className="mt-0.5 text-12 leading-5">
                 {report.passed_count} passed · {report.failed_count} failed ·{" "}
-                {report.not_assessed_count} not assessed · generated{" "}
+                {report.not_assessed_count} not assessed ·{" "}
+                {report.mandatory_failed_count} mandatory failures ·{" "}
+                {report.mandatory_missing_count} mandatory unassessed · generated{" "}
                 {formatDateTime(report.generated_at)}
               </p>
             </div>
           </div>
+
+          {downloadError ? (
+            <p className="rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
+              {downloadError}
+            </p>
+          ) : null}
+
+          {report.illustrative_failed_count > 0 ? (
+            <p className="rounded-input border border-line bg-neutral-soft p-2.5 text-12 leading-5 text-ink-700">
+              {report.illustrative_failed_count} illustrative project threshold
+              {report.illustrative_failed_count === 1 ? "" : "s"} listed below{" "}
+              {report.illustrative_failed_count === 1 ? "is" : "are"} for information
+              only and cannot block a Nil Deficiency result.
+            </p>
+          ) : null}
 
           {report.items.length === 0 ? (
             <p className="text-13 text-ink-700">
@@ -236,6 +290,16 @@ export default function DeficiencyReportPanel({
                     <span className="rounded-pill border border-line bg-surface px-2 py-0.5 text-12 text-ink-700">
                       {item.apH_clause}
                     </span>
+                    {!item.mandatory ? (
+                      <span className="rounded-pill bg-neutral-soft px-2 py-0.5 text-12 text-ink-700">
+                        Advisory
+                      </span>
+                    ) : null}
+                    {item.illustrative ? (
+                      <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-12 text-watch-strong">
+                        Illustrative, not an AICTE norm
+                      </span>
+                    ) : null}
                     {item.needs_verification ? (
                       <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-12 text-watch-strong">
                         Needs verification
@@ -244,6 +308,26 @@ export default function DeficiencyReportPanel({
                   </div>
                   <p className="mt-1 text-13 font-medium text-ink">{item.name}</p>
                   <p className="mt-0.5 text-12 leading-5 text-ink-700">{item.message}</p>
+                  {item.penal_action_suggestions.length > 0 ? (
+                    <div className="mt-2 rounded-input border border-line bg-surface p-2.5">
+                      <p className="flex items-center gap-1.5 text-12 font-medium text-ink">
+                        <Scale aria-hidden="true" className="size-3.5 text-ink-500" />
+                        Suggested action under APH 7.3
+                      </p>
+                      <ul className="mt-1 space-y-1 text-12 leading-5 text-ink-700">
+                        {item.penal_action_suggestions.map((suggestion) => (
+                          <li key={`${item.code}-${suggestion.violation_code}`}>
+                            {suggestion.action_label} · {suggestion.violation_code} (
+                            {suggestion.apH_clause})
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-1 text-12 text-ink-500">
+                        A show-cause notice, hearing and speaking order are mandatory before
+                        any action is imposed.
+                      </p>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>

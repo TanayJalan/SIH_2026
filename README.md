@@ -45,6 +45,12 @@ Implemented:
   writes and an on-demand admin run, with append-only institution snapshots for trend charts
 - Compliance admin APIs and a `/compliance` screen for `SUPER_ADMIN` and `REGIONAL_OFFICER`:
   rule list/add/edit/activate, threshold impact preview, editable severity weights and RAG bounds
+- APH calculator engine with a clause-cited rule library: faculty establishment and the 1:2:6 cadre
+  split, instructional and built-up area, library, students-per-computer and bandwidth tiers, and
+  land/lease checks — all seeded as data with admin-editable norms
+- Nil Deficiency decided by mandatory rules only, with illustrative project thresholds clearly
+  badged, APH 7.3 penal-action suggestions for APH 7.4 violations, and a downloadable Deficiency
+  Report PDF
 - A compliance tab on the application detail page with rule-by-rule pass/fail, severity badges,
   score gauge and human-readable explanations
 - DEBUG-only simulated clock for demonstrating deadline, SLA breach and escalation behaviour in
@@ -198,13 +204,14 @@ automatically. The seed is only needed when a release adds or changes reference 
 make seed
 ```
 
-The seed is idempotent. It creates two fictional institutions with APH institution profiles, one
-account per APH role, five applications (including decided cases for the public average) and one
-inspection with audit records. It also loads the APH application-type routing table, fee schedule,
-Security Deposit rate table (Table 1.4), required-document checklist, committee compositions, demo
-public notices and academic calendar events, plus the illustrative SLA configuration, 15 compliance
-rules, alert rules and default severity weights and RED/AMBER/GREEN breakpoints. Change both seed passwords before sharing any
-environment.
+The seed is idempotent. It creates two fictional institutions with APH institution profiles,
+approved programmes, faculty rosters and admission history, one account per APH role, five
+applications (including decided cases for the public average) and one inspection with audit
+records. It also loads the APH application-type routing table, fee schedule, Security Deposit rate
+table (Table 1.4), required-document checklist, committee compositions, demo public notices and
+academic calendar events, plus the illustrative SLA configuration, the 90-row compliance rule
+library, the calculator norms, alert rules and default severity weights and RED/AMBER/GREEN
+breakpoints. Change both seed passwords before sharing any environment.
 
 | Role | Email |
 | ---- | ----- |
@@ -429,94 +436,124 @@ Submitted applications are read-only in the institution workspace.
 
 ## Compliance engine
 
-Compliance norms are stored as rows in `compliance_rules`; no threshold, weight or status band is
-hard-coded in the evaluator. `SUPER_ADMIN` and `REGIONAL_OFFICER` manage them at `/compliance`
-(**Monitoring**, **Rules** and **Scoring** tabs). Every rule and configuration edit is written to
-the audit log.
+The engine is **data plus pure calculators**: no threshold, ratio or status band is hard-coded in
+the evaluator, and every rule cites the APH clause it implements.
 
-> **Illustrative values:** the 15 seeded rules, severity weights and RED/AMBER/GREEN breakpoints are
-> prototype configuration. They are **not** official AICTE norms. Verify and replace them against
-> the current AICTE Approval Process Handbook before using this system for real approvals.
+| Part | Location |
+| ---- | -------- |
+| Rule library (90 rows) | `backend/seeds/aph/compliance_rules.json` |
+| Calculator norms and scoring config | `backend/seeds/aph/compliance_config.json` |
+| Pure APH calculators | `backend/app/services/compliance_calculators.py` |
+| Metric extraction, safe evaluator, scoring | `backend/app/services/compliance.py` |
+| APH 7.4 → 7.3 penalty suggestions | `backend/app/services/penal_actions.py` |
+| Deficiency Report and PDF | `backend/app/services/deficiency_report.py` |
+
+`SUPER_ADMIN` and `REGIONAL_OFFICER` manage the rules at `/compliance` (**Monitoring**, **Rules**,
+**Scoring** and **Norm calculators** tabs). Every rule and configuration edit is audited with its
+before/after values.
+
+> **Verification notice:** real-clause rules cite an `APH` clause from
+> `docs/reference/APH_SPEC.md`. Rules seeded as `illustrative` are project-only demo thresholds:
+> they are advisory, carry an “Illustrative, not an AICTE norm” badge and are flagged
+> `needs_verification`. Every figure must still be checked against the current AICTE Approval
+> Process Handbook before an approval decision relies on it. Ambiguous readings are listed in
+> `docs/OPEN_QUESTIONS.md` (OQ-38 … OQ-50).
+
+### Calculators (APH 7.1, 6.14, 6.17, Annexure-3, Annexure-4)
+
+Calculators are pure functions with unit tests built from the worked examples in `APH_SPEC.md`:
+
+| Calculator | Formula |
+| ---------- | ------- |
+| `faculty_requirement` | `S = approved intake × programme duration`; required faculty `= ceil(S / ratio)`; ratios `20` (E&T UG), `15` (E&T PG), `25` (Diploma). The Principal/Director is the first Professor post. |
+| `cadre_split` | `1:2:6` (R = 9): Professors and Associate Professors round down, the remainder goes to Assistant Professors, so 12 posts → 1 / 2 / 9. |
+| `cadre_compliance` | Upward substitution is allowed (a Professor may cover an Associate post), downward is not. |
+| `instructional_area` | Classroom/tutorial/workshop formula from Annexure-3 3.2. |
+| `required_built_up_area` | `(instructional + 750 administrative + 500 amenities) × 1.25 circulation`. |
+| `library_requirement` | Titles (100 first year + 50 per later year), volumes, journals and reading-room seats. |
+| `pc_requirement` | Students ÷ students-per-computer ratio, with a 20-PC floor and printers at 5%. |
+| `bandwidth_requirement` | 100 / 300 / 500 / 1000 Mbps tiers by sanctioned intake. |
+| `lease_compliance`, `plot_compliance` | 30-year lease, live lease ≥ longest course, at most three plots within 2 km. |
+| `reduced_enrolment_trigger`, `excess_admission` | Five-year admission ledger checks (APH 7.2, 7.4g). |
+
+The numeric inputs above live in `area_norms`, `fsr_ratios`, `cadre_ratios`, `library_norms`,
+`pc_ratios` and `bandwidth_tiers` rows of `compliance_config`, so the **Norm calculators** tab can
+correct them without a code change.
 
 ### Rules and operators
 
-`ComplianceRule(metric_key, operator, threshold, threshold_max, severity, applies_to, is_active)`
+`ComplianceRule(metric_key, operator, threshold, threshold_max, severity, applies_to,
+applies_to_family, applies_to_level, apH_clause, mandatory, illustrative, weight, unit,
+explanation_template, metric_params, penalty_codes, is_active)`
 
-Supported operators are `>=`, `<=`, `=`, `==`, `BETWEEN` and `EXISTS`, with `>`, `<` and `!=`
-retained for compatibility. Operators are implemented as a safe comparison map
-(`backend/app/services/compliance.py`); no `eval()` is used. `BETWEEN` is inclusive and requires an
-upper bound.
+Operators are `>=`, `<=`, `=`, `==`, `BETWEEN`, `EXISTS`, `>`, `<`, `!=` plus three safe aggregate
+operators that read their operands from `metric_params` instead of evaluating code:
 
-`applies_to` is a comma-separated scope list. It accepts APH application types (for example
-`NEW_INSTITUTION`, `EOA_SELF_DISCLOSURE`, `INCREASE_INTAKE`), programme levels (`UG`, `PG`) or
-`ALL`. A level-scoped rule runs only when the application includes a programme at that level.
+- `RATIO` — `numerator` ÷ `denominator`, for example faculty ÷ required establishment.
+- `SUM` — sum of the `metrics` list.
+- `COUNT` — number of `metrics` equal to `equals`.
+- `DATE_NOT_EXPIRED` — compares a certificate validity date with the evaluation date.
 
-Severity is `CRITICAL`, `HIGH`, `MEDIUM` or `LOW` and determines the rule's score weight. The default
-weights are 25, 15, 8 and 4 respectively; the default status bands are RED below 70 and AMBER below
-85. Both are editable in the admin UI.
+No `eval()` is used. `BETWEEN` is inclusive and requires an upper bound. `applies_to` accepts APH
+application types (for example `NEW_INSTITUTION`, `EOA_SELF_DISCLOSURE`, `INCREASE_INTAKE`),
+programme levels (`UG`, `PG`) or `ALL`; `applies_to_family`/`applies_to_level` narrow a rule to one
+programme family and level. A family/level-scoped metric with no matching programme group is
+reported as **data missing**, never as the institution-wide value.
 
-### Metrics
+Severity is `CRITICAL`, `HIGH`, `MEDIUM` or `LOW`. An optional per-rule `weight` overrides the
+severity weight (25 / 15 / 8 / 4). Status bands are RED below 70 and AMBER below 85. All are
+editable in the admin UI.
 
-Metrics are derived from application section data, programmes, documents and accreditation records.
-The rule editor lists them from `GET /compliance/metrics`.
+### Nil Deficiency and scoring
 
-| Metric key | Meaning |
-| ---------- | ------- |
-| `infrastructure.land_area`, `infrastructure.built_up_area` | Declared campus areas |
-| `infrastructure.labs`, `infrastructure.library`, `infrastructure.hostel` | Facility counts and capacity |
-| `faculty.total`, `faculty.professors`, `faculty.associate_professors`, `faculty.assistant_professors` | Faculty establishment |
-| `faculty.student_faculty_ratio`, `faculty.phd_faculty_ratio` | Declared ratios |
-| `finance.tuition_fee`, `finance.development_fee`, `finance.other_fees`, `finance.total_annual_fee` | Fee components and computed total |
-| `finance.balance` | Declared financial balance |
-| `derived.qualified_faculty_pct` | Share of faculty in professor/associate/assistant ranks (illustrative proxy) |
-| `derived.built_up_area_per_student` | Built-up area divided by approved intake |
-| `derived.library_books_per_student` | Library volumes divided by approved intake |
-| `derived.lab_count_per_program` | Average laboratory count per programme |
-| `derived.total_intake` | Sum of approved programme intake (student denominator) |
-| `derived.naac_grade_present` | `1` when a NAAC grade other than `NOT_ACCREDITED` is declared |
-| `derived.nba_accredited_programs_pct` | `100` when NBA status is `ACCREDITED`, otherwise `0` |
-| `derived.mandatory_disclosure_published` | `1` when a disclosure URL is present |
-| `derived.document_validity` | `1` when every uploaded document is valid, `0` when any is rejected/flagged or expired, `None` when none are uploaded |
+- **Nil Deficiency requires every mandatory rule to pass or be assessed.** A failed mandatory rule
+  or unassessed mandatory evidence blocks it, whatever the RAG score says.
+- Illustrative rules are advisory: a failure is shown as an observation and never blocks a Nil
+  Deficiency result.
+- A mandatory failure forces RED; unassessed mandatory evidence forces at least AMBER; a failed
+  `CRITICAL` rule also forces RED.
+- The score is `earned weight / assessed weight × 100` over assessed rules only, so missing metrics
+  neither inflate nor deflate it.
+- The case file shows rule-by-rule `PASS` / `FAIL` / `NOT_ASSESSED` with the APH clause, the
+  observed and required values, an explanation, the Nil Deficiency banner and the score gauge.
+- Snapshots are append-only per institution and power the trend chart. Evaluation runs nightly
+  through APScheduler, after application data writes and on demand from **Re-evaluate now**. Set
+  `COMPLIANCE_MONITOR_HOUR` (0–23) or `COMPLIANCE_MONITOR_ENABLED=false` to change or disable it.
+- A worsening to RED creates in-app alerts for the Regional Officer and super administrator.
 
-A fee cap is expressed as a data-driven rule on `finance.total_annual_fee` (`BETWEEN` or `<=`),
-rather than a duplicate metric. When a metric cannot be derived, the rule is reported as
-**data missing** (`NOT_ASSESSED`) instead of crashing. Missing metrics are excluded from the score
-and counted separately.
+### Penalty suggestions (APH 7.4 → 7.3)
 
-### Score and monitoring
+A rule may carry APH 7.4 violation codes (`7.4a` … `7.4n`). When it fails, the engine returns the
+matching APH 7.3 penal actions as **suggestions** with `suggests_only = true` and
+`hearing_required = true`. The engine never mutates an approval: a show-cause notice, hearing and
+speaking order remain mandatory workflow steps.
 
-- Each assessed rule contributes its severity weight. `score = earned weight / assessed weight × 100`.
-  A score of 100 means every assessed rule passed; missing metrics do not inflate or deflate it.
-- The application detail page shows rule-by-rule `PASS` / `FAIL` / `NOT_ASSESSED`, the observed
-  value, the threshold, the severity badge, a readable explanation and the score gauge.
-- Monitoring status comes from configurable breakpoints: score below `red_below` is RED, below
-  `amber_below` is AMBER, otherwise GREEN. A failed `CRITICAL` rule forces RED.
-- Snapshots are append-only per institution and power the trend chart in the admin Monitoring tab.
-- Evaluation runs nightly through APScheduler, after application data writes (draft section
-  updates, programme changes, document uploads and submission) and on demand from **Re-evaluate
-  now**. The job runs at 02:00 UTC by default; set `COMPLIANCE_MONITOR_HOUR` (0–23) or
-  `COMPLIANCE_MONITOR_ENABLED=false` in the backend environment to change or disable it.
-- When an institution becomes RED, the monitor creates an in-app alert addressed to the relevant
-  Regional Officer or super administrator.
+### Deficiency Report and PDF
+
+`GET /applications/{id}/deficiency-report` returns the structured report and
+`GET /applications/{id}/deficiency-report.pdf` renders the same report with reportlab. The report
+lists the failed and unassessed mandatory items with their clauses, marks illustrative observations
+separately and prints the Nil Deficiency banner only when no mandatory item is open.
 
 ### Compliance APIs
 
 All endpoints require `SUPER_ADMIN` or `REGIONAL_OFFICER`; Regional Officers only see institutions
 in their region.
 
-- `GET /compliance/rules` — paginated rule catalogue, including inactive rules with
-  `include_inactive=true`.
+- `GET /compliance/rules` — paginated rule catalogue with `category`, `family`, `level`,
+  `search`, `needs_verification`, `illustrative`, `mandatory` and `include_inactive` filters.
 - `POST /compliance/rules` — create a rule.
-- `PATCH /compliance/rules/{rule_id}` — edit threshold, bounds, severity, scope, description or
-  active flag. Code is immutable.
+- `PATCH /compliance/rules/{rule_id}` — edit any field except the immutable code.
+- `GET /compliance/rules/{rule_id}/history` — audited change history (actor, timestamp,
+  changed fields).
 - `POST /compliance/rules/impact` — preview a proposed rule change. Returns projected RED/AMBER
   flips, improvements and affected institutions. This is read-only; nothing is persisted.
 - `GET /compliance/metrics` — metric catalogue for the rule editor.
 - `GET /compliance/monitor` — paginated latest snapshot per institution.
-- `POST /compliance/monitor/run` — immediate re-evaluation for the caller's scope. Useful after
-  editing a threshold so stored snapshots and trends refresh without waiting for the nightly job.
+- `POST /compliance/monitor/run` — immediate re-evaluation for the caller's scope.
 - `GET /compliance/institutions/{institution_id}/trend?limit=50` — chronological score history.
-- `GET /compliance/config`, `PUT /compliance/config` — severity weights and RAG breakpoints.
+- `GET /compliance/config`, `PUT /compliance/config` — severity weights, RAG breakpoints and the
+  calculator norms.
 
 The application-level read endpoint remains `GET /applications/{id}/compliance`. It evaluates the
 current rules live, so an admin threshold edit changes the displayed result immediately without a

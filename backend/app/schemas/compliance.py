@@ -15,13 +15,49 @@ ComplianceRuleStatus = Literal["PASS", "FAIL", "NOT_ASSESSED"]
 ComplianceOutcome = Literal["PASS", "ATTENTION", "INCOMPLETE"]
 ComplianceHealthValue = Literal["GREEN", "AMBER", "RED"]
 
-RuleOperator = Literal["<", "<=", ">=", ">", "=", "==", "!=", "BETWEEN", "EXISTS"]
+RuleOperator = Literal[
+    "<",
+    "<=",
+    ">=",
+    ">",
+    "=",
+    "==",
+    "!=",
+    "BETWEEN",
+    "EXISTS",
+    "RATIO",
+    "SUM",
+    "COUNT",
+    "DATE_NOT_EXPIRED",
+]
+"""Comparison, existence and aggregate operators the evaluator understands.
+
+``RATIO``, ``SUM`` and ``COUNT`` read their operands from ``metric_params``
+instead of evaluating code, so rules stay data. ``DATE_NOT_EXPIRED`` compares
+a certificate's validity date with the evaluation date.
+"""
 
 
 class CompliancePreviewRequest(BaseModel):
     """Unsaved draft values to evaluate without persisting them."""
 
     data: ApplicationData
+
+
+class PenalActionSuggestionRead(BaseModel):
+    """A suggested APH 7.3 penalty for an APH 7.4 violation.
+
+    Suggestions never mutate an approval: a show-cause notice, a hearing and a
+    speaking order remain mandatory before any action is imposed.
+    """
+
+    violation_code: str
+    violation: str
+    action: str
+    action_label: str
+    apH_clause: str
+    suggests_only: bool = True
+    hearing_required: bool = True
 
 
 class ComplianceRulePreview(BaseModel):
@@ -44,6 +80,17 @@ class ComplianceRulePreview(BaseModel):
     """Values the decision was based on: metric, observed value and threshold."""
     explanation: dict[str, Any] = Field(default_factory=dict)
     """Structured criteria, values, pass/fail and APH clause for the decision."""
+    apH_clause: str = "DEMO"
+    needs_verification: bool = False
+    mandatory: bool = True
+    """Mandatory rules block Nil Deficiency when they fail or are unassessed."""
+    illustrative: bool = False
+    """True for project-only demo thresholds that are not AICTE norms."""
+    weight: float | None = None
+    penalty_codes: list[str] = Field(default_factory=list)
+    penal_action_suggestions: list[PenalActionSuggestionRead] = Field(
+        default_factory=list
+    )
 
 
 class CompliancePreviewRead(BaseModel):
@@ -59,6 +106,10 @@ class CompliancePreviewRead(BaseModel):
     score: float
     outcome: ComplianceOutcome
     status: ComplianceHealthValue
+    mandatory_failed_count: int = 0
+    mandatory_missing_count: int = 0
+    nil_deficiency: bool = False
+    banner: str = ""
 
 
 # --------------------------------------------------------------------------
@@ -82,8 +133,17 @@ class ComplianceRuleRead(BaseModel):
     threshold_max: float | None
     severity: Severity
     applies_to: str
+    applies_to_family: str | None = None
+    applies_to_level: str | None = None
     apH_clause: str
     needs_verification: bool
+    mandatory: bool = True
+    illustrative: bool = False
+    weight: float | None = None
+    unit: str | None = None
+    explanation_template: str | None = None
+    metric_params: dict[str, Any] = Field(default_factory=dict)
+    penalty_codes: list[str] = Field(default_factory=list)
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -98,6 +158,26 @@ class ComplianceRulePage(BaseModel):
     page_size: int
 
 
+class ComplianceRuleChangeRead(BaseModel):
+    """One audited change to a compliance rule."""
+
+    id: uuid.UUID
+    action: str
+    actor_name: str | None
+    created_at: datetime
+    before: dict[str, Any] | None
+    after: dict[str, Any] | None
+    changed_fields: list[str]
+
+
+class ComplianceRuleHistoryRead(BaseModel):
+    """Change history for one rule, newest first."""
+
+    rule_id: uuid.UUID
+    code: str
+    items: list[ComplianceRuleChangeRead]
+
+
 class ComplianceMonitorPage(BaseModel):
     """Paginated monitoring list for the admin screen."""
 
@@ -108,7 +188,7 @@ class ComplianceMonitorPage(BaseModel):
 
 
 class ComplianceRuleCreate(BaseModel):
-    """Payload to add a rule; threshold values are illustrative and editable."""
+    """Payload to add a rule; threshold values are editable configuration."""
 
     code: str = Field(max_length=64)
     name: str = Field(max_length=255)
@@ -122,10 +202,21 @@ class ComplianceRuleCreate(BaseModel):
     applies_to: str = "ALL"
     """Comma separated scopes: APH application types (for example
     NEW_INSTITUTION or EOA_SELF_DISCLOSURE), programme levels (UG/PG), or ALL."""
+    applies_to_family: str | None = Field(default=None, max_length=64)
+    """Optional programme family scope, e.g. ENGINEERING_TECHNOLOGY."""
+    applies_to_level: str | None = Field(default=None, max_length=32)
+    """Optional programme level scope, e.g. UG or DIPLOMA."""
     apH_clause: str = Field(default="DEMO", max_length=64)
     """APH clause backing the rule; ``DEMO`` marks illustrative configuration."""
     needs_verification: bool = True
     """True while the clause or threshold still needs verification."""
+    mandatory: bool = True
+    illustrative: bool = False
+    weight: float | None = Field(default=None, ge=0)
+    unit: str | None = Field(default=None, max_length=32)
+    explanation_template: str | None = Field(default=None, max_length=2000)
+    metric_params: dict[str, Any] = Field(default_factory=dict)
+    penalty_codes: list[str] = Field(default_factory=list)
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -137,6 +228,10 @@ class ComplianceRuleCreate(BaseModel):
                 raise ValueError("threshold_max must be greater than or equal to threshold")
         elif self.threshold_max is not None:
             raise ValueError("threshold_max is only valid when operator is BETWEEN")
+        if self.illustrative and not self.needs_verification:
+            raise ValueError(
+                "an illustrative rule cannot claim a verified AICTE clause"
+            )
         return self
 
 
@@ -152,8 +247,17 @@ class ComplianceRuleUpdate(BaseModel):
     threshold_max: float | None = Field(default=None, ge=0)
     severity: Severity | None = None
     applies_to: str | None = None
+    applies_to_family: str | None = Field(default=None, max_length=64)
+    applies_to_level: str | None = Field(default=None, max_length=32)
     apH_clause: str | None = Field(default=None, max_length=64)
     needs_verification: bool | None = None
+    mandatory: bool | None = None
+    illustrative: bool | None = None
+    weight: float | None = Field(default=None, ge=0)
+    unit: str | None = Field(default=None, max_length=32)
+    explanation_template: str | None = Field(default=None, max_length=2000)
+    metric_params: dict[str, Any] | None = None
+    penalty_codes: list[str] | None = None
     is_active: bool | None = None
 
 
@@ -237,11 +341,32 @@ class RagBreakpointsConfig(BaseModel):
         return self
 
 
+class BandwidthTierConfig(BaseModel):
+    """One row of the internet-bandwidth table (APH 7.3).
+
+    ``max_intake=None`` is the catch-all top tier.
+    """
+
+    max_intake: int | None = Field(default=None, ge=0)
+    mbps: int = Field(ge=1)
+
+
 class ComplianceConfigRead(BaseModel):
-    """Admin-editable compliance configuration."""
+    """Admin-editable compliance configuration.
+
+    ``severity_weights`` and ``rag_breakpoints`` drive scoring. The remaining
+    keys feed the APH calculators (faculty, area, library, computing) so ratios
+    and norms never have to be edited in code.
+    """
 
     severity_weights: SeverityWeightsConfig
     rag_breakpoints: RagBreakpointsConfig
+    fsr_ratios: dict[str, dict[str, float]] = Field(default_factory=dict)
+    cadre_ratios: dict[str, list[int]] = Field(default_factory=dict)
+    area_norms: dict[str, float] = Field(default_factory=dict)
+    bandwidth_tiers: list[BandwidthTierConfig] = Field(default_factory=list)
+    library_norms: dict[str, float] = Field(default_factory=dict)
+    pc_ratios: dict[str, dict[str, float]] = Field(default_factory=dict)
     updated_at: datetime | None = None
 
 
@@ -250,6 +375,12 @@ class ComplianceConfigUpdate(BaseModel):
 
     severity_weights: SeverityWeightsConfig | None = None
     rag_breakpoints: RagBreakpointsConfig | None = None
+    fsr_ratios: dict[str, dict[str, float]] | None = None
+    cadre_ratios: dict[str, list[int]] | None = None
+    area_norms: dict[str, float] | None = None
+    bandwidth_tiers: list[BandwidthTierConfig] | None = None
+    library_norms: dict[str, float] | None = None
+    pc_ratios: dict[str, dict[str, float]] | None = None
 
 
 # --------------------------------------------------------------------------

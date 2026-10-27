@@ -534,6 +534,16 @@ export interface ApplicationTypeRouteSummary {
   needs_verification: boolean;
 }
 
+export interface PenalActionSuggestion {
+  violation_code: string;
+  violation: string;
+  action: string;
+  action_label: string;
+  apH_clause: string;
+  suggests_only: boolean;
+  hearing_required: boolean;
+}
+
 export interface DeficiencyReportItem {
   code: string;
   name: string;
@@ -543,8 +553,12 @@ export interface DeficiencyReportItem {
   message: string;
   apH_clause: string;
   needs_verification: boolean;
+  mandatory: boolean;
+  illustrative: boolean;
+  unit: string | null;
   observed_value: number | null;
   explanation: Record<string, unknown>;
+  penal_action_suggestions: PenalActionSuggestion[];
 }
 
 export interface DeficiencyReport {
@@ -558,6 +572,9 @@ export interface DeficiencyReport {
   passed_count: number;
   failed_count: number;
   not_assessed_count: number;
+  mandatory_failed_count: number;
+  mandatory_missing_count: number;
+  illustrative_failed_count: number;
   score: number;
   status: ComplianceOutcome;
   include_not_assessed: boolean;
@@ -585,10 +602,20 @@ export interface ComplianceRulePreview {
   metric_key: string;
   operator: string;
   threshold: number;
+  threshold_max: number | null;
   unit: string | null;
   observed_value: number | null;
   status: ComplianceRuleStatus;
   message: string;
+  evidence: Record<string, unknown>;
+  explanation: Record<string, unknown>;
+  apH_clause: string;
+  needs_verification: boolean;
+  mandatory: boolean;
+  illustrative: boolean;
+  weight: number | null;
+  penalty_codes: string[];
+  penal_action_suggestions: PenalActionSuggestion[];
 }
 
 export interface CompliancePreview {
@@ -602,6 +629,10 @@ export interface CompliancePreview {
   score: number;
   outcome: ComplianceOutcome;
   status: ComplianceHealth;
+  mandatory_failed_count: number;
+  mandatory_missing_count: number;
+  nil_deficiency: boolean;
+  banner: string;
 }
 
 export type ComplianceHealth = "GREEN" | "AMBER" | "RED";
@@ -614,7 +645,11 @@ export type RuleOperator =
   | "=="
   | "!="
   | "BETWEEN"
-  | "EXISTS";
+  | "EXISTS"
+  | "RATIO"
+  | "SUM"
+  | "COUNT"
+  | "DATE_NOT_EXPIRED";
 
 export interface ComplianceRule {
   id: string;
@@ -628,6 +663,17 @@ export interface ComplianceRule {
   threshold_max: number | null;
   severity: Severity;
   applies_to: string;
+  applies_to_family: string | null;
+  applies_to_level: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+  mandatory: boolean;
+  illustrative: boolean;
+  weight: number | null;
+  unit: string | null;
+  explanation_template: string | null;
+  metric_params: Record<string, unknown>;
+  penalty_codes: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -651,7 +697,34 @@ export interface ComplianceRuleInput {
   threshold_max: number | null;
   severity: Severity;
   applies_to: string;
+  applies_to_family: string | null;
+  applies_to_level: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+  mandatory: boolean;
+  illustrative: boolean;
+  weight: number | null;
+  unit: string | null;
+  explanation_template: string | null;
+  metric_params: Record<string, unknown>;
+  penalty_codes: string[];
   is_active: boolean;
+}
+
+export interface ComplianceRuleChange {
+  id: string;
+  action: string;
+  actor_name: string | null;
+  created_at: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  changed_fields: string[];
+}
+
+export interface ComplianceRuleHistory {
+  rule_id: string;
+  code: string;
+  items: ComplianceRuleChange[];
 }
 
 export interface ComplianceMetric {
@@ -729,15 +802,32 @@ export interface RagBreakpoints {
   amber_below: number;
 }
 
+export interface BandwidthTier {
+  max_intake: number | null;
+  mbps: number;
+}
+
 export interface ComplianceConfig {
   severity_weights: SeverityWeights;
   rag_breakpoints: RagBreakpoints;
+  fsr_ratios: Record<string, Record<string, number>>;
+  cadre_ratios: Record<string, number[]>;
+  area_norms: Record<string, number>;
+  bandwidth_tiers: BandwidthTier[];
+  library_norms: Record<string, number>;
+  pc_ratios: Record<string, Record<string, number>>;
   updated_at: string | null;
 }
 
 export interface ComplianceConfigUpdate {
   severity_weights?: SeverityWeights;
   rag_breakpoints?: RagBreakpoints;
+  fsr_ratios?: Record<string, Record<string, number>>;
+  cadre_ratios?: Record<string, number[]>;
+  area_norms?: Record<string, number>;
+  bandwidth_tiers?: BandwidthTier[];
+  library_norms?: Record<string, number>;
+  pc_ratios?: Record<string, Record<string, number>>;
 }
 
 export interface ComplianceMonitorRun {
@@ -1448,6 +1538,35 @@ export function getDeficiencyReport(
   );
 }
 
+export async function downloadDeficiencyReportPdf(
+  token: string,
+  applicationId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/applications/${applicationId}/deficiency-report.pdf`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    throw buildApiError(response.status, payload);
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+  link.href = objectUrl;
+  link.download = `deficiency-report-${applicationId}.pdf`;
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}
+
 export function listDocumentShells(
   token: string,
   applicationId: string,
@@ -1518,14 +1637,49 @@ export function getApplicationCompliance(
 
 export function listComplianceRules(
   token: string,
-  options: { includeInactive?: boolean; page?: number; pageSize?: number } = {},
+  options: {
+    includeInactive?: boolean;
+    category?: string;
+    family?: string;
+    level?: string;
+    needsVerification?: boolean;
+    illustrative?: boolean;
+    mandatory?: boolean;
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  } = {},
 ): Promise<ComplianceRulePage> {
   const params = new URLSearchParams({
     include_inactive: String(options.includeInactive ?? true),
     page: String(options.page ?? 1),
     page_size: String(options.pageSize ?? 100),
   });
+  if (options.category) params.set("category", options.category);
+  if (options.family) params.set("family", options.family);
+  if (options.level) params.set("level", options.level);
+  if (options.needsVerification !== undefined) {
+    params.set("needs_verification", String(options.needsVerification));
+  }
+  if (options.illustrative !== undefined) {
+    params.set("illustrative", String(options.illustrative));
+  }
+  if (options.mandatory !== undefined) {
+    params.set("mandatory", String(options.mandatory));
+  }
+  if (options.search) params.set("search", options.search);
   return request<ComplianceRulePage>(`/compliance/rules?${params.toString()}`, { token });
+}
+
+export function getComplianceRuleHistory(
+  token: string,
+  ruleId: string,
+  limit = 50,
+): Promise<ComplianceRuleHistory> {
+  return request<ComplianceRuleHistory>(
+    `/compliance/rules/${ruleId}/history?limit=${limit}`,
+    { token },
+  );
 }
 
 export function createComplianceRule(

@@ -1,6 +1,8 @@
 """Compliance admin endpoints: rules, config, monitoring and impact preview."""
 
+import copy
 import uuid
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -8,6 +10,7 @@ from sqlalchemy import func, select
 
 from app.api.dependencies import AuditDep, ClockDep, DbSession, require_roles
 from app.models.application import Application
+from app.models.audit import AuditLog
 from app.models.compliance import (
     ComplianceConfig,
     ComplianceRule,
@@ -26,7 +29,9 @@ from app.schemas.compliance import (
     ComplianceMonitorPage,
     ComplianceMonitorRead,
     ComplianceMonitorRunRead,
+    ComplianceRuleChangeRead,
     ComplianceRuleCreate,
+    ComplianceRuleHistoryRead,
     ComplianceRuleImpactRead,
     ComplianceRuleImpactRequest,
     ComplianceRulePage,
@@ -97,13 +102,41 @@ def list_rules(
     current_user: ComplianceAdminUser,
     db: DbSession,
     include_inactive: bool = True,
+    category: str | None = None,
+    family: str | None = None,
+    level: str | None = None,
+    needs_verification: bool | None = None,
+    illustrative: bool | None = None,
+    mandatory: bool | None = None,
+    search: str | None = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> ComplianceRulePage:
-    """Return the configurable rule catalogue."""
+    """Return the configurable rule catalogue with optional filters."""
     query = select(ComplianceRule)
     if not include_inactive:
         query = query.where(ComplianceRule.is_active.is_(True))
+    if category:
+        query = query.where(ComplianceRule.category == category)
+    if family:
+        query = query.where(ComplianceRule.applies_to_family == family)
+    if level:
+        query = query.where(ComplianceRule.applies_to_level == level)
+    if needs_verification is not None:
+        query = query.where(
+            ComplianceRule.needs_verification.is_(needs_verification)
+        )
+    if illustrative is not None:
+        query = query.where(ComplianceRule.illustrative.is_(illustrative))
+    if mandatory is not None:
+        query = query.where(ComplianceRule.mandatory.is_(mandatory))
+    if search:
+        needle = f"%{search.strip()}%"
+        query = query.where(
+            ComplianceRule.code.ilike(needle)
+            | ComplianceRule.name.ilike(needle)
+            | ComplianceRule.apH_clause.ilike(needle)
+        )
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = db.scalars(
         query.order_by(ComplianceRule.category, ComplianceRule.code)
@@ -154,8 +187,17 @@ def create_rule(
         threshold_max=str(payload.threshold_max) if payload.threshold_max is not None else None,
         severity=payload.severity,
         applies_to=payload.applies_to,
+        applies_to_family=payload.applies_to_family,
+        applies_to_level=payload.applies_to_level,
         apH_clause=payload.apH_clause,
         needs_verification=payload.needs_verification,
+        mandatory=payload.mandatory,
+        illustrative=payload.illustrative,
+        weight=Decimal(str(payload.weight)) if payload.weight is not None else None,
+        unit=payload.unit,
+        explanation_template=payload.explanation_template,
+        metric_params=dict(payload.metric_params),
+        penalty_codes=list(payload.penalty_codes),
         is_active=payload.is_active,
     )
     db.add(rule)
@@ -215,6 +257,11 @@ def update_rule(
 
     if applied:
         _validate_rule_bounds(rule)
+        if rule.illustrative and not rule.needs_verification:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="an illustrative rule cannot claim a verified AICTE clause",
+            )
         db.flush()
         audit.log(
             current_user,
@@ -228,6 +275,72 @@ def update_rule(
         db.commit()
         db.refresh(rule)
     return rule
+
+
+@router.get(
+    "/rules/{rule_id}/history",
+    response_model=ComplianceRuleHistoryRead,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
+    },
+    summary="Audit history for one compliance rule",
+)
+def rule_history(
+    rule_id: uuid.UUID,
+    current_user: ComplianceAdminUser,
+    db: DbSession,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> ComplianceRuleHistoryRead:
+    """Return every audited change to a rule, newest first."""
+    rule = _readable_rule(db, rule_id)
+    entries = db.scalars(
+        select(AuditLog)
+        .where(
+            AuditLog.entity_type == "ComplianceRule",
+            AuditLog.entity_id == rule.id,
+        )
+        .order_by(AuditLog.created_at.desc())
+        .limit(limit)
+    ).all()
+    actor_ids = {entry.actor_id for entry in entries if entry.actor_id is not None}
+    actors = {
+        user.id: user.name
+        for user in (
+            db.scalars(select(User).where(User.id.in_(actor_ids))).all()
+            if actor_ids
+            else []
+        )
+    }
+    return ComplianceRuleHistoryRead(
+        rule_id=rule.id,
+        code=rule.code,
+        items=[
+            ComplianceRuleChangeRead(
+                id=entry.id,
+                action=entry.action,
+                actor_name=actors.get(entry.actor_id) if entry.actor_id else None,
+                created_at=entry.created_at,
+                before=entry.before,
+                after=entry.after,
+                changed_fields=_changed_fields(entry.before, entry.after),
+            )
+            for entry in entries
+        ],
+    )
+
+
+def _changed_fields(
+    before: dict[str, object] | None, after: dict[str, object] | None
+) -> list[str]:
+    """Field names whose values differ between two audit snapshots."""
+    if not before or not after:
+        return sorted((after or before or {}).keys())
+    return sorted(
+        key
+        for key in set(before) | set(after)
+        if before.get(key) != after.get(key)
+    )
 
 
 @router.post(
@@ -322,23 +435,33 @@ def update_config(
     request: Request,
 ) -> ComplianceConfigRead:
     """Persist any subset of the configuration with audit entries."""
+    payload_values: dict[str, object] = {}
     if payload.severity_weights is not None:
-        _upsert_config_key(
-            db,
-            audit,
-            current_user,
-            request,
-            key="severity_weights",
-            value=payload.severity_weights.model_dump(),
-        )
+        payload_values["severity_weights"] = payload.severity_weights.model_dump()
     if payload.rag_breakpoints is not None:
+        payload_values["rag_breakpoints"] = payload.rag_breakpoints.model_dump()
+    if payload.fsr_ratios is not None:
+        payload_values["fsr_ratios"] = payload.fsr_ratios
+    if payload.cadre_ratios is not None:
+        payload_values["cadre_ratios"] = payload.cadre_ratios
+    if payload.area_norms is not None:
+        payload_values["area_norms"] = payload.area_norms
+    if payload.bandwidth_tiers is not None:
+        payload_values["bandwidth_tiers"] = [
+            tier.model_dump() for tier in payload.bandwidth_tiers
+        ]
+    if payload.library_norms is not None:
+        payload_values["library_norms"] = payload.library_norms
+    if payload.pc_ratios is not None:
+        payload_values["pc_ratios"] = payload.pc_ratios
+    for key, value in payload_values.items():
         _upsert_config_key(
             db,
             audit,
             current_user,
             request,
-            key="rag_breakpoints",
-            value=payload.rag_breakpoints.model_dump(),
+            key=key,
+            value=value,
         )
     db.commit()
     return compliance_admin.get_compliance_config_read(db)
@@ -351,7 +474,7 @@ def _upsert_config_key(
     request: Request,
     *,
     key: str,
-    value: dict[str, float],
+    value: object,
 ) -> None:
     """Insert or update one configuration key with an audit entry."""
     row = db.scalar(select(ComplianceConfig).where(ComplianceConfig.key == key))
@@ -368,7 +491,7 @@ def _upsert_config_key(
             request=request,
         )
         return
-    before = {"key": key, "value": dict(row.value)}
+    before = {"key": key, "value": copy.deepcopy(row.value)}
     row.value = value
     db.flush()
     audit.log(

@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
+  History,
   Pencil,
   Plus,
   RefreshCw,
@@ -53,6 +54,7 @@ import {
   createComplianceRule,
   getComplianceConfig,
   getComplianceMonitor,
+  getComplianceRuleHistory,
   getInstitutionComplianceTrend,
   listComplianceMetrics,
   listComplianceRules,
@@ -60,14 +62,15 @@ import {
   runComplianceMonitor,
   updateComplianceConfig,
   updateComplianceRule,
+  type BandwidthTier,
   type ComplianceConfig,
+  type ComplianceConfigUpdate,
   type ComplianceHealth,
   type ComplianceInstitutionTrend,
   type ComplianceMetric,
   type ComplianceRule,
   type ComplianceRuleImpact,
   type ComplianceRuleInput,
-  type ComplianceConfigUpdate,
   type RagBreakpoints,
   type RuleOperator,
   type Severity,
@@ -101,6 +104,10 @@ const OPERATOR_OPTIONS: { value: RuleOperator; label: string }[] = [
   { value: "==", label: "Equal to (==)" },
   { value: "BETWEEN", label: "Between (inclusive)" },
   { value: "EXISTS", label: "Value exists" },
+  { value: "RATIO", label: "Ratio of two metrics" },
+  { value: "SUM", label: "Sum of metrics" },
+  { value: "COUNT", label: "Count of matches" },
+  { value: "DATE_NOT_EXPIRED", label: "Date not expired" },
   { value: ">", label: "Above (>)" },
   { value: "<", label: "Below (<)" },
   { value: "!=", label: "Different from (!=)" },
@@ -109,13 +116,30 @@ const OPERATOR_OPTIONS: { value: RuleOperator; label: string }[] = [
 const SEVERITY_OPTIONS: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
 const CATEGORY_OPTIONS = [
-  "Infrastructure",
   "Faculty",
+  "Land and building",
+  "Infrastructure",
+  "Library",
+  "Computing",
+  "Essential requirements",
+  "Admissions",
+  "Documents",
   "Finance",
   "Accreditation",
-  "Documents",
   "Other",
 ];
+
+const FAMILY_OPTIONS = [
+  "ENGINEERING_TECHNOLOGY",
+  "MANAGEMENT",
+  "COMPUTER_APPLICATIONS",
+  "PLANNING",
+  "DESIGN",
+  "HMCT",
+  "APPLIED_ARTS_CRAFTS",
+];
+
+const LEVEL_OPTIONS = ["UG", "PG", "DIPLOMA", "PG_DIPLOMA", "INTEGRATED"];
 
 interface RuleFormState {
   code: string;
@@ -128,6 +152,17 @@ interface RuleFormState {
   threshold_max: string;
   severity: Severity;
   applies_to: string;
+  applies_to_family: string;
+  applies_to_level: string;
+  apH_clause: string;
+  needs_verification: boolean;
+  mandatory: boolean;
+  illustrative: boolean;
+  weight: string;
+  unit: string;
+  explanation_template: string;
+  metric_params: string;
+  penalty_codes: string;
   is_active: boolean;
 }
 
@@ -137,12 +172,23 @@ function emptyRuleForm(metrics: ComplianceMetric[]): RuleFormState {
     name: "",
     category: "Infrastructure",
     description: "",
-    metric_key: metrics[0]?.key ?? "infrastructure.land_area",
+    metric_key: metrics[0]?.key ?? "area.built_up_available",
     operator: ">=",
     threshold: "0",
     threshold_max: "",
     severity: "MEDIUM",
     applies_to: "ALL",
+    applies_to_family: "",
+    applies_to_level: "",
+    apH_clause: "APH ",
+    needs_verification: true,
+    mandatory: true,
+    illustrative: false,
+    weight: "",
+    unit: "",
+    explanation_template: "",
+    metric_params: "{}",
+    penalty_codes: "",
     is_active: true,
   };
 }
@@ -159,17 +205,46 @@ function ruleToForm(rule: ComplianceRule): RuleFormState {
     threshold_max: rule.threshold_max === null ? "" : String(rule.threshold_max),
     severity: rule.severity,
     applies_to: rule.applies_to,
+    applies_to_family: rule.applies_to_family ?? "",
+    applies_to_level: rule.applies_to_level ?? "",
+    apH_clause: rule.apH_clause,
+    needs_verification: rule.needs_verification,
+    mandatory: rule.mandatory,
+    illustrative: rule.illustrative,
+    weight: rule.weight === null ? "" : String(rule.weight),
+    unit: rule.unit ?? "",
+    explanation_template: rule.explanation_template ?? "",
+    metric_params: JSON.stringify(rule.metric_params ?? {}, null, 2),
+    penalty_codes: (rule.penalty_codes ?? []).join(", "),
     is_active: rule.is_active,
   };
 }
 
+function parseMetricParams(raw: string): Record<string, unknown> | string {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return {};
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    return "The metric parameters must be valid JSON.";
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return "The metric parameters must be a JSON object.";
+  }
+  return parsed as Record<string, unknown>;
+}
+
 function formToInput(form: RuleFormState): ComplianceRuleInput {
+  const params = parseMetricParams(form.metric_params);
   return {
     code: form.code.trim(),
     name: form.name.trim(),
     category: form.category.trim(),
     description: form.description.trim(),
-    metric_key: form.metric_key,
+    metric_key: form.metric_key.trim(),
     operator: form.operator,
     threshold: Number(form.threshold),
     threshold_max:
@@ -178,6 +253,20 @@ function formToInput(form: RuleFormState): ComplianceRuleInput {
         : null,
     severity: form.severity,
     applies_to: form.applies_to.trim() || "ALL",
+    applies_to_family: form.applies_to_family.trim() || null,
+    applies_to_level: form.applies_to_level.trim() || null,
+    apH_clause: form.apH_clause.trim() || "DEMO",
+    needs_verification: form.needs_verification,
+    mandatory: form.mandatory,
+    illustrative: form.illustrative,
+    weight: form.weight.trim() === "" ? null : Number(form.weight),
+    unit: form.unit.trim() || null,
+    explanation_template: form.explanation_template.trim() || null,
+    metric_params: typeof params === "string" ? {} : params,
+    penalty_codes: form.penalty_codes
+      .split(",")
+      .map((code) => code.trim())
+      .filter(Boolean),
     is_active: form.is_active,
   };
 }
@@ -187,7 +276,11 @@ function validateForm(form: RuleFormState): string | null {
   if (!form.name.trim()) return "A rule name is required.";
   if (!form.category.trim()) return "A category is required.";
   if (!form.description.trim()) return "A description is required.";
+  if (!form.metric_key.trim()) return "A metric is required.";
   if (!Number.isFinite(Number(form.threshold))) return "Threshold must be a number.";
+  if (form.weight.trim() !== "" && !Number.isFinite(Number(form.weight))) {
+    return "Weight must be a number.";
+  }
   if (form.operator === "BETWEEN") {
     const max = Number(form.threshold_max);
     if (form.threshold_max === "" || !Number.isFinite(max)) {
@@ -196,6 +289,24 @@ function validateForm(form: RuleFormState): string | null {
     if (max < Number(form.threshold)) {
       return "The upper bound must be greater than or equal to the lower bound.";
     }
+  }
+  const params = parseMetricParams(form.metric_params);
+  if (typeof params === "string") {
+    return params;
+  }
+  if (
+    (form.operator === "RATIO" ||
+      form.operator === "SUM" ||
+      form.operator === "COUNT") &&
+    Object.keys(params).length === 0
+  ) {
+    return "RATIO, SUM and COUNT rules need metric parameters.";
+  }
+  if (form.illustrative && !form.needs_verification) {
+    return "An illustrative rule cannot claim a verified AICTE clause. Keep 'needs verification' on.";
+  }
+  if (!form.apH_clause.trim() || form.apH_clause.trim() === "APH") {
+    return "An APH clause is required, for example APH 6.14.";
   }
   return null;
 }
@@ -206,6 +317,7 @@ function conditionText(rule: ComplianceRule): string {
     return `between ${rule.threshold} and ${rule.threshold_max ?? "?"}`;
   }
   if (rule.operator === "EXISTS") return "present";
+  if (rule.operator === "DATE_NOT_EXPIRED") return "not expired";
   return `${operator} ${rule.threshold}`;
 }
 
@@ -469,13 +581,12 @@ function RuleDialog({
 
   return (
     <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>{rule ? "Edit compliance rule" : "Add compliance rule"}</DialogTitle>
           <DialogDescription>
-            Thresholds and weights are configuration data. Every change is written to the audit
-            log. Values are illustrative and must be verified against the current AICTE Approval
-            Process Handbook.
+            Rules and thresholds are configuration data, never code. Each rule must cite the APH
+            clause it implements, and every change is written to the audit log.
           </DialogDescription>
         </DialogHeader>
 
@@ -486,7 +597,7 @@ function RuleDialog({
               value={form.code}
               onChange={(event) => update("code", event.target.value)}
               disabled={Boolean(rule)}
-              hint={rule ? "The code is immutable after creation." : "Unique, for example DEMO-LAND-AREA."}
+              hint={rule ? "The code is immutable after creation." : "Unique, for example APH-FSR-20."}
               required
             />
             <Input
@@ -552,8 +663,47 @@ function RuleDialog({
                 required
               />
             ) : (
-              <div className="hidden sm:block" aria-hidden="true" />
+              <Input
+                label="Unit"
+                value={form.unit}
+                onChange={(event) => update("unit", event.target.value)}
+                hint="sq. m, faculty, Mbps, count…"
+              />
             )}
+          </div>
+
+          {form.operator === "BETWEEN" ? (
+            <Input
+              label="Unit"
+              value={form.unit}
+              onChange={(event) => update("unit", event.target.value)}
+              hint="sq. m, faculty, Mbps, count…"
+            />
+          ) : null}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Input
+              label="APH clause"
+              value={form.apH_clause}
+              onChange={(event) => update("apH_clause", event.target.value)}
+              hint="For example APH 6.14 or APH Annexure-2.1."
+              required
+            />
+            <Input
+              label="Penalty codes"
+              value={form.penalty_codes}
+              onChange={(event) => update("penalty_codes", event.target.value)}
+              hint="Comma separated APH 7.4 codes, for example 7.4a, 7.4c."
+            />
+            <Input
+              label="Weight (optional)"
+              type="number"
+              step="0.5"
+              min="0"
+              value={form.weight}
+              onChange={(event) => update("weight", event.target.value)}
+              hint="Overrides the severity weight when set."
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -570,19 +720,94 @@ function RuleDialog({
               label="Applies to"
               value={form.applies_to}
               onChange={(event) => update("applies_to", event.target.value)}
-              hint="Comma-separated: ALL, NEW, EXTENSION, INTAKE_CHANGE, UG or PG."
+              hint="Comma-separated application types, levels, or ALL."
             />
           </div>
 
-          <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
-            <input
-              type="checkbox"
-              checked={form.is_active}
-              onChange={(event) => update("is_active", event.target.checked)}
-              className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Select
+              label="Programme family scope"
+              value={form.applies_to_family || "__all__"}
+              onValueChange={(value) =>
+                update("applies_to_family", value === "__all__" ? "" : value)
+              }
+              options={[
+                { value: "__all__", label: "All families" },
+                ...FAMILY_OPTIONS.map((family) => ({
+                  value: family,
+                  label: humanizeEnum(family),
+                })),
+              ]}
             />
-            Active (included in evaluations)
-          </label>
+            <Select
+              label="Programme level scope"
+              value={form.applies_to_level || "__all__"}
+              onValueChange={(value) =>
+                update("applies_to_level", value === "__all__" ? "" : value)
+              }
+              options={[
+                { value: "__all__", label: "All levels" },
+                ...LEVEL_OPTIONS.map((level) => ({
+                  value: level,
+                  label: humanizeEnum(level),
+                })),
+              ]}
+            />
+          </div>
+
+          <Textarea
+            label="Explanation template"
+            value={form.explanation_template}
+            onChange={(event) => update("explanation_template", event.target.value)}
+            rows={2}
+            hint="Quotes the clause and fills in observed and required values."
+          />
+          <Textarea
+            label="Metric parameters (JSON)"
+            value={form.metric_params}
+            onChange={(event) => update("metric_params", event.target.value)}
+            rows={4}
+            hint='Required for RATIO/SUM/COUNT, for example {"numerator": "faculty.total", "denominator": "students.total"}.'
+          />
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
+              <input
+                type="checkbox"
+                checked={form.mandatory}
+                onChange={(event) => update("mandatory", event.target.checked)}
+                className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+              />
+              Mandatory (blocks Nil Deficiency)
+            </label>
+            <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
+              <input
+                type="checkbox"
+                checked={form.illustrative}
+                onChange={(event) => update("illustrative", event.target.checked)}
+                className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+              />
+              Illustrative, not an AICTE norm
+            </label>
+            <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
+              <input
+                type="checkbox"
+                checked={form.needs_verification}
+                onChange={(event) => update("needs_verification", event.target.checked)}
+                className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+              />
+              Clause or threshold still needs verification
+            </label>
+            <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
+              <input
+                type="checkbox"
+                checked={form.is_active}
+                onChange={(event) => update("is_active", event.target.checked)}
+                className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+              />
+              Active (included in evaluations)
+            </label>
+          </div>
 
           {error ? (
             <p className="rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
@@ -635,6 +860,79 @@ function RuleDialog({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RuleHistoryDialog({
+  token,
+  rule,
+  onClose,
+}: {
+  token: string;
+  rule: ComplianceRule;
+  onClose: () => void;
+}) {
+  const historyQuery = useQuery({
+    queryKey: ["compliance-rule-history", rule.id],
+    queryFn: () => getComplianceRuleHistory(token, rule.id),
+  });
+
+  return (
+    <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Change history · {rule.code}</DialogTitle>
+          <DialogDescription>
+            Every create, edit and activation change is written to the audit log with the actor,
+            timestamp and before/after values.
+          </DialogDescription>
+        </DialogHeader>
+
+        {historyQuery.isPending ? (
+          <div className="mt-4 space-y-2">
+            {[0, 1, 2].map((item) => (
+              <Skeleton key={item} className="h-16 w-full" />
+            ))}
+          </div>
+        ) : historyQuery.isError ? (
+          <p className="mt-4 rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
+            {messageFor(historyQuery.error, "The history could not be loaded.")}
+          </p>
+        ) : historyQuery.data && historyQuery.data.items.length > 0 ? (
+          <ol className="mt-4 divide-y divide-line border-y border-line">
+            {historyQuery.data.items.map((entry) => (
+              <li key={entry.id} className="py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-13 font-medium text-ink">
+                    {humanizeEnum(entry.action)}
+                  </p>
+                  <p className="text-12 text-ink-500">{formatDateTime(entry.created_at)}</p>
+                </div>
+                <p className="mt-0.5 text-12 text-ink-500">
+                  {entry.actor_name ?? "Seed or system"} · {entry.changed_fields.length} field
+                  {entry.changed_fields.length === 1 ? "" : "s"} changed
+                </p>
+                {entry.changed_fields.length > 0 ? (
+                  <p className="mt-1 font-mono text-11 leading-5 text-ink-700">
+                    {entry.changed_fields.join(", ")}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-4 rounded-input border border-line bg-paper p-3 text-13 text-ink-700">
+            No audited changes are recorded for this rule yet.
+          </p>
+        )}
+
+        <DialogFooter>
+          <Button variant="secondary" type="button" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -707,8 +1005,8 @@ function ScoringPanel({
           <h2 className="font-serif text-20 font-semibold text-ink">Scoring and status bands</h2>
           <p className="mt-1 text-13 text-ink-500">
             The score is earned severity weight divided by assessed severity weight. Missing
-            metrics are excluded from the score and counted as “data missing”. A failed CRITICAL
-            rule forces RED regardless of score.
+            metrics are excluded from the score and counted as “data missing”. A mandatory failure
+            cannot be GREEN, and a failed CRITICAL rule forces RED regardless of score.
           </p>
         </div>
       </div>
@@ -767,12 +1065,488 @@ function ScoringPanel({
   );
 }
 
+function NumberCell({
+  label,
+  value,
+  onChange,
+  step = "0.5",
+  integer = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  step?: string;
+  integer?: boolean;
+}) {
+  return (
+    <input
+      aria-label={label}
+      type="number"
+      min="0"
+      step={integer ? "1" : step}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="h-9 w-full rounded-input border border-line bg-surface px-2 text-13 tabular-nums text-ink focus-visible:border-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+    />
+  );
+}
+
+type RatioMap = Record<string, Record<string, string>>;
+
+function RatioTable({
+  title,
+  description,
+  value,
+  onChange,
+  unitLabel,
+}: {
+  title: string;
+  description: string;
+  value: RatioMap;
+  onChange: (next: RatioMap) => void;
+  unitLabel: string;
+}) {
+  const families = Object.keys(value).sort();
+  const levels = Array.from(
+    new Set(families.flatMap((family) => Object.keys(value[family] ?? {}))),
+  );
+  if (families.length === 0) {
+    return (
+      <p className="text-12 text-ink-500">No {title.toLowerCase()} rows are configured yet.</p>
+    );
+  }
+  return (
+    <div>
+      <p className="text-13 font-semibold text-ink">{title}</p>
+      <p className="mt-0.5 text-12 leading-5 text-ink-500">{description}</p>
+      <div className="mt-2 overflow-x-auto rounded-input border border-line">
+        <table className="w-full min-w-[520px] text-left text-12">
+          <thead>
+            <tr className="border-b border-line bg-paper">
+              <th scope="col" className="px-2 py-1.5 font-semibold text-ink-700">
+                Family
+              </th>
+              {levels.map((level) => (
+                <th key={level} scope="col" className="px-2 py-1.5 font-semibold text-ink-700">
+                  {humanizeEnum(level)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {families.map((family) => (
+              <tr key={family}>
+                <th scope="row" className="px-2 py-1.5 text-left font-medium text-ink-700">
+                  {humanizeEnum(family)}
+                </th>
+                {levels.map((level) => (
+                  <td key={`${family}-${level}`} className="px-2 py-1.5">
+                    <NumberCell
+                      label={`${title} ${family} ${level} ${unitLabel}`}
+                      value={value[family]?.[level] ?? ""}
+                      onChange={(next) =>
+                        onChange({
+                          ...value,
+                          [family]: { ...(value[family] ?? {}), [level]: next },
+                        })
+                      }
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+type NumberMap = Record<string, string>;
+
+function FlatNorms({
+  title,
+  description,
+  value,
+  onChange,
+  unitLabel,
+}: {
+  title: string;
+  description: string;
+  value: NumberMap;
+  onChange: (next: NumberMap) => void;
+  unitLabel: string;
+}) {
+  const keys = Object.keys(value).sort();
+  if (keys.length === 0) {
+    return (
+      <p className="text-12 text-ink-500">No {title.toLowerCase()} values are configured yet.</p>
+    );
+  }
+  return (
+    <div>
+      <p className="text-13 font-semibold text-ink">{title}</p>
+      <p className="mt-0.5 text-12 leading-5 text-ink-500">{description}</p>
+      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {keys.map((key) => (
+          <div key={key} className="flex items-center justify-between gap-2">
+            <span className="text-12 text-ink-700">{humanizeEnum(key)}</span>
+            <div className="w-28">
+              <NumberCell
+                label={`${title} ${key} ${unitLabel}`}
+                value={value[key]}
+                onChange={(next) => onChange({ ...value, [key]: next })}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NormsPanel({
+  token,
+  config,
+}: {
+  token: string;
+  config: ComplianceConfig;
+}) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+
+  const toRatioMap = (source: Record<string, Record<string, number>>): RatioMap =>
+    Object.fromEntries(
+      Object.entries(source).map(([family, levels]) => [
+        family,
+        Object.fromEntries(
+          Object.entries(levels).map(([level, ratio]) => [level, String(ratio)]),
+        ),
+      ]),
+    );
+
+  const toNumberMap = (source: Record<string, number>): NumberMap =>
+    Object.fromEntries(Object.entries(source).map(([key, value]) => [key, String(value)]));
+
+  const [fsrRatios, setFsrRatios] = useState<RatioMap>(() => toRatioMap(config.fsr_ratios));
+  const [pcRatios, setPcRatios] = useState<RatioMap>(() => toRatioMap(config.pc_ratios));
+  const [areaNorms, setAreaNorms] = useState<NumberMap>(() => toNumberMap(config.area_norms));
+  const [libraryNorms, setLibraryNorms] = useState<NumberMap>(() =>
+    toNumberMap(config.library_norms),
+  );
+  const [cadreRatios, setCadreRatios] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(config.cadre_ratios).map(([key, value]) => [key, value.join(",")]),
+    ),
+  );
+  const [tiers, setTiers] = useState<{ max_intake: string; mbps: string }[]>(() =>
+    config.bandwidth_tiers.map((tier) => ({
+      max_intake: tier.max_intake === null ? "" : String(tier.max_intake),
+      mbps: String(tier.mbps),
+    })),
+  );
+
+  const mutation = useMutation({
+    mutationFn: (input: ComplianceConfigUpdate) => updateComplianceConfig(token, input),
+    onSuccess: () => {
+      toast({
+        title: "Norm configuration saved",
+        description: "Calculators use these values on the next evaluation.",
+      });
+      setError(null);
+      void queryClient.invalidateQueries({ queryKey: ["compliance-config"] });
+      void queryClient.invalidateQueries({ queryKey: ["compliance-monitor"] });
+      void queryClient.invalidateQueries({ queryKey: ["compliance-trend"] });
+      void queryClient.invalidateQueries({ queryKey: ["compliance-preview"] });
+    },
+    onError: (mutationError) => {
+      setError(messageFor(mutationError, "The norm configuration could not be saved."));
+    },
+  });
+
+  const buildPayload = (): ComplianceConfigUpdate | string => {
+    const parseRatioMap = (source: RatioMap, label: string) => {
+      const parsed: Record<string, Record<string, number>> = {};
+      for (const [family, levels] of Object.entries(source)) {
+        const parsedLevels: Record<string, number> = {};
+        for (const [level, raw] of Object.entries(levels)) {
+          if (raw.trim() === "") {
+            continue;
+          }
+          const value = Number(raw);
+          if (!Number.isFinite(value) || value <= 0) {
+            return `${label}: ${humanizeEnum(family)} ${level} must be a positive number.`;
+          }
+          parsedLevels[level] = value;
+        }
+        if (Object.keys(parsedLevels).length > 0) {
+          parsed[family] = parsedLevels;
+        }
+      }
+      return parsed;
+    };
+
+    const parseNumberMap = (source: NumberMap, label: string) => {
+      const parsed: Record<string, number> = {};
+      for (const [key, raw] of Object.entries(source)) {
+        if (raw.trim() === "") {
+          continue;
+        }
+        const value = Number(raw);
+        if (!Number.isFinite(value) || value < 0) {
+          return `${label}: ${humanizeEnum(key)} must be a non-negative number.`;
+        }
+        parsed[key] = value;
+      }
+      return parsed;
+    };
+
+    const parsedFsr = parseRatioMap(fsrRatios, "Faculty-student ratio");
+    if (typeof parsedFsr === "string") return parsedFsr;
+    const parsedPc = parseRatioMap(pcRatios, "Students per computer");
+    if (typeof parsedPc === "string") return parsedPc;
+    const parsedArea = parseNumberMap(areaNorms, "Area norms");
+    if (typeof parsedArea === "string") return parsedArea;
+    const parsedLibrary = parseNumberMap(libraryNorms, "Library norms");
+    if (typeof parsedLibrary === "string") return parsedLibrary;
+
+    const parsedCadre: Record<string, number[]> = {};
+    for (const [key, raw] of Object.entries(cadreRatios)) {
+      const parts = raw
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map(Number);
+      if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part) || part < 0)) {
+        return `Cadre ratio ${key} must be three comma-separated numbers, e.g. 1,2,6.`;
+      }
+      parsedCadre[key] = parts.map((part) => Math.round(part));
+    }
+
+    const parsedTiers: BandwidthTier[] = [];
+    for (const tier of tiers) {
+      const mbps = Number(tier.mbps);
+      if (!Number.isFinite(mbps) || mbps <= 0) {
+        return "Every bandwidth tier needs a positive Mbps value.";
+      }
+      const maxIntake =
+        tier.max_intake.trim() === "" ? null : Number(tier.max_intake);
+      if (maxIntake !== null && (!Number.isFinite(maxIntake) || maxIntake < 0)) {
+        return "The bandwidth tier intake must be a non-negative number or blank.";
+      }
+      parsedTiers.push({
+        max_intake: maxIntake === null ? null : Math.round(maxIntake),
+        mbps: Math.round(mbps),
+      });
+    }
+
+    return {
+      fsr_ratios: parsedFsr,
+      pc_ratios: parsedPc,
+      area_norms: parsedArea,
+      library_norms: parsedLibrary,
+      cadre_ratios: parsedCadre,
+      bandwidth_tiers: parsedTiers,
+    };
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const payload = buildPayload();
+    if (typeof payload === "string") {
+      setError(payload);
+      return;
+    }
+    setError(null);
+    mutation.mutate(payload);
+  };
+
+  const cadreKeys = Object.keys(cadreRatios).sort();
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 rounded-panel border border-line bg-surface p-5 sm:p-6"
+    >
+      <div>
+        <h2 className="font-serif text-20 font-semibold text-ink">Calculator norms</h2>
+        <p className="mt-1 text-13 leading-5 text-ink-500">
+          These values feed the APH calculators for faculty, area, library and computing. They live
+          in the database so the handbook figures can be corrected without a code change. Confirm
+          each value against the current AICTE Approval Process Handbook.
+        </p>
+      </div>
+
+      <RatioTable
+        title="Faculty-student ratio"
+        description="Students per faculty member. The calculator sums the sanctioned intake times the programme duration for every programme in scope."
+        value={fsrRatios}
+        onChange={setFsrRatios}
+        unitLabel="students per faculty"
+      />
+
+      <div>
+        <p className="text-13 font-semibold text-ink">Cadre ratio</p>
+        <p className="mt-0.5 text-12 leading-5 text-ink-500">
+          Professor, Associate Professor and Assistant Professor share for each family and level.
+          The Principal or Director occupies the first Professor slot.
+        </p>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {cadreKeys.map((key) => (
+            <div key={key} className="flex items-center justify-between gap-2">
+              <label className="text-12 text-ink-700" htmlFor={`cadre-${key}`}>
+                {key.replace("|", " · ")}
+              </label>
+              <div className="w-28">
+                <input
+                  id={`cadre-${key}`}
+                  aria-label={`Cadre ratio ${key}`}
+                  value={cadreRatios[key]}
+                  onChange={(event) =>
+                    setCadreRatios((current) => ({ ...current, [key]: event.target.value }))
+                  }
+                  className="h-9 w-full rounded-input border border-line bg-surface px-2 text-13 tabular-nums text-ink focus-visible:border-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <FlatNorms
+        title="Area norms"
+        description="Fixed administrative and amenities area plus the circulation factor applied on top of the instructional area."
+        value={areaNorms}
+        onChange={setAreaNorms}
+        unitLabel="value"
+      />
+
+      <FlatNorms
+        title="Library norms"
+        description="Journals per course and the share of students that must have a reading-room seat and a digital library computer."
+        value={libraryNorms}
+        onChange={setLibraryNorms}
+        unitLabel="value"
+      />
+
+      <RatioTable
+        title="Students per computer"
+        description="Computing ratio used to compute the required number of computers for a programme group."
+        value={pcRatios}
+        onChange={setPcRatios}
+        unitLabel="students per computer"
+      />
+
+      <div>
+        <p className="text-13 font-semibold text-ink">Internet bandwidth tiers</p>
+        <p className="mt-0.5 text-12 leading-5 text-ink-500">
+          Required Mbps by sanctioned intake. A blank intake is the catch-all top tier.
+        </p>
+        <div className="mt-2 space-y-2">
+          {tiers.map((tier, index) => (
+            <div key={index} className="flex items-end gap-2">
+              <div className="w-40">
+                <Input
+                  label="Max intake"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={tier.max_intake}
+                  onChange={(event) =>
+                    setTiers((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index
+                          ? { ...row, max_intake: event.target.value }
+                          : row,
+                      ),
+                    )
+                  }
+                />
+              </div>
+              <div className="w-40">
+                <Input
+                  label="Mbps"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={tier.mbps}
+                  onChange={(event) =>
+                    setTiers((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, mbps: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </div>
+              <Button
+                variant="quiet"
+                size="sm"
+                type="button"
+                onClick={() =>
+                  setTiers((current) => current.filter((_, rowIndex) => rowIndex !== index))
+                }
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
+          className="mt-2"
+          onClick={() => setTiers((current) => [...current, { max_intake: "", mbps: "" }])}
+        >
+          <Plus aria-hidden="true" className="size-3.5" />
+          Add tier
+        </Button>
+      </div>
+
+      {error ? (
+        <p className="rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving…" : "Save norms"}
+        </Button>
+        <p className="text-12 text-ink-500">
+          Last updated {formatDateTime(config.updated_at)}. Every edit is audited.
+        </p>
+      </div>
+    </form>
+  );
+}
+
+interface RuleFilters {
+  category: string;
+  search: string;
+  needsVerification: boolean;
+  illustrative: boolean;
+  mandatory: boolean;
+}
+
+const EMPTY_FILTERS: RuleFilters = {
+  category: "",
+  search: "",
+  needsVerification: false,
+  illustrative: false,
+  mandatory: false,
+};
+
 export default function ComplianceAdminPage() {
   const { user, token } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [editor, setEditor] = useState<{ rule: ComplianceRule | null } | null>(null);
+  const [historyRule, setHistoryRule] = useState<ComplianceRule | null>(null);
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<RuleFilters>(EMPTY_FILTERS);
 
   const authToken = token ?? "";
 
@@ -782,8 +1556,16 @@ export default function ComplianceAdminPage() {
     enabled: Boolean(authToken && user),
   });
   const rulesQuery = useQuery({
-    queryKey: ["compliance-rules"],
-    queryFn: () => listComplianceRules(authToken, { pageSize: 100 }),
+    queryKey: ["compliance-rules", filters],
+    queryFn: () =>
+      listComplianceRules(authToken, {
+        pageSize: 100,
+        category: filters.category || undefined,
+        search: filters.search.trim() || undefined,
+        needsVerification: filters.needsVerification ? true : undefined,
+        illustrative: filters.illustrative ? true : undefined,
+        mandatory: filters.mandatory ? true : undefined,
+      }),
     enabled: Boolean(authToken && user),
   });
   const metricsQuery = useQuery({
@@ -858,13 +1640,16 @@ export default function ComplianceAdminPage() {
     green: items.filter((item) => item.latest_status === "GREEN").length,
     missing: items.filter((item) => item.latest_status === null).length,
   };
+  const rules = rulesQuery.data?.items ?? [];
+  const needsVerificationCount = rules.filter((rule) => rule.needs_verification).length;
+  const illustrativeCount = rules.filter((rule) => rule.illustrative).length;
 
   return (
     <>
       <PageHeader
         eyebrow="Oversight"
         title="Compliance monitoring"
-        description="Configure the norms, inspect rule-by-rule outcomes and track institution score trends. Thresholds are editable data, not code."
+        description="Configure the APH norms, inspect rule-by-rule outcomes and track institution score trends. Every threshold is editable data with the clause that backs it."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -907,6 +1692,7 @@ export default function ComplianceAdminPage() {
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="rules">Rules</TabsTrigger>
           <TabsTrigger value="scoring">Scoring</TabsTrigger>
+          <TabsTrigger value="norms">Norm calculators</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monitoring">
@@ -1064,13 +1850,101 @@ export default function ComplianceAdminPage() {
               <div>
                 <h2 className="font-serif text-20 font-semibold text-ink">Rule catalogue</h2>
                 <p className="mt-0.5 max-w-2xl text-12 leading-5 text-ink-500">
-                  Rules are evaluated against application data and programme records. Scope accepts
-                  application types and programme levels. Seed values are illustrative.
+                  Each rule cites the APH clause it implements. Rules marked illustrative are
+                  project-only demo thresholds and never block a Nil Deficiency result.
                 </p>
               </div>
               <Button size="sm" onClick={() => setEditor({ rule: null })}>
                 <Plus aria-hidden="true" className="size-4" />
                 Add rule
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3 border-b border-line bg-paper px-4 py-3">
+              <div className="w-64">
+                <Input
+                  label="Search"
+                  value={filters.search}
+                  onChange={(event) =>
+                    setFilters((current) => ({ ...current, search: event.target.value }))
+                  }
+                  placeholder="Code, name or clause"
+                />
+              </div>
+              <div className="w-52">
+                <Select
+                  label="Category"
+                  value={filters.category || "__all__"}
+                  onValueChange={(value) =>
+                    setFilters((current) => ({
+                      ...current,
+                      category: value === "__all__" ? "" : value,
+                    }))
+                  }
+                  options={[
+                    { value: "__all__", label: "All categories" },
+                    ...CATEGORY_OPTIONS.map((category) => ({
+                      value: category,
+                      label: category,
+                    })),
+                  ]}
+                />
+              </div>
+              <label className="flex h-10 items-center gap-2 text-13 font-medium text-ink-700">
+                <input
+                  type="checkbox"
+                  checked={filters.needsVerification}
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      needsVerification: event.target.checked,
+                    }))
+                  }
+                  className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+                />
+                Needs verification
+              </label>
+              <label className="flex h-10 items-center gap-2 text-13 font-medium text-ink-700">
+                <input
+                  type="checkbox"
+                  checked={filters.illustrative}
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      illustrative: event.target.checked,
+                    }))
+                  }
+                  className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+                />
+                Illustrative only
+              </label>
+              <label className="flex h-10 items-center gap-2 text-13 font-medium text-ink-700">
+                <input
+                  type="checkbox"
+                  checked={filters.mandatory}
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      mandatory: event.target.checked,
+                    }))
+                  }
+                  className="size-4 rounded border-line text-saffron focus-visible:ring-focus"
+                />
+                Mandatory only
+              </label>
+              <Button
+                variant="quiet"
+                size="sm"
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                disabled={
+                  filters.category === "" &&
+                  filters.search === "" &&
+                  !filters.needsVerification &&
+                  !filters.illustrative &&
+                  !filters.mandatory
+                }
+              >
+                Clear filters
               </Button>
             </div>
 
@@ -1095,13 +1969,17 @@ export default function ComplianceAdminPage() {
                   Retry
                 </Button>
               </div>
-            ) : (rulesQuery.data?.items.length ?? 0) === 0 ? (
+            ) : rules.length === 0 ? (
               <div className="p-4">
                 <EmptyState
-                  message="No compliance rules are configured."
+                  message={
+                    rulesQuery.data?.total
+                      ? "No rule matches these filters."
+                      : "No compliance rules are configured."
+                  }
                   action={
                     <Button size="sm" onClick={() => setEditor({ rule: null })}>
-                      Add the first rule
+                      Add a rule
                     </Button>
                   }
                 />
@@ -1112,6 +1990,7 @@ export default function ComplianceAdminPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Rule</TableHead>
+                      <TableHead>Clause</TableHead>
                       <TableHead>Condition</TableHead>
                       <TableHead>Severity</TableHead>
                       <TableHead>Scope</TableHead>
@@ -1122,12 +2001,31 @@ export default function ComplianceAdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rulesQuery.data?.items.map((rule) => (
+                    {rules.map((rule) => (
                       <TableRow key={rule.id} className={rule.is_active ? undefined : "opacity-60"}>
                         <TableCell className="min-w-64">
                           <p className="font-medium text-ink">{rule.name}</p>
                           <p className="mt-0.5 font-mono text-11 text-ink-500">{rule.code}</p>
-                          <p className="mt-0.5 text-12 text-ink-500">{rule.metric_key}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            {!rule.mandatory ? (
+                              <span className="rounded-pill bg-neutral-soft px-2 py-0.5 text-11 text-ink-700">
+                                Advisory
+                              </span>
+                            ) : null}
+                            {rule.illustrative ? (
+                              <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                                Illustrative, not an AICTE norm
+                              </span>
+                            ) : null}
+                            {rule.needs_verification ? (
+                              <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                                Needs verification
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-12 text-ink-700">
+                          {rule.apH_clause}
                         </TableCell>
                         <TableCell className="whitespace-nowrap tabular-nums">
                           {conditionText(rule)}
@@ -1138,7 +2036,19 @@ export default function ComplianceAdminPage() {
                           </StatusPill>
                         </TableCell>
                         <TableCell className="text-12 text-ink-700">
-                          {rule.applies_to}
+                          <p>{humanizeEnum(rule.applies_to)}</p>
+                          {rule.applies_to_family ? (
+                            <p className="mt-0.5 text-11 text-ink-500">
+                              {humanizeEnum(rule.applies_to_family)}
+                              {rule.applies_to_level
+                                ? ` · ${humanizeEnum(rule.applies_to_level)}`
+                                : ""}
+                            </p>
+                          ) : rule.applies_to_level ? (
+                            <p className="mt-0.5 text-11 text-ink-500">
+                              {humanizeEnum(rule.applies_to_level)}
+                            </p>
+                          ) : null}
                         </TableCell>
                         <TableCell>
                           <button
@@ -1163,14 +2073,24 @@ export default function ComplianceAdminPage() {
                           </button>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="quiet"
-                            size="sm"
-                            onClick={() => setEditor({ rule })}
-                          >
-                            <Pencil aria-hidden="true" className="size-3.5" />
-                            Edit
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="quiet"
+                              size="sm"
+                              onClick={() => setHistoryRule(rule)}
+                            >
+                              <History aria-hidden="true" className="size-3.5" />
+                              History
+                            </Button>
+                            <Button
+                              variant="quiet"
+                              size="sm"
+                              onClick={() => setEditor({ rule })}
+                            >
+                              <Pencil aria-hidden="true" className="size-3.5" />
+                              Edit
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1180,8 +2100,10 @@ export default function ComplianceAdminPage() {
             )}
 
             <p className="border-t border-line px-4 py-3 text-11 leading-4 text-ink-500">
-              Editing a threshold changes live application previews immediately. Stored monitoring
-              snapshots refresh on the next nightly run or when you select “Re-evaluate now”.
+              {rules.length} rule{rules.length === 1 ? "" : "s"} shown · {needsVerificationCount}{" "}
+              awaiting verification · {illustrativeCount} illustrative. Editing a threshold changes
+              live application previews immediately; stored monitoring snapshots refresh on the next
+              nightly run or when you select “Re-evaluate now”.
             </p>
           </section>
         </TabsContent>
@@ -1211,13 +2133,39 @@ export default function ComplianceAdminPage() {
             />
           ) : null}
         </TabsContent>
+
+        <TabsContent value="norms">
+          {configQuery.isPending ? (
+            <Skeleton className="h-64 w-full" />
+          ) : configQuery.isError ? (
+            <div className="rounded-panel border border-line bg-surface p-4">
+              <p className="rounded-input border border-breach bg-breach-soft p-3 text-13 text-breach-strong">
+                {messageFor(configQuery.error, "Norm configuration could not be loaded.")}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3"
+                onClick={() => void configQuery.refetch()}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : configQuery.data ? (
+            <NormsPanel
+              key={configQuery.data.updated_at ?? "default"}
+              token={authToken}
+              config={configQuery.data}
+            />
+          ) : null}
+        </TabsContent>
       </Tabs>
 
       <p className="mt-5 flex items-start gap-2 rounded-panel border border-line bg-surface p-3 text-12 leading-5 text-ink-500">
         <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-        Compliance rules and thresholds in this prototype are illustrative configuration. They are
-        not official AICTE norms and must be verified against the current AICTE Approval Process
-        Handbook before use.
+        Rules marked illustrative are prototype-only values, not AICTE norms. The remaining rules
+        cite the APH clause they implement, but every figure still has to be verified against the
+        current AICTE Approval Process Handbook before an approval decision relies on it.
       </p>
 
       {editor ? (
@@ -1226,6 +2174,14 @@ export default function ComplianceAdminPage() {
           rule={editor.rule}
           metrics={metricsQuery.data?.items ?? []}
           onClose={() => setEditor(null)}
+        />
+      ) : null}
+
+      {historyRule ? (
+        <RuleHistoryDialog
+          token={authToken}
+          rule={historyRule}
+          onClose={() => setHistoryRule(null)}
         />
       ) : null}
     </>

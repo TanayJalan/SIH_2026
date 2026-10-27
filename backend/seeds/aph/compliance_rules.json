@@ -1,0 +1,1373 @@
+[
+  {
+    "code": "APH-FSR-UG-ET",
+    "name": "Faculty:student ratio for UG Engineering & Technology",
+    "category": "Faculty",
+    "description": "S = approved intake across all years of the programme. Required faculty = S / 20 for UG Engineering & Technology.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 20,
+    "severity": "CRITICAL",
+    "applies_to_family": "ENGINEERING_TECHNOLOGY",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "ENGINEERING_TECHNOLOGY",
+      "level": "UG"
+    },
+    "explanation_template": "UG Engineering & Technology faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-ET",
+    "name": "Faculty:student ratio for PG Engineering & Technology",
+    "category": "Faculty",
+    "description": "Required faculty = S / 15 for PG Engineering & Technology.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "CRITICAL",
+    "applies_to_family": "ENGINEERING_TECHNOLOGY",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "ENGINEERING_TECHNOLOGY",
+      "level": "PG"
+    },
+    "explanation_template": "PG Engineering & Technology faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-DIPLOMA",
+    "name": "Faculty:student ratio for Diploma programmes",
+    "category": "Faculty",
+    "description": "Required faculty = S / 25 for Diploma programmes in Engineering & Technology, Applied Arts, Design and HMCT.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 25,
+    "severity": "CRITICAL",
+    "applies_to_level": "DIPLOMA",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "level": "DIPLOMA"
+    },
+    "explanation_template": "Diploma faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-PLANNING",
+    "name": "Faculty:student ratio for UG Planning",
+    "category": "Faculty",
+    "description": "Required faculty = S / 16 for UG Planning programmes.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 16,
+    "severity": "CRITICAL",
+    "applies_to_family": "PLANNING",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "PLANNING",
+      "level": "UG"
+    },
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-MANAGEMENT",
+    "name": "Faculty:student ratio for UG Management",
+    "category": "Faculty",
+    "description": "Required faculty = S / 25 for UG Management programmes.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 25,
+    "severity": "CRITICAL",
+    "applies_to_family": "MANAGEMENT",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "MANAGEMENT",
+      "level": "UG"
+    },
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-MANAGEMENT",
+    "name": "Faculty:student ratio for MBA/PGDM",
+    "category": "Faculty",
+    "description": "Required faculty = S / 20 for PG Management (MBA/PGDM).",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 20,
+    "severity": "CRITICAL",
+    "applies_to_family": "MANAGEMENT",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "MANAGEMENT",
+      "level": "PG"
+    },
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-MCA",
+    "name": "Faculty:student ratio for UG Computer Applications",
+    "category": "Faculty",
+    "description": "Required faculty = S / 25 for UG Computer Applications (BCA).",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 25,
+    "severity": "CRITICAL",
+    "applies_to_family": "COMPUTER_APPLICATIONS",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "COMPUTER_APPLICATIONS",
+      "level": "UG"
+    },
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-MCA",
+    "name": "Faculty:student ratio for MCA",
+    "category": "Faculty",
+    "description": "Required faculty = S / 20 for MCA.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 20,
+    "severity": "CRITICAL",
+    "applies_to_family": "COMPUTER_APPLICATIONS",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 7.1",
+    "metric_params": {
+      "family": "COMPUTER_APPLICATIONS",
+      "level": "PG"
+    },
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-ESTABLISHMENT",
+    "name": "Faculty establishment meets the calculated requirement",
+    "category": "Faculty",
+    "description": "Appointed faculty must be at least the establishment calculated from S/ratio, including the Principal/Director post.",
+    "metric_key": "faculty.total",
+    "operator": "RATIO",
+    "threshold": 1,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 7.1",
+    "unit": "ratio",
+    "metric_params": {
+      "numerator": "faculty.total",
+      "denominator": "faculty.required_total",
+      "compare": ">="
+    },
+    "explanation_template": "Appointed faculty is {observed} times the required establishment; {clause} requires at least {threshold}. Required posts are calculated as S divided by the sanctioned ratio.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-CADRE",
+    "name": "Professor:Associate:Assistant cadre ratio 1:2:6",
+    "category": "Faculty",
+    "description": "Cadre mix must satisfy Professor : Associate Professor : Assistant Professor = 1 : 2 : 6 (R = 9) for UG and MCA/MBA/PGDM.",
+    "metric_key": "faculty.cadre_compliant",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 7.1",
+    "explanation_template": "The appointed cadre mix is {result} with the 1:2:6 requirement in {clause}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-PRINCIPAL",
+    "name": "Principal/Director in position with prescribed qualifications",
+    "category": "Faculty",
+    "description": "A regularly appointed Principal/Director must be in position; a vacancy beyond 12 months is a penal violation.",
+    "metric_key": "faculty.head_present",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 2.7j",
+    "explanation_template": "A Principal/Director is required by {clause}; a vacancy beyond 12 months attracts penal action under APH 7.4b.",
+    "penalty_codes": [
+      "7.4b"
+    ]
+  },
+  {
+    "code": "APH-FAC-HOD-DIPLOMA",
+    "name": "Head of Department for each Diploma department",
+    "category": "Faculty",
+    "description": "Diploma institutions must have one Head of Department per department (APH 7.1).",
+    "metric_key": "faculty.hod_present",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "applies_to_level": "DIPLOMA",
+    "apH_clause": "APH 7.1",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-PG-PHD",
+    "name": "A Professor with PhD for every PG course",
+    "category": "Faculty",
+    "description": "Every PG course needs at least one Professor with a PhD, or an Associate Professor with a PhD if no qualified Professor is available.",
+    "metric_key": "faculty.pg_phd_professor_present",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.14f",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-ADJUNCT-CAP",
+    "name": "Adjunct faculty within the permitted share",
+    "category": "Faculty",
+    "description": "Adjunct faculty and Professors of Practice together may not exceed 15% of required faculty (Design 20%, Planning 30%).",
+    "metric_key": "faculty.adjunct_pct",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.14d",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-ECS",
+    "name": "Faculty salary paid through ECS",
+    "category": "Faculty",
+    "description": "Salary must be paid through ECS/RTGS/NEFT through a nationalised or scheduled commercial bank.",
+    "metric_key": "faculty.ecs_pct",
+    "operator": ">=",
+    "threshold": 100,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.14a",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-BIOMETRIC",
+    "name": "Biometric attendance for all faculty",
+    "category": "Faculty",
+    "description": "Biometric attendance is mandatory for every faculty member.",
+    "metric_key": "faculty.biometric_pct",
+    "operator": ">=",
+    "threshold": 100,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.14j",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-ID-LAG",
+    "name": "Faculty IDs updated on the portal in the same month",
+    "category": "Faculty",
+    "description": "Faculty additions and removals must be reflected on the AICTE portal in the same month as joining or leaving.",
+    "metric_key": "faculty.id_update_lag_days",
+    "operator": "<=",
+    "threshold": 31,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.14c",
+    "needs_verification": true,
+    "unit": "days",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-LAND-TENURE",
+    "name": "Clear land title or compliant lease",
+    "category": "Land and building",
+    "description": "Land must have a clear title in the promoter's name, or a lease of at least 30 years with a live lease at least as long as the longest course.",
+    "metric_key": "land.tenure_ok",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 6.17a",
+    "explanation_template": "Land title or lease complies with {clause}: {result}.",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-LAND-PLOTS",
+    "name": "At most three land parcels",
+    "category": "Land and building",
+    "description": "The campus may comprise at most three plots, with academic, instructional, administrative and amenity areas on one plot.",
+    "metric_key": "land.plots_ok",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.17d",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-LAND-DISTANCE",
+    "name": "Plots within two kilometres",
+    "category": "Land and building",
+    "description": "Plots must be within 2 km of each other (hilly and North-Eastern regions: up to three pieces within 2 km).",
+    "metric_key": "land.distance_ok",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.17d",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-LAND-CONTIGUOUS",
+    "name": "Contiguous land parcels",
+    "category": "Land and building",
+    "description": "Land parcels must be contiguous.",
+    "metric_key": "land.contiguous",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.17d",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-LAND-OBSTACLES",
+    "name": "No obstacles across the land",
+    "category": "Land and building",
+    "description": "No river, canal, railway line, highway or high-tension line may cross the land.",
+    "metric_key": "land.obstacle_count",
+    "operator": "=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.17d",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-LAND-LEASE-30",
+    "name": "Lease tenure of at least 30 years",
+    "category": "Land and building",
+    "description": "Leased land must have a registered lease of at least 30 years. Owned land is not assessed against this rule.",
+    "metric_key": "land.lease_years_total",
+    "operator": ">=",
+    "threshold": 30,
+    "severity": "HIGH",
+    "mandatory": false,
+    "apH_clause": "APH 6.17a",
+    "unit": "years"
+  },
+  {
+    "code": "APH-LAND-LEASE-LIVE",
+    "name": "Live lease covers the longest course",
+    "category": "Land and building",
+    "description": "The remaining lease must be at least as long as the longest course offered. Owned land is not assessed against this rule.",
+    "metric_key": "land.lease_years_live",
+    "operator": "RATIO",
+    "threshold": 1,
+    "severity": "HIGH",
+    "mandatory": false,
+    "apH_clause": "APH 6.17a",
+    "unit": "ratio",
+    "metric_params": {
+      "numerator": "land.lease_years_live",
+      "denominator": "land.longest_course_years",
+      "compare": ">="
+    }
+  },
+  {
+    "code": "APH-AREA-INSTRUCTIONAL",
+    "name": "Instructional area for the approved intake",
+    "category": "Infrastructure",
+    "description": "Classrooms, tutorial rooms, laboratories, workshops and fixed facilities must meet the Annexure-3 formula for the approved intake.",
+    "metric_key": "area.instructional_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH Annexure-3 3.2",
+    "unit": "sq. m",
+    "explanation_template": "Instructional area available is short by {observed} {unit}; {clause} requires the full computed area.",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-AREA-BUILTUP",
+    "name": "Built-up area including 25% circulation",
+    "category": "Infrastructure",
+    "description": "Built-up area = (instructional + administrative + amenities) + access and circulation of about 25%.",
+    "metric_key": "area.built_up_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH Annexure-3 3.2",
+    "unit": "sq. m",
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-AREA-ADMIN",
+    "name": "Administrative area of at least 750 sq. m",
+    "category": "Infrastructure",
+    "description": "Minimum administrative area is 750 sq. m for an intake up to 300.",
+    "metric_key": "area.administrative_required",
+    "operator": "RATIO",
+    "threshold": 1,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-3 3.2",
+    "unit": "ratio",
+    "metric_params": {
+      "numerator": "area.administrative_available",
+      "denominator": "area.administrative_required",
+      "compare": ">="
+    },
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-AREA-AMENITIES",
+    "name": "Amenities area of at least 500 sq. m",
+    "category": "Infrastructure",
+    "description": "Minimum amenities area is 500 sq. m for an intake up to 300.",
+    "metric_key": "area.amenities_required",
+    "operator": "RATIO",
+    "threshold": 1,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-3 3.2",
+    "unit": "ratio",
+    "metric_params": {
+      "numerator": "area.amenities_available",
+      "denominator": "area.amenities_required",
+      "compare": ">="
+    },
+    "penalty_codes": [
+      "7.4f"
+    ]
+  },
+  {
+    "code": "APH-AREA-CIRCULATION",
+    "name": "Access and circulation area of about 25%",
+    "category": "Infrastructure",
+    "description": "Access and circulation area should be about 25% of the instructional, administrative and amenities area.",
+    "metric_key": "area.circulation_pct",
+    "operator": ">=",
+    "threshold": 25,
+    "severity": "MEDIUM",
+    "mandatory": false,
+    "apH_clause": "APH Annexure-3 3.2",
+    "needs_verification": true,
+    "unit": "%"
+  },
+  {
+    "code": "APH-LIB-TITLES",
+    "name": "Library titles for every programme",
+    "category": "Library",
+    "description": "Titles are counted per programme: 100 in the first year for E&T UG, 50 for Diploma and Management/Computer Applications, plus 50 per later year.",
+    "metric_key": "library.titles_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-4",
+    "unit": "titles",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-LIB-VOLUMES",
+    "name": "Library volumes for every division",
+    "category": "Library",
+    "description": "Volumes = 5 x titles x divisions in the first year for UG/Diploma and 4 x titles x divisions for PG.",
+    "metric_key": "library.volumes_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-4",
+    "unit": "volumes",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-LIB-JOURNALS",
+    "name": "Subscribed indexed journals",
+    "category": "Library",
+    "description": "Six subscribed indexed journals per course per level for UG and PG programmes.",
+    "metric_key": "library.journals_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH Annexure-4",
+    "unit": "journals",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-LIB-SEATS",
+    "name": "Reading-room seating",
+    "category": "Library",
+    "description": "Reading-room seats must be 15% of students (maximum 150) for UG/Diploma and 25% (maximum 100) for PG.",
+    "metric_key": "library.reading_seats_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH Annexure-4",
+    "unit": "seats",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-LIB-NDL",
+    "name": "National Digital Library membership",
+    "category": "Library",
+    "description": "NDL membership is a desirable requirement under APH 6.54.",
+    "metric_key": "library.ndl_membership",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "LOW",
+    "mandatory": false,
+    "apH_clause": "APH 6.54"
+  },
+  {
+    "code": "APH-COMP-PCS",
+    "name": "Computers for the approved intake",
+    "category": "Computing",
+    "description": "Computers must satisfy the PC:student ratio with a minimum of 20 PCs.",
+    "metric_key": "computing.pcs_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-4",
+    "unit": "count",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-COMP-PRINTERS",
+    "name": "Printers at least 5% of computers",
+    "category": "Computing",
+    "description": "Printers must be at least 5% of the installed computers.",
+    "metric_key": "computing.printer_pct",
+    "operator": ">=",
+    "threshold": 5,
+    "severity": "LOW",
+    "apH_clause": "APH Annexure-4",
+    "unit": "%",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-COMP-BANDWIDTH",
+    "name": "Internet bandwidth by approved intake",
+    "category": "Computing",
+    "description": "100 Mbps up to 300 intake, 300 Mbps for 301-600, 500 Mbps for 601-900 and 1 Gbps above 900.",
+    "metric_key": "computing.bandwidth_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 7.3",
+    "unit": "Mbps",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-COMP-LANG-LAB",
+    "name": "Language laboratory computers",
+    "category": "Computing",
+    "description": "A language laboratory with at least 20 computers, 20 per 300 intake pro rata.",
+    "metric_key": "computing.language_lab_deficit",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 7.3",
+    "unit": "count",
+    "penalty_codes": [
+      "7.4d"
+    ]
+  },
+  {
+    "code": "APH-ESS-ANTIRAGGING",
+    "name": "Anti-ragging committee, squad and CCTV",
+    "category": "Essential requirements",
+    "description": "An Anti-Ragging Committee, a squad and CCTV coverage must all be in place.",
+    "metric_key": "essential.anti_ragging_committee",
+    "operator": "COUNT",
+    "threshold": 3,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 6.47",
+    "metric_params": {
+      "metrics": [
+        "essential.anti_ragging_committee",
+        "essential.anti_ragging_squad",
+        "essential.cctv"
+      ],
+      "equals": true,
+      "compare": ">="
+    },
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-IC",
+    "name": "Internal Committee for sexual harassment",
+    "category": "Essential requirements",
+    "description": "An Internal Committee with the prescribed composition must be constituted.",
+    "metric_key": "essential.internal_committee",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 6.48",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-IC-REPORT",
+    "name": "Internal Committee annual report uploaded by 30 June",
+    "category": "Essential requirements",
+    "description": "The Internal Committee annual report must be uploaded on the portal by 30 June.",
+    "metric_key": "essential.ic_annual_report_uploaded",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.48g",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-SCST",
+    "name": "SC/ST committee",
+    "category": "Essential requirements",
+    "description": "An SC/ST committee with five members, at least two SC/ST and at least one woman, must be constituted.",
+    "metric_key": "essential.sc_st_committee",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.49",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-GRIEVANCE",
+    "name": "Grievance redressal and Ombudsperson",
+    "category": "Essential requirements",
+    "description": "Online grievance redressal, a Student Grievance Redressal Committee and an Ombudsperson must be in place.",
+    "metric_key": "essential.grievance_redressal",
+    "operator": "COUNT",
+    "threshold": 2,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.50",
+    "metric_params": {
+      "metrics": [
+        "essential.grievance_redressal",
+        "essential.ombudsperson"
+      ],
+      "equals": true,
+      "compare": ">="
+    },
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-IIC",
+    "name": "Institution's Innovation Council",
+    "category": "Essential requirements",
+    "description": "An Institution's Innovation Council with certificate and registration number must be in place.",
+    "metric_key": "essential.innovation_council",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.51",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-BARRIER-FREE",
+    "name": "Barrier-free environment",
+    "category": "Essential requirements",
+    "description": "Barrier-free facilities as per CPWD/NBC must be provided.",
+    "metric_key": "essential.barrier_free_facilities",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.52",
+    "penalty_codes": [
+      "7.4j"
+    ]
+  },
+  {
+    "code": "APH-ESS-ABC",
+    "name": "Academic Bank of Credits compliance",
+    "category": "Essential requirements",
+    "description": "Academic Bank of Credits registration and compliance is mandatory.",
+    "metric_key": "essential.abc_compliance",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4l"
+    ]
+  },
+  {
+    "code": "APH-ESS-CAMPUS-SAFETY",
+    "name": "Campus safety and security",
+    "category": "Essential requirements",
+    "description": "Campus safety and security arrangements must be in place.",
+    "metric_key": "essential.campus_safety",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-FOOD-SAFETY",
+    "name": "Food Safety and Standards Act compliance",
+    "category": "Essential requirements",
+    "description": "The institution must comply with the Food Safety and Standards Act for its canteen and mess.",
+    "metric_key": "essential.food_safety",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-DIGITAL-PAYMENTS",
+    "name": "Digital payments only",
+    "category": "Essential requirements",
+    "description": "All payments to and from students must be through digital modes.",
+    "metric_key": "essential.digital_payments",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-LETTERS",
+    "name": "All AICTE letters displayed on the website",
+    "category": "Essential requirements",
+    "description": "LoA/EoA letters since inception and accreditation status must be displayed on the institution's website.",
+    "metric_key": "essential.letters_displayed",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-ESS-MANDATORY-DISCLOSURE",
+    "name": "Mandatory disclosure published",
+    "category": "Essential requirements",
+    "description": "The Annexure-18 mandatory disclosure must be published in full on the website and in the brochure.",
+    "metric_key": "essential.mandatory_disclosure_complete",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-18",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-ESS-MENTAL-HEALTH",
+    "name": "Mental-health counselling platform",
+    "category": "Essential requirements",
+    "description": "A mental-health counselling platform must be available to students.",
+    "metric_key": "essential.mental_health_counselling",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-WOMEN-HELPLINE",
+    "name": "24x7 women helpline",
+    "category": "Essential requirements",
+    "description": "A 24x7 women helpline must be operational.",
+    "metric_key": "essential.women_helpline_24x7",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-FIRST-AID",
+    "name": "First aid and medical facilities",
+    "category": "Essential requirements",
+    "description": "First aid and medical facilities must be available on campus.",
+    "metric_key": "essential.first_aid",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-POTABLE-WATER",
+    "name": "Potable drinking water",
+    "category": "Essential requirements",
+    "description": "Potable drinking water must be available on campus.",
+    "metric_key": "essential.potable_water",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-WASTE",
+    "name": "Waste management and green campus",
+    "category": "Essential requirements",
+    "description": "Waste management and green-campus practices must be in place.",
+    "metric_key": "essential.waste_management",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-INSURANCE",
+    "name": "Student safety insurance and group accident policy",
+    "category": "Essential requirements",
+    "description": "Student safety insurance and a group accident policy for employees are mandatory.",
+    "metric_key": "essential.student_insurance",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-SEL",
+    "name": "Social and emotional learning mechanism",
+    "category": "Essential requirements",
+    "description": "A social and emotional learning mechanism must be in place.",
+    "metric_key": "essential.sel_mechanism",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "LOW",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-INTERNSHIP",
+    "name": "Compulsory internship for final-year students",
+    "category": "Essential requirements",
+    "description": "A compulsory internship with a published Internship Policy is required for final-year students.",
+    "metric_key": "essential.compulsory_internship",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-SWAYAM",
+    "name": "SWAYAM elective credits",
+    "category": "Essential requirements",
+    "description": "Up to 40% of courses may be delivered through SWAYAM/MOOCs; the institution must offer the electives.",
+    "metric_key": "essential.swayam_electives",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "LOW",
+    "apH_clause": "APH 6.11",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-SKILLING",
+    "name": "Skilling credits",
+    "category": "Essential requirements",
+    "description": "Skilling credits must be offered to students.",
+    "metric_key": "essential.skilling_credits",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "LOW",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-IIC-CELL",
+    "name": "Industry-institution cell",
+    "category": "Essential requirements",
+    "description": "An industry-institution cell must be established.",
+    "metric_key": "essential.industry_institution_cell",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-LANGUAGE-LAB",
+    "name": "Language laboratory",
+    "category": "Essential requirements",
+    "description": "A language laboratory must be available.",
+    "metric_key": "essential.language_lab",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 7.3",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ESS-IQAC",
+    "name": "Internal Quality Assurance Cell",
+    "category": "Essential requirements",
+    "description": "An IQAC must be constituted with the prescribed affidavit.",
+    "metric_key": "essential.iqac",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.53",
+    "penalty_codes": [
+      "7.4e"
+    ]
+  },
+  {
+    "code": "APH-ADM-EXCESS",
+    "name": "No admission beyond the approved intake",
+    "category": "Admissions",
+    "description": "Admissions must not exceed approved intake plus permitted OCI/NRI and lateral-entry seats.",
+    "metric_key": "admissions.max_excess",
+    "operator": "=",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 7.4g",
+    "unit": "seats",
+    "explanation_template": "Admissions exceeded the permitted seats by {observed} {unit}; {clause} imposes a fine of five times the total course fee per excess admission.",
+    "penalty_codes": [
+      "7.4g"
+    ]
+  },
+  {
+    "code": "APH-ADM-ENROLMENT-UPLOAD",
+    "name": "Student enrolment uploaded before 30 November",
+    "category": "Admissions",
+    "description": "Student enrolment data must be uploaded on the portal before 30 November.",
+    "metric_key": "essential.enrolment_uploaded",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 2.25n",
+    "penalty_codes": [
+      "7.4m"
+    ]
+  },
+  {
+    "code": "APH-ADM-LOW-ENROLMENT",
+    "name": "Admissions above 30% of approved intake",
+    "category": "Admissions",
+    "description": "Admissions below 30% of the approved intake for the preceding five years trigger the reduced-enrolment rule.",
+    "metric_key": "admissions.lowest_admission_pct_5y",
+    "operator": ">=",
+    "threshold": 30,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.12a",
+    "unit": "%",
+    "penalty_codes": [
+      "7.4g"
+    ]
+  },
+  {
+    "code": "APH-DOC-AFFIDAVIT2",
+    "name": "Affidavit 2 uploaded",
+    "category": "Documents",
+    "description": "The portal-generated common Affidavit 2 with its 33 declarations must be uploaded with every application.",
+    "metric_key": "document.affidavit2.present",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 8",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-DOC-AFFIDAVIT2-DSC",
+    "name": "Affidavit 2 digitally signed",
+    "category": "Documents",
+    "description": "Every upload must carry a digital signature certificate (DSC).",
+    "metric_key": "document.affidavit2.dsc_signed",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 8",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-DOC-OCCUPANCY",
+    "name": "Valid Occupancy/Completion Certificate or Form D",
+    "category": "Documents",
+    "description": "A valid Occupancy/Completion Certificate, Building Licence or Form D must be uploaded. A partial certificate is accepted for two academic years only.",
+    "metric_key": "document.occupancy.valid",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 6.17g",
+    "explanation_template": "Occupancy/Completion Certificate: {result}. {clause} requires a valid certificate (Annexure-2.1(iii) cross-refers to it).",
+    "penalty_codes": [
+      "7.4j"
+    ]
+  },
+  {
+    "code": "APH-DOC-FIRE",
+    "name": "Valid Fire Safety Certificate",
+    "category": "Documents",
+    "description": "A valid Fire Safety Certificate must be uploaded with the application.",
+    "metric_key": "document.fire_safety.valid",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "CRITICAL",
+    "apH_clause": "APH Annexure-2.1(iv)",
+    "penalty_codes": [
+      "7.4j"
+    ]
+  },
+  {
+    "code": "APH-DOC-STRUCTURAL",
+    "name": "Structural Stability Certificate for buildings older than 30 years",
+    "category": "Documents",
+    "description": "A Structural Stability Certificate is required for buildings older than 30 years and is valid for five years.",
+    "metric_key": "document.structural.ok",
+    "operator": "EXISTS",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.17h",
+    "penalty_codes": [
+      "7.4j"
+    ]
+  },
+  {
+    "code": "APH-DOC-ANNEXURE21",
+    "name": "All mandatory Annexure-2.1 documents uploaded",
+    "category": "Documents",
+    "description": "Every mandatory document for the application type must be uploaded before the EoA is downloaded.",
+    "metric_key": "document.annexure21.missing_count",
+    "operator": "=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-2.1",
+    "unit": "count",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-DOC-DSC",
+    "name": "Every uploaded document digitally signed",
+    "category": "Documents",
+    "description": "All uploads must be digitally signed.",
+    "metric_key": "document.unsigned_count",
+    "operator": "=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH 8",
+    "unit": "count",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "APH-DOC-EXPIRED",
+    "name": "No expired certificate uploaded",
+    "category": "Documents",
+    "description": "Certificates must be valid on the date of evaluation; an expired certificate is treated as not uploaded.",
+    "metric_key": "document.expired_count",
+    "operator": "=",
+    "threshold": 0,
+    "severity": "HIGH",
+    "apH_clause": "APH Annexure-2.1",
+    "unit": "count",
+    "penalty_codes": [
+      "7.4a"
+    ]
+  },
+  {
+    "code": "DEMO-LAND-AREA",
+    "name": "Minimum campus land area",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for the minimum land area available to the institution. Not an AICTE norm.",
+    "metric_key": "infrastructure.land_area",
+    "operator": ">=",
+    "threshold": 8000,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-BUILT-UP-AREA",
+    "name": "Minimum built-up area",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for the constructed area for teaching and support spaces. Not an AICTE norm.",
+    "metric_key": "infrastructure.built_up_area",
+    "operator": ">=",
+    "threshold": 5000,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-LABORATORIES",
+    "name": "Laboratory count",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for the number of laboratories. Not an AICTE norm.",
+    "metric_key": "infrastructure.labs",
+    "operator": ">=",
+    "threshold": 10,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-LIBRARY-VOLUMES",
+    "name": "Library volumes (demo)",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for the library collection. Not an AICTE norm; APH-LIB-VOLUMES carries the handbook rule.",
+    "metric_key": "infrastructure.library",
+    "operator": ">=",
+    "threshold": 10000,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-FACULTY-TOTAL",
+    "name": "Total faculty strength (demo)",
+    "category": "Faculty",
+    "description": "Project-only demo threshold for total faculty strength. Not an AICTE norm; APH-FAC-ESTABLISHMENT carries the handbook rule.",
+    "metric_key": "faculty.total",
+    "operator": ">=",
+    "threshold": 60,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-STUDENT-FACULTY-RATIO",
+    "name": "Student-faculty ratio (demo)",
+    "category": "Faculty",
+    "description": "Project-only demo threshold for students per faculty member. Not an AICTE norm.",
+    "metric_key": "faculty.student_faculty_ratio",
+    "operator": "<=",
+    "threshold": 20,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-PHD-FACULTY-RATIO",
+    "name": "Faculty with a PhD (demo)",
+    "category": "Faculty",
+    "description": "Project-only demo threshold for the share of faculty holding a PhD. Not an AICTE norm.",
+    "metric_key": "faculty.phd_faculty_ratio",
+    "operator": ">=",
+    "threshold": 30,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-FINANCIAL-BALANCE",
+    "name": "Non-negative declared balance",
+    "category": "Finance",
+    "description": "Project-only demo requirement that the declared annual balance is not negative. Not an AICTE norm.",
+    "metric_key": "finance.balance",
+    "operator": ">=",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-QUALIFIED-FACULTY",
+    "name": "Qualified faculty share (demo)",
+    "category": "Faculty",
+    "description": "Project-only demo threshold for the share of professorial-rank faculty. Not an AICTE norm.",
+    "metric_key": "derived.qualified_faculty_pct",
+    "operator": ">=",
+    "threshold": 90,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-BUILT-UP-PER-STUDENT",
+    "name": "Built-up area per student (demo)",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for constructed area per approved seat. Not an AICTE norm.",
+    "metric_key": "derived.built_up_area_per_student",
+    "operator": ">=",
+    "threshold": 1.5,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-LAB-PER-PROGRAM",
+    "name": "Laboratories per programme (demo)",
+    "category": "Infrastructure",
+    "description": "Project-only demo threshold for average laboratories per requested programme. Not an AICTE norm.",
+    "metric_key": "derived.lab_count_per_program",
+    "operator": ">=",
+    "threshold": 1,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-NAAC-DECLARED",
+    "name": "NAAC grade declared (demo)",
+    "category": "Accreditation",
+    "description": "Project-only demo expectation that a valid NAAC grade is declared. Not an AICTE norm.",
+    "metric_key": "derived.naac_grade_present",
+    "operator": ">=",
+    "threshold": 1,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-MANDATORY-DISCLOSURE",
+    "name": "Mandatory disclosure URL provided (demo)",
+    "category": "Accreditation",
+    "description": "Project-only demo expectation that a mandatory disclosure URL is provided. Not an AICTE norm; APH-ESS-MANDATORY-DISCLOSURE carries the handbook rule.",
+    "metric_key": "derived.mandatory_disclosure_published",
+    "operator": ">=",
+    "threshold": 1,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-DOCUMENTS-VALID",
+    "name": "Uploaded documents valid (demo)",
+    "category": "Documents",
+    "description": "Project-only demo rule that no uploaded document is rejected, flagged or expired. Not an AICTE norm.",
+    "metric_key": "derived.document_validity",
+    "operator": ">=",
+    "threshold": 1,
+    "severity": "HIGH",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  },
+  {
+    "code": "DEMO-FEE-BAND",
+    "name": "Total annual fee band",
+    "category": "Finance",
+    "description": "Project-only demo band for tuition plus development plus other fees. Not an AICTE norm.",
+    "metric_key": "finance.total_annual_fee",
+    "operator": "BETWEEN",
+    "threshold": 20000,
+    "threshold_max": 200000,
+    "severity": "MEDIUM",
+    "apH_clause": "DEMO",
+    "illustrative": true,
+    "mandatory": false,
+    "needs_verification": true
+  }
+]

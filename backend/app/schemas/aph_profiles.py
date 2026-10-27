@@ -82,6 +82,8 @@ class InfrastructureProfile(AphModel):
     occupancy_certificate_valid_until: date | None = None
     fire_safety_valid_until: date | None = None
     structural_stability_valid_until: date | None = None
+    building_completion_year: int | None = Field(default=None, ge=1800, le=2100)
+    """Year the building was completed; drives the 30-year structural rule (APH 6.17h)."""
     barrier_free: bool | None = None
 
 
@@ -120,6 +122,8 @@ class EssentialRequirements(AphModel):
     anti_ragging_squad: bool | None = None
     cctv: bool | None = None
     internal_committee: bool | None = None
+    ic_annual_report_uploaded: bool | None = None
+    """Internal Committee annual report uploaded by 30 June (APH 6.48g)."""
     sc_st_committee: bool | None = None
     grievance_redressal: bool | None = None
     ombudsperson: bool | None = None
@@ -130,6 +134,8 @@ class EssentialRequirements(AphModel):
     food_safety: bool | None = None
     digital_payments: bool | None = None
     letters_displayed: bool | None = None
+    mandatory_disclosure_complete: bool | None = None
+    """Annexure-18 mandatory disclosure published in full (APH 6.53, Anx-18)."""
     mental_health_counselling: bool | None = None
     women_helpline_24x7: bool | None = None
     first_aid: bool | None = None
@@ -138,11 +144,14 @@ class EssentialRequirements(AphModel):
     student_insurance: bool | None = None
     sel_mechanism: bool | None = None
     compulsory_internship: bool | None = None
+    internship_policy: bool | None = None
     swayam_electives: bool | None = None
     skilling_credits: bool | None = None
     industry_institution_cell: bool | None = None
     language_lab: bool | None = None
     iqac: bool | None = None
+    enrolment_uploaded: bool | None = None
+    """Student enrolment uploaded before 30 November (APH 2.25n)."""
 
 
 INSTITUTION_PROFILE_MODELS: dict[str, type[AphModel]] = {

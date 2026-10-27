@@ -9,6 +9,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import ApplicationCategory, FeeKind, Severity
+from app.schemas.compliance import PenalActionSuggestionRead
 
 
 class FeeLineRead(BaseModel):
@@ -176,8 +177,16 @@ class DeficiencyReportItemRead(BaseModel):
     message: str
     apH_clause: str
     needs_verification: bool
+    mandatory: bool = True
+    illustrative: bool = False
+    """True for project-only demo thresholds, not AICTE norms."""
+    unit: str | None = None
     observed_value: float | None = None
     explanation: dict[str, Any] = Field(default_factory=dict)
+    penal_action_suggestions: list[PenalActionSuggestionRead] = Field(
+        default_factory=list
+    )
+    """Advisory APH 7.3 actions; a hearing and speaking order remain mandatory."""
 
 
 class DeficiencyReportRead(BaseModel):
@@ -193,6 +202,9 @@ class DeficiencyReportRead(BaseModel):
     passed_count: int
     failed_count: int
     not_assessed_count: int
+    mandatory_failed_count: int = 0
+    mandatory_missing_count: int = 0
+    illustrative_failed_count: int = 0
     score: float
     status: str
     include_not_assessed: bool

@@ -20,12 +20,14 @@ from app.models.compliance import (
     ComplianceRule,
     ComplianceSnapshot,
 )
+from app.models.document import Document
 from app.models.enums import (
     ApplicationCategory,
     ApplicationStatus,
     ApplicationTrack,
     ApplicationType,
     ComplianceHealth,
+    DocumentVerificationStatus,
     InstitutionClass,
     InstitutionRegion,
     Role,
@@ -33,6 +35,7 @@ from app.models.enums import (
     WorkflowStage,
 )
 from app.models.institution import Institution
+from app.models.required_document import RequiredDocument
 from app.models.user import User
 from app.services.compliance import (
     evaluate_application,
@@ -127,6 +130,9 @@ def _delete_monitored_data(db: Session, aicte_id: str) -> None:
     )
     if application_ids:
         db.execute(
+            delete(Document).where(Document.application_id.in_(application_ids))
+        )
+        db.execute(
             delete(ApplicationProgram).where(
                 ApplicationProgram.application_id.in_(application_ids)
             )
@@ -183,6 +189,32 @@ def monitored_institution(
                 lab_count=3,
             )
             for program in ("CSE", "ECE")
+        )
+        # Upload every mandatory Annexure-2 document so the baseline evaluation
+        # has no document deficiency. Without this the institution would be RED
+        # before the test changes any data, and the AMBER->RED flip below could
+        # not be observed.
+        required_documents = db.scalars(
+            select(RequiredDocument).where(
+                RequiredDocument.application_type == ApplicationType.NEW_INSTITUTION,
+                RequiredDocument.mandatory.is_(True),
+            )
+        ).all()
+        db.add_all(
+            Document(
+                application_id=application.id,
+                doc_type=requirement.doc_type,
+                doc_code=requirement.doc_code,
+                filename=f"{requirement.doc_code}.pdf",
+                content_type="application/pdf",
+                size_bytes=10,
+                storage_path=f"tests/{requirement.doc_code}.pdf",
+                uploaded_by=test_data.users["institution_admin_west"].id,
+                verification_status=DocumentVerificationStatus.PENDING,
+                signed_with_dsc=True,
+                version=1,
+            )
+            for requirement in required_documents
         )
         db.commit()
         context = {
@@ -249,12 +281,18 @@ def test_evaluate_application_persists_results_score_and_snapshot(
         )
         refreshed = _application(db, monitored_institution["application_id"])
         assert refreshed.compliance_score is not None
-    assert preview.status == "GREEN"
+    # Every assessed rule passes, so the weighted score is 100. Yet the fixture
+    # has no faculty roster, library or computing profile: mandatory evidence is
+    # missing, so the result is AMBER and not a Nil Deficiency. A Nil Deficiency
+    # requires every mandatory rule to be assessed and passing.
     assert preview.score == 100.0
+    assert preview.mandatory_missing_count > 0
+    assert preview.nil_deficiency is False
+    assert preview.status == "AMBER"
     assert snapshot is not None
     assert snapshot.trigger == "application_update"
     assert snapshot.score == Decimal("100.00")
-    assert snapshot.status == ComplianceHealth.GREEN
+    assert snapshot.status == ComplianceHealth.AMBER
 
 
 def test_red_flip_creates_alerts_for_regional_heads_and_admins(
@@ -295,9 +333,16 @@ def test_nightly_evaluation_records_snapshots_for_all_institutions(
 ) -> None:
     with SessionLocal() as db:
         results = run_nightly_evaluation()
-        assert any(
-            row["institution"] == TEST_AICTE_ID and row["status"] == "GREEN"
-            for row in results
+        rows = {row["institution"]: row for row in results}
+        assert TEST_AICTE_ID in rows
+        latest = db.scalar(
+            select(ComplianceSnapshot)
+            .where(
+                ComplianceSnapshot.institution_id
+                == monitored_institution["institution_id"]
+            )
+            .order_by(ComplianceSnapshot.evaluated_at.desc())
+            .limit(1)
         )
         snapshots = db.scalars(
             select(ComplianceSnapshot)
@@ -307,6 +352,9 @@ def test_nightly_evaluation_records_snapshots_for_all_institutions(
             )
             .order_by(ComplianceSnapshot.evaluated_at.desc())
         ).all()
+    assert latest is not None
+    # The nightly run reports the same status it persisted for the institution.
+    assert rows[TEST_AICTE_ID]["status"] == latest.status.value
     assert len(snapshots) >= 1
     assert any(snapshot.trigger == "nightly" for snapshot in snapshots)
 

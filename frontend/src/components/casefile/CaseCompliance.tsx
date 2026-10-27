@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Scale } from "lucide-react";
 
 import { Button, ScoreGauge, Skeleton, StatusPill, type ScoreBand } from "../ui";
 import { useWorkflowActions, type WorkflowPrefill } from "../workflow/WorkflowDialogHost";
@@ -40,6 +41,34 @@ function categoryForRule(rule: ComplianceRulePreview): WorkflowPrefill["category
 }
 
 function requirement(rule: ComplianceRulePreview): string {
+  if (rule.operator === "EXISTS") {
+    return "must be present";
+  }
+  if (rule.operator === "DATE_NOT_EXPIRED") {
+    return "must be valid on the evaluation date";
+  }
+  if (rule.operator === "BETWEEN") {
+    return `between ${rule.threshold.toLocaleString("en-IN")} and ${(
+      rule.threshold_max ?? rule.threshold
+    ).toLocaleString("en-IN")}${rule.unit ? ` ${rule.unit}` : ""}`;
+  }
+  if (rule.operator === "RATIO" || rule.operator === "SUM" || rule.operator === "COUNT") {
+    const comparison =
+      typeof rule.explanation?.comparison === "string"
+        ? rule.explanation.comparison
+        : ">=";
+    const phrases: Record<string, string> = {
+      "<": "below",
+      "<=": "at most",
+      "=": "equal to",
+      ">=": "at least",
+      ">": "above",
+      "!=": "different from",
+    };
+    return `${phrases[comparison] ?? comparison} ${rule.threshold.toLocaleString("en-IN")}${
+      rule.unit ? ` ${rule.unit}` : ""
+    }`;
+  }
   const phrases: Record<string, string> = {
     "<": "below",
     "<=": "at most",
@@ -57,6 +86,31 @@ function observed(rule: ComplianceRulePreview): string {
     return "—";
   }
   return `${rule.observed_value.toLocaleString("en-IN")}${rule.unit ? ` ${rule.unit}` : ""}`;
+}
+
+function PenalActions({ rule }: { rule: ComplianceRulePreview }) {
+  if (rule.penal_action_suggestions.length === 0) {
+    return null;
+  }
+  return (
+    <div className="mt-2 rounded-input border border-line bg-paper p-2.5">
+      <p className="flex items-center gap-1.5 text-12 font-medium text-ink">
+        <Scale aria-hidden="true" className="size-3.5 text-ink-500" />
+        Suggested action under APH 7.3
+      </p>
+      <ul className="mt-1 space-y-1 text-12 leading-5 text-ink-700">
+        {rule.penal_action_suggestions.map((suggestion) => (
+          <li key={`${rule.code}-${suggestion.violation_code}`}>
+            {suggestion.action_label} · {suggestion.violation_code} ({suggestion.apH_clause})
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1 text-12 text-ink-500">
+        A show-cause notice, hearing and speaking order are mandatory before any action is
+        imposed.
+      </p>
+    </div>
+  );
 }
 
 export default function CaseCompliance({
@@ -120,6 +174,7 @@ export default function CaseCompliance({
     .slice()
     .sort(
       (a, b) =>
+        Number(b.mandatory) - Number(a.mandatory) ||
         SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] ||
         a.category.localeCompare(b.category),
     )
@@ -132,8 +187,8 @@ export default function CaseCompliance({
         <div className="min-w-0">
           <h2 className="font-serif text-20 font-semibold text-ink">Compliance</h2>
           <p className="mt-1 text-13 text-ink-500">
-            Configured AICTE norms evaluated against the submitted case data.
-            Thresholds are illustrative and editable by administrators.
+            Each rule cites the APH clause it implements. Thresholds are editable
+            configuration; illustrative rows are project-only demo values.
           </p>
         </div>
         <ScoreGauge
@@ -141,6 +196,20 @@ export default function CaseCompliance({
           band={band}
           className="shrink-0"
         />
+      </div>
+
+      <div
+        className={`mt-3 rounded-input border px-3 py-2 text-12 leading-5 ${
+          preview.nil_deficiency
+            ? "border-ok bg-ok-soft text-ok-strong"
+            : "border-watch bg-watch-soft text-watch-strong"
+        }`}
+      >
+        <p className="font-semibold">{preview.banner}</p>
+        <p className="mt-0.5">
+          {preview.mandatory_failed_count} mandatory failure(s) ·{" "}
+          {preview.mandatory_missing_count} mandatory unassessed
+        </p>
       </div>
 
       <p className="mt-3 flex flex-wrap items-center gap-2 text-12 text-ink-500">
@@ -156,15 +225,16 @@ export default function CaseCompliance({
 
       {failed.length === 0 && notAssessed.length === 0 ? (
         <p className="mt-4 rounded-input border border-line bg-paper p-4 text-13 text-ink-700">
-          Every configured norm is currently met.
+          Every mandatory requirement is assessed and met.
         </p>
       ) : ordered.length === 0 ? null : (
         <div className="mt-4 overflow-x-auto rounded-panel border border-line">
-          <table className="w-full min-w-[720px] text-left text-13">
+          <table className="w-full min-w-[840px] text-left text-13">
             <caption className="sr-only">Rule-by-rule compliance results</caption>
             <thead>
               <tr className="border-b border-line bg-paper">
                 <th scope="col" className="px-4 py-2.5 font-semibold text-ink-700">Rule</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold text-ink-700">Clause</th>
                 <th scope="col" className="px-4 py-2.5 font-semibold text-ink-700">Required</th>
                 <th scope="col" className="px-4 py-2.5 font-semibold text-ink-700">Observed</th>
                 <th scope="col" className="px-4 py-2.5 font-semibold text-ink-700">Severity</th>
@@ -180,7 +250,26 @@ export default function CaseCompliance({
                   <td className="px-4 py-3 align-top">
                     <p className="font-medium text-ink">{rule.name}</p>
                     <p className="mt-0.5 text-12 leading-5 text-ink-500">{rule.message}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {!rule.mandatory ? (
+                        <span className="rounded-pill bg-neutral-soft px-2 py-0.5 text-11 text-ink-700">
+                          Advisory
+                        </span>
+                      ) : null}
+                      {rule.illustrative ? (
+                        <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                          Illustrative, not an AICTE norm
+                        </span>
+                      ) : null}
+                      {rule.needs_verification ? (
+                        <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                          Needs verification
+                        </span>
+                      ) : null}
+                    </div>
+                    {rule.status === "FAIL" ? <PenalActions rule={rule} /> : null}
                   </td>
+                  <td className="px-4 py-3 align-top text-12 text-ink-700">{rule.apH_clause}</td>
                   <td className="px-4 py-3 align-top text-ink-700">{requirement(rule)}</td>
                   <td className="px-4 py-3 align-top tabular-nums text-ink-700">{observed(rule)}</td>
                   <td className="px-4 py-3 align-top">
@@ -230,6 +319,12 @@ export default function CaseCompliance({
           </Button>
         </div>
       ) : null}
+
+      <p className="mt-4 border-t border-line pt-3 text-11 leading-5 text-ink-500">
+        A Nil Deficiency result requires every mandatory rule to pass or be assessed. Rows marked
+        illustrative are project-only demo thresholds, not AICTE norms. Verify every figure against
+        the current AICTE Approval Process Handbook before relying on it.
+      </p>
     </section>
   );
 }

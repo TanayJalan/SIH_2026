@@ -27,16 +27,22 @@ from app.models import (
     AlertTrigger,
     Application,
     ApplicationCategory,
+    ApplicationProgram,
     ApplicationStatus,
     ApplicationTrack,
     ApplicationTypeRoute,
+    ApprovedIntakeLedger,
     CalendarEventKey,
     ComplianceConfig,
     ComplianceRule,
     ComplianceSnapshot,
     DeadlineRule,
     DecisionType,
+    Document,
+    DocumentVerificationStatus,
     ExpertPool,
+    Faculty,
+    FacultyCadre,
     FeeSchedule,
     FeeUnit,
     Inspection,
@@ -46,6 +52,8 @@ from app.models import (
     InstitutionRegion,
     InstitutionStatus,
     LandOwnership,
+    Programme,
+    ProgrammeStatus,
     PublicNotice,
     RequiredDocument,
     Role,
@@ -379,210 +387,20 @@ ALERT_RULES = (
 )
 
 
-# Deliberately illustrative thresholds for the local demo. They are database
-# configuration, not official AICTE norms, and should be reviewed by an
-# administrator against the current Approval Process Handbook.
-COMPLIANCE_RULES = (
-    # code, name, category, description, metric_key, operator, threshold,
-    # threshold_max, severity, applies_to
-    (
-        "DEMO-LAND-AREA",
-        "Minimum campus land area",
-        "Infrastructure",
-        "Illustrative minimum land area available to the institution.",
-        "infrastructure.land_area",
-        ">=",
-        Decimal("8000"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-BUILT-UP-AREA",
-        "Minimum built-up area",
-        "Infrastructure",
-        "Illustrative minimum constructed area for teaching and support spaces.",
-        "infrastructure.built_up_area",
-        ">=",
-        Decimal("5000"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-LABORATORIES",
-        "Laboratory count",
-        "Infrastructure",
-        "Illustrative minimum number of laboratories for the demo flow.",
-        "infrastructure.labs",
-        ">=",
-        Decimal("10"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-LIBRARY-VOLUMES",
-        "Library volumes",
-        "Infrastructure",
-        "Illustrative minimum library collection for the demo flow.",
-        "infrastructure.library",
-        ">=",
-        Decimal("10000"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-FACULTY-TOTAL",
-        "Total faculty strength",
-        "Faculty",
-        "Illustrative minimum total faculty strength for the demo flow.",
-        "faculty.total",
-        ">=",
-        Decimal("60"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-STUDENT-FACULTY-RATIO",
-        "Student-faculty ratio",
-        "Faculty",
-        "Illustrative maximum students per faculty member.",
-        "faculty.student_faculty_ratio",
-        "<=",
-        Decimal("20"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-PHD-FACULTY-RATIO",
-        "Faculty with a PhD",
-        "Faculty",
-        "Illustrative minimum share of faculty holding a PhD.",
-        "faculty.phd_faculty_ratio",
-        ">=",
-        Decimal("30"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-FINANCIAL-BALANCE",
-        "Non-negative declared balance",
-        "Finance",
-        "Illustrative requirement that the declared annual balance is not negative.",
-        "finance.balance",
-        ">=",
-        Decimal("0"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-QUALIFIED-FACULTY",
-        "Qualified faculty share",
-        "Faculty",
-        "Illustrative minimum share of permanent-rank (professorial) faculty.",
-        "derived.qualified_faculty_pct",
-        ">=",
-        Decimal("90"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-BUILT-UP-PER-STUDENT",
-        "Built-up area per student",
-        "Infrastructure",
-        "Illustrative minimum constructed area per approved intake seat.",
-        "derived.built_up_area_per_student",
-        ">=",
-        Decimal("1.5"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-LAB-PER-PROGRAM",
-        "Laboratories per programme",
-        "Infrastructure",
-        "Illustrative minimum average laboratories per requested programme.",
-        "derived.lab_count_per_program",
-        ">=",
-        Decimal("1"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-NAAC-DECLARED",
-        "NAAC grade declared",
-        "Accreditation",
-        "Illustrative expectation that a valid NAAC grade is declared.",
-        "derived.naac_grade_present",
-        ">=",
-        Decimal("1"),
-        None,
-        Severity.MEDIUM,
-        "ALL",
-    ),
-    (
-        "DEMO-MANDATORY-DISCLOSURE",
-        "Mandatory disclosure published",
-        "Accreditation",
-        "Illustrative requirement that a mandatory disclosure URL is provided.",
-        "derived.mandatory_disclosure_published",
-        ">=",
-        Decimal("1"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-DOCUMENTS-VALID",
-        "Uploaded documents valid",
-        "Documents",
-        "Illustrative rule that no uploaded document is rejected, flagged or expired.",
-        "derived.document_validity",
-        ">=",
-        Decimal("1"),
-        None,
-        Severity.HIGH,
-        "ALL",
-    ),
-    (
-        "DEMO-FEE-BAND",
-        "Total annual fee band",
-        "Finance",
-        (
-            "Illustrative fee band: total annual fee (tuition + development + other) "
-            "must fall between the lower and upper cap."
-        ),
-        "finance.total_annual_fee",
-        "BETWEEN",
-        Decimal("20000"),
-        Decimal("200000"),
-        Severity.MEDIUM,
-        "ALL",
-    ),
-)
+# The compliance rule library and calculator norms are data files under
+# ``seeds/aph`` so an administrator can edit every norm without a code change.
+# Real rules carry an APH clause; the DEMO-* rows are project-only thresholds
+# and are marked ``illustrative`` so the UI can badge them.
 
-COMPLIANCE_DEFAULT_CONFIG: dict[str, dict[str, float]] = {
-    "severity_weights": {
-        "CRITICAL": 25.0,
-        "HIGH": 15.0,
-        "MEDIUM": 8.0,
-        "LOW": 4.0,
-    },
-    "rag_breakpoints": {
-        "red_below": 70.0,
-        "amber_below": 85.0,
-    },
-}
-"""Illustrative scoring weights and status bands; editable from the admin screen."""
+_seed_compliance_rules_cache: list[dict[str, Any]] | None = None
+
+
+def _compliance_rule_rows() -> list[dict[str, Any]]:
+    """Return the APH rule library from JSON (loaded once per process)."""
+    global _seed_compliance_rules_cache
+    if _seed_compliance_rules_cache is None:
+        _seed_compliance_rules_cache = _load_seed("compliance_rules.json")
+    return _seed_compliance_rules_cache
 
 
 def _get_or_create_institution(
@@ -616,6 +434,36 @@ def _get_or_create_institution(
 ) -> tuple[Institution, bool]:
     institution = db.scalar(select(Institution).where(Institution.aicte_id == aicte_id))
     if institution is not None:
+        # Backfill profile keys added by later APH releases without overwriting
+        # anything the institution has already answered. This keeps an existing
+        # demo database usable after a seed change.
+        changed = False
+        for field_name, values in (
+            ("accreditation", accreditation),
+            ("infra_profile", infra_profile),
+            ("library_profile", library_profile),
+            ("computing_profile", computing_profile),
+            ("essential_requirements", essential_requirements),
+            ("campus", campus),
+        ):
+            if not values:
+                continue
+            current = dict(getattr(institution, field_name) or {})
+            missing = {
+                key: value for key, value in values.items() if key not in current
+            }
+            if missing:
+                setattr(institution, field_name, {**current, **missing})
+                changed = True
+        if changed:
+            db.flush()
+            audit.log(
+                None,
+                "seed.institution.backfill_profiles",
+                "Institution",
+                institution.id,
+                after={"aicte_id": aicte_id},
+            )
         return institution, False
 
     institution = Institution(
@@ -852,6 +700,266 @@ def _get_or_create_application(
         },
     )
     return application, True
+
+
+DEMO_FACULTY_APH_CLAUSE = "APH 7.1"
+
+
+def _ensure_programmes(
+    db: Session,
+    audit: AuditService,
+    *,
+    institution: Institution,
+    programmes: list[dict[str, Any]],
+) -> tuple[list[Programme], int]:
+    """Create the approved programmes used by the compliance calculators."""
+    created = 0
+    rows: list[Programme] = []
+    for spec in programmes:
+        programme = db.scalar(
+            select(Programme).where(
+                Programme.institution_id == institution.id,
+                Programme.course_name == spec["course_name"],
+                Programme.level == spec["level"],
+            )
+        )
+        if programme is None:
+            programme = Programme(
+                institution_id=institution.id,
+                programme_family=spec["programme_family"],
+                level=spec["level"],
+                course_name=spec["course_name"],
+                is_core=bool(spec.get("is_core", True)),
+                duration_years=Decimal(str(spec["duration_years"])),
+                approved_intake=int(spec["approved_intake"]),
+                divisions=int(spec.get("divisions", 1)),
+                status=ProgrammeStatus.ACTIVE,
+                apH_clause=spec.get("apH_clause", "APH 6.1"),
+                needs_verification=False,
+            )
+            db.add(programme)
+            db.flush()
+            audit.log(
+                None,
+                "seed.programme.create",
+                "Programme",
+                programme.id,
+                after={
+                    "institution_id": str(institution.id),
+                    "course_name": programme.course_name,
+                    "level": programme.level,
+                    "approved_intake": programme.approved_intake,
+                },
+            )
+            created += 1
+        rows.append(programme)
+    return rows, created
+
+
+def _ensure_faculty(
+    db: Session,
+    audit: AuditService,
+    *,
+    institution: Institution,
+    members: list[dict[str, Any]],
+) -> int:
+    """Create the demo faculty roster, idempotent on the portal faculty ID."""
+    created = 0
+    for member in members:
+        existing = db.scalar(
+            select(Faculty).where(
+                Faculty.institution_id == institution.id,
+                Faculty.portal_faculty_id == member["portal_faculty_id"],
+            )
+        )
+        if existing is not None:
+            continue
+        faculty = Faculty(
+            institution_id=institution.id,
+            programme_id=member.get("programme_id"),
+            name=member["name"],
+            portal_faculty_id=member["portal_faculty_id"],
+            cadre=FacultyCadre(member["cadre"]),
+            qualification=member.get("qualification"),
+            has_phd=bool(member.get("has_phd", False)),
+            regular=bool(member.get("regular", True)),
+            joined_on=member.get("joined_on", date(2019, 7, 1)),
+            portal_updated_on=member.get("portal_updated_on", date(2019, 7, 1)),
+            biometric=bool(member.get("biometric", True)),
+            salary_via_ecs=bool(member.get("salary_via_ecs", True)),
+            apH_clause=DEMO_FACULTY_APH_CLAUSE,
+            needs_verification=False,
+        )
+        db.add(faculty)
+        db.flush()
+        audit.log(
+            None,
+            "seed.faculty.create",
+            "Faculty",
+            faculty.id,
+            after={
+                "institution_id": str(institution.id),
+                "name": faculty.name,
+                "cadre": faculty.cadre.value,
+                "has_phd": faculty.has_phd,
+            },
+        )
+        created += 1
+    if created:
+        db.flush()
+    return created
+
+
+def _ensure_intake_ledger(
+    db: Session,
+    audit: AuditService,
+    *,
+    programme: Programme,
+    rows: list[dict[str, Any]],
+) -> int:
+    """Create the per-year approved/admitted seat history for one programme."""
+    created = 0
+    for row in rows:
+        existing = db.scalar(
+            select(ApprovedIntakeLedger).where(
+                ApprovedIntakeLedger.programme_id == programme.id,
+                ApprovedIntakeLedger.academic_year == row["academic_year"],
+            )
+        )
+        if existing is not None:
+            continue
+        ledger = ApprovedIntakeLedger(
+            programme_id=programme.id,
+            academic_year=row["academic_year"],
+            approved_intake=int(row["approved_intake"]),
+            admitted_total=int(row["admitted_total"]),
+            apH_clause="APH 2.25b",
+            needs_verification=False,
+        )
+        db.add(ledger)
+        db.flush()
+        audit.log(
+            None,
+            "seed.intake_ledger.create",
+            "ApprovedIntakeLedger",
+            ledger.id,
+            after={
+                "programme_id": str(programme.id),
+                "academic_year": ledger.academic_year,
+                "approved_intake": ledger.approved_intake,
+                "admitted_total": ledger.admitted_total,
+            },
+        )
+        created += 1
+    if created:
+        db.flush()
+    return created
+
+
+def _ensure_application_programmes(
+    db: Session,
+    audit: AuditService,
+    *,
+    application: Application,
+    programmes: list[dict[str, Any]],
+) -> int:
+    """Create the programme rows requested by one application."""
+    created = 0
+    for spec in programmes:
+        existing = db.scalar(
+            select(ApplicationProgram).where(
+                ApplicationProgram.application_id == application.id,
+                ApplicationProgram.program_name == spec["program_name"],
+                ApplicationProgram.level == spec["level"],
+            )
+        )
+        if existing is not None:
+            continue
+        row = ApplicationProgram(
+            application_id=application.id,
+            program_name=spec["program_name"],
+            level=spec["level"],
+            intake=int(spec["intake"]),
+            faculty_count=int(spec.get("faculty_count", 0)),
+            lab_count=int(spec.get("lab_count", 0)),
+        )
+        db.add(row)
+        db.flush()
+        audit.log(
+            None,
+            "seed.application_program.create",
+            "ApplicationProgram",
+            row.id,
+            after={
+                "application_id": str(application.id),
+                "program_name": row.program_name,
+                "level": row.level,
+                "intake": row.intake,
+            },
+        )
+        created += 1
+    if created:
+        db.flush()
+    return created
+
+
+def _ensure_documents(
+    db: Session,
+    audit: AuditService,
+    *,
+    application: Application,
+    documents: list[dict[str, Any]],
+    uploaded_by: User,
+) -> int:
+    """Create demo uploads so the document rules have something to assess."""
+    created = 0
+    for spec in documents:
+        existing = db.scalar(
+            select(Document).where(
+                Document.application_id == application.id,
+                Document.doc_type == spec["doc_type"],
+                Document.version == 1,
+            )
+        )
+        if existing is not None:
+            continue
+        document = Document(
+            application_id=application.id,
+            doc_type=spec["doc_type"],
+            doc_code=spec.get("doc_code", spec["doc_type"]),
+            signed_with_dsc=bool(spec.get("signed_with_dsc", True)),
+            valid_until=spec.get("valid_until"),
+            affidavit_no=spec.get("affidavit_no"),
+            filename=spec.get("filename", f"{spec['doc_type'].lower()}.pdf"),
+            content_type="application/pdf",
+            size_bytes=int(spec.get("size_bytes", 120_000)),
+            storage_path=f"demo/{application.id}/{spec['doc_type'].lower()}.pdf",
+            uploaded_by=uploaded_by.id,
+            verification_status=DocumentVerificationStatus(
+                spec.get("verification_status", "VERIFIED")
+            ),
+            version=1,
+        )
+        db.add(document)
+        db.flush()
+        audit.log(
+            None,
+            "seed.document.create",
+            "Document",
+            document.id,
+            after={
+                "application_id": str(application.id),
+                "doc_type": document.doc_type,
+                "doc_code": document.doc_code,
+                "valid_until": document.valid_until.isoformat()
+                if document.valid_until
+                else None,
+            },
+        )
+        created += 1
+    if created:
+        db.flush()
+    return created
 
 
 def _get_or_create_inspection(
@@ -1397,36 +1505,47 @@ def _ensure_alert_rules(db: Session, audit: AuditService) -> int:
 
 
 def _ensure_compliance_rules(db: Session, audit: AuditService) -> int:
-    """Create illustrative compliance rules without overwriting edits."""
+    """Create the APH compliance rule library without overwriting edits.
+
+    Real rules carry an APH clause and default to ``mandatory``. The ``DEMO-*``
+    rows are project-only thresholds: they are seeded with
+    ``illustrative=True, mandatory=False`` so they can never turn a clean
+    institution into a deficiency.
+    """
     created = 0
-    for (
-        code,
-        name,
-        category,
-        description,
-        metric_key,
-        operator,
-        threshold,
-        threshold_max,
-        severity,
-        applies_to,
-    ) in COMPLIANCE_RULES:
+    for row in _compliance_rule_rows():
+        code = str(row["code"])
         existing = db.scalar(select(ComplianceRule).where(ComplianceRule.code == code))
         if existing is not None:
             continue
         rule = ComplianceRule(
             code=code,
-            name=name,
-            category=category,
-            description=description,
-            metric_key=metric_key,
-            operator=operator,
-            threshold=threshold,
-            threshold_max=threshold_max,
-            severity=severity,
-            applies_to=applies_to,
-            apH_clause="DEMO",
-            needs_verification=True,
+            name=str(row["name"]),
+            category=str(row["category"]),
+            description=str(row["description"]),
+            metric_key=str(row["metric_key"]),
+            operator=str(row["operator"]),
+            threshold=Decimal(str(row["threshold"])),
+            threshold_max=(
+                Decimal(str(row["threshold_max"]))
+                if row.get("threshold_max") is not None
+                else None
+            ),
+            severity=Severity(str(row["severity"])),
+            applies_to=str(row.get("applies_to", "ALL")),
+            applies_to_family=row.get("applies_to_family"),
+            applies_to_level=row.get("applies_to_level"),
+            apH_clause=str(row.get("apH_clause", "DEMO")),
+            needs_verification=bool(row.get("needs_verification", False)),
+            mandatory=bool(row.get("mandatory", True)),
+            illustrative=bool(row.get("illustrative", False)),
+            weight=(
+                Decimal(str(row["weight"])) if row.get("weight") is not None else None
+            ),
+            unit=row.get("unit"),
+            explanation_template=row.get("explanation_template"),
+            metric_params=dict(row.get("metric_params") or {}),
+            penalty_codes=list(row.get("penalty_codes") or []),
             is_active=True,
         )
         db.add(rule)
@@ -1438,12 +1557,13 @@ def _ensure_compliance_rules(db: Session, audit: AuditService) -> int:
             rule.id,
             after={
                 "code": code,
-                "metric_key": metric_key,
-                "operator": operator,
-                "threshold": str(threshold),
-                "threshold_max": str(threshold_max) if threshold_max else None,
-                "severity": severity.value,
-                "applies_to": applies_to,
+                "metric_key": rule.metric_key,
+                "operator": rule.operator,
+                "threshold": str(rule.threshold),
+                "severity": rule.severity.value,
+                "apH_clause": rule.apH_clause,
+                "mandatory": rule.mandatory,
+                "illustrative": rule.illustrative,
             },
         )
         created += 1
@@ -1451,9 +1571,10 @@ def _ensure_compliance_rules(db: Session, audit: AuditService) -> int:
 
 
 def _ensure_compliance_config(db: Session, audit: AuditService) -> int:
-    """Create the default scoring/rag configuration rows."""
+    """Create the editable scoring and calculator norms from JSON."""
     created = 0
-    for key, value in COMPLIANCE_DEFAULT_CONFIG.items():
+    config_rows: dict[str, Any] = _load_seed("compliance_config.json")
+    for key, value in config_rows.items():
         existing = db.scalar(select(ComplianceConfig).where(ComplianceConfig.key == key))
         if existing is not None:
             continue
@@ -1896,6 +2017,11 @@ def seed() -> None:
         "institutions": 0,
         "users": 0,
         "applications": 0,
+        "application_programs": 0,
+        "programmes": 0,
+        "faculty": 0,
+        "intake_ledger": 0,
+        "documents": 0,
         "inspections": 0,
         "application_type_routes": 0,
         "fee_schedules": 0,
@@ -1943,6 +2069,10 @@ def seed() -> None:
                 "land_area_sqm": 12000.0,
                 "built_up_sqm": 8000.0,
                 "instructional_area_sqm": 4800.0,
+                "administrative_area_sqm": 820.0,
+                "amenities_area_sqm": 540.0,
+                "circulation_area_sqm": 1450.0,
+                "building_completion_year": 2001,
                 "classrooms": 24,
                 "tutorial_rooms": 8,
                 "labs": 12,
@@ -1976,6 +2106,7 @@ def seed() -> None:
                 "anti_ragging_squad": True,
                 "cctv": True,
                 "internal_committee": True,
+                "ic_annual_report_uploaded": False,
                 "sc_st_committee": True,
                 "grievance_redressal": True,
                 "ombudsperson": True,
@@ -1986,6 +2117,7 @@ def seed() -> None:
                 "food_safety": True,
                 "digital_payments": True,
                 "letters_displayed": True,
+                "mandatory_disclosure_complete": False,
                 "mental_health_counselling": True,
                 "women_helpline_24x7": True,
                 "first_aid": True,
@@ -1994,11 +2126,13 @@ def seed() -> None:
                 "student_insurance": True,
                 "sel_mechanism": True,
                 "compulsory_internship": True,
+                "internship_policy": False,
                 "swayam_electives": True,
                 "skilling_credits": True,
                 "industry_institution_cell": True,
                 "language_lab": True,
                 "iqac": True,
+                "enrolment_uploaded": False,
             },
             campus={
                 "plots": [
@@ -2047,6 +2181,10 @@ def seed() -> None:
                 "land_area_sqm": 9000.0,
                 "built_up_sqm": 5200.0,
                 "instructional_area_sqm": 3100.0,
+                "administrative_area_sqm": 800.0,
+                "amenities_area_sqm": 600.0,
+                "circulation_area_sqm": 900.0,
+                "building_completion_year": 2012,
                 "classrooms": 16,
                 "tutorial_rooms": 6,
                 "labs": 6,
@@ -2100,6 +2238,10 @@ def seed() -> None:
                 "industry_institution_cell": True,
                 "language_lab": True,
                 "iqac": True,
+                "ic_annual_report_uploaded": True,
+                "mandatory_disclosure_complete": True,
+                "internship_policy": True,
+                "enrolment_uploaded": True,
             },
             campus={
                 "plots": [
@@ -2119,6 +2261,159 @@ def seed() -> None:
             },
         )
         created["institutions"] += int(made)
+
+        # Approved programmes, faculty roster and admission history. These rows
+        # feed the APH calculators (FSR, cadre split, area, library, PC ratio,
+        # reduced enrolment) so the compliance demo evaluates real data.
+        west_programmes, made = _ensure_programmes(
+            db,
+            audit,
+            institution=west,
+            programmes=[
+                {
+                    "programme_family": "ENGINEERING_TECHNOLOGY",
+                    "level": "UG",
+                    "course_name": "B.Tech Computer Science and Engineering",
+                    "duration_years": 4,
+                    "approved_intake": 60,
+                    "divisions": 1,
+                    "apH_clause": "APH 6.1",
+                }
+            ],
+        )
+        created["programmes"] += made
+        created["faculty"] += _ensure_faculty(
+            db,
+            audit,
+            institution=west,
+            members=[
+                {
+                    "name": "Dr. Meera Deshpande (Fictional)",
+                    "portal_faculty_id": "DEMO-WEST-FAC-01",
+                    "cadre": "PRINCIPAL_DIRECTOR",
+                    "qualification": "PhD (Computer Science)",
+                    "has_phd": True,
+                    "programme_id": west_programmes[0].id,
+                },
+                {
+                    "name": "Dr. Rahul Kulkarni (Fictional)",
+                    "portal_faculty_id": "DEMO-WEST-FAC-02",
+                    "cadre": "ASSOC_PROFESSOR",
+                    "qualification": "PhD (Computer Science)",
+                    "has_phd": True,
+                    "programme_id": west_programmes[0].id,
+                },
+                *[
+                    {
+                        "name": f"Prof. Demo Faculty {index} (Fictional)",
+                        "portal_faculty_id": f"DEMO-WEST-FAC-{index + 2:02d}",
+                        "cadre": "ASST_PROFESSOR",
+                        "qualification": "M.Tech",
+                        "has_phd": False,
+                        "programme_id": west_programmes[0].id,
+                    }
+                    for index in range(1, 7)
+                ],
+            ],
+        )
+        created["intake_ledger"] += _ensure_intake_ledger(
+            db,
+            audit,
+            programme=west_programmes[0],
+            rows=[
+                {
+                    "academic_year": academic_year,
+                    "approved_intake": 60,
+                    "admitted_total": admitted,
+                }
+                for academic_year, admitted in (
+                    ("2021-22", 42),
+                    ("2022-23", 45),
+                    ("2023-24", 40),
+                    ("2024-25", 43),
+                    ("2025-26", 46),
+                )
+            ],
+        )
+
+        south_programmes, made = _ensure_programmes(
+            db,
+            audit,
+            institution=south,
+            programmes=[
+                {
+                    "programme_family": "MANAGEMENT",
+                    "level": "PG",
+                    "course_name": "Master of Business Administration",
+                    "duration_years": 2,
+                    "approved_intake": 120,
+                    "divisions": 2,
+                    "apH_clause": "APH 6.1",
+                }
+            ],
+        )
+        created["programmes"] += made
+        created["faculty"] += _ensure_faculty(
+            db,
+            audit,
+            institution=south,
+            members=[
+                {
+                    "name": "Dr. Ananya Menon (Fictional)",
+                    "portal_faculty_id": "DEMO-SOUTH-FAC-01",
+                    "cadre": "PRINCIPAL_DIRECTOR",
+                    "qualification": "PhD (Management)",
+                    "has_phd": True,
+                    "programme_id": south_programmes[0].id,
+                },
+                {
+                    "name": "Dr. Vikram Nair (Fictional)",
+                    "portal_faculty_id": "DEMO-SOUTH-FAC-02",
+                    "cadre": "ASSOC_PROFESSOR",
+                    "qualification": "PhD (Finance)",
+                    "has_phd": True,
+                    "programme_id": south_programmes[0].id,
+                },
+                {
+                    "name": "Dr. Leela Krishnan (Fictional)",
+                    "portal_faculty_id": "DEMO-SOUTH-FAC-03",
+                    "cadre": "ASSOC_PROFESSOR",
+                    "qualification": "PhD (Marketing)",
+                    "has_phd": True,
+                    "programme_id": south_programmes[0].id,
+                },
+                *[
+                    {
+                        "name": f"Prof. Demo MBA Faculty {index} (Fictional)",
+                        "portal_faculty_id": f"DEMO-SOUTH-FAC-{index + 3:02d}",
+                        "cadre": "ASST_PROFESSOR",
+                        "qualification": "MBA",
+                        "has_phd": index <= 3,
+                        "programme_id": south_programmes[0].id,
+                    }
+                    for index in range(1, 10)
+                ],
+            ],
+        )
+        created["intake_ledger"] += _ensure_intake_ledger(
+            db,
+            audit,
+            programme=south_programmes[0],
+            rows=[
+                {
+                    "academic_year": academic_year,
+                    "approved_intake": 120,
+                    "admitted_total": admitted,
+                }
+                for academic_year, admitted in (
+                    ("2021-22", 118),
+                    ("2022-23", 120),
+                    ("2023-24", 116),
+                    ("2024-25", 120),
+                    ("2025-26", 119),
+                )
+            ],
+        )
 
         admin, made = _get_or_create_user(
             db,
@@ -2175,7 +2470,7 @@ def seed() -> None:
         )
         created["users"] += int(made)
 
-        _, made = _get_or_create_user(
+        south_admin, made = _get_or_create_user(
             db,
             audit,
             name="South Institution Administrator (Demo)",
@@ -2243,7 +2538,7 @@ def seed() -> None:
         )
         created["applications"] += int(made)
 
-        _, made = _get_or_create_application(
+        south_application, made = _get_or_create_application(
             db,
             audit,
             reference=SOUTH_REFERENCE,
@@ -2305,6 +2600,122 @@ def seed() -> None:
             sla_days=21,
         )
         created["applications"] += int(made)
+
+        created["application_programs"] += _ensure_application_programmes(
+            db,
+            audit,
+            application=west_application,
+            programmes=[
+                {
+                    "program_name": "B.Tech Computer Science and Engineering",
+                    "level": "UG",
+                    "intake": 60,
+                    "faculty_count": 8,
+                    "lab_count": 6,
+                }
+            ],
+        )
+        created["application_programs"] += _ensure_application_programmes(
+            db,
+            audit,
+            application=south_application,
+            programmes=[
+                {
+                    "program_name": "Master of Business Administration",
+                    "level": "PG",
+                    "intake": 120,
+                    "faculty_count": 12,
+                    "lab_count": 4,
+                }
+            ],
+        )
+
+        # The deficient demo institution has uploaded only its Affidavit 2, so
+        # the Annexure-2.1 checklist and several essential requirements fail.
+        created["documents"] += _ensure_documents(
+            db,
+            audit,
+            application=west_application,
+            uploaded_by=institution_admin,
+            documents=[
+                {
+                    "doc_type": "AFFIDAVIT_2",
+                    "doc_code": "AFFIDAVIT_2",
+                    "affidavit_no": "Affidavit 2",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+                    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+                    "signed_with_dsc": True,
+                    "valid_until": date(2025, 12, 31),
+                },
+            ],
+        )
+
+        # The clean demo institution has a complete, valid document set.
+        created["documents"] += _ensure_documents(
+            db,
+            audit,
+            application=south_application,
+            uploaded_by=south_admin,
+            documents=[
+                {
+                    "doc_type": "AFFIDAVIT_2",
+                    "doc_code": "AFFIDAVIT_2",
+                    "affidavit_no": "Affidavit 2",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "TER_RECEIPT",
+                    "doc_code": "TER_RECEIPT",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "OCCUPANCY_CERTIFICATE",
+                    "doc_code": "OCCUPANCY_CERTIFICATE",
+                    "signed_with_dsc": True,
+                    "valid_until": date(2030, 12, 31),
+                },
+                {
+                    "doc_type": "STRUCTURAL_STABILITY_CERTIFICATE",
+                    "doc_code": "STRUCTURAL_STABILITY_CERTIFICATE",
+                    "signed_with_dsc": True,
+                    "valid_until": date(2031, 3, 31),
+                },
+                {
+                    "doc_type": "FIRE_SAFETY_CERTIFICATE",
+                    "doc_code": "FIRE_SAFETY_CERTIFICATE",
+                    "signed_with_dsc": True,
+                    "valid_until": date(2027, 12, 31),
+                },
+                {
+                    "doc_type": "SATELLITE_MAP",
+                    "doc_code": "SATELLITE_MAP",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+                    "doc_code": "AUDITED_ACCOUNTS_PREVIOUS_YEAR",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "AFFILIATION_CERTIFICATE",
+                    "doc_code": "AFFILIATION_CERTIFICATE",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "FACULTY_DETAILS",
+                    "doc_code": "FACULTY_DETAILS",
+                    "signed_with_dsc": True,
+                },
+                {
+                    "doc_type": "MANDATORY_DISCLOSURE",
+                    "doc_code": "MANDATORY_DISCLOSURE",
+                    "signed_with_dsc": True,
+                },
+            ],
+        )
 
         _, made = _get_or_create_inspection(
             db,
