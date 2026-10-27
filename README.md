@@ -844,8 +844,15 @@ but production deployments should use secure, HTTP-only cookies and refresh-toke
   tables. Compliance rules, weights, status bands and alert rules do have admin screens at
   `/compliance` and `/alert-rules`.
 - Programmes are captured but do not block submission in this increment. Submitted application
-  section data and programmes are visible on the detail page, but there is no post-submission
-  document browser inside the detail page.
+  section data, programmes and the document browser (with reject, re-upload and verify) are
+  visible on the detail page.
+- `MAX_REUPLOADS_PER_DOCUMENT` is an environment setting, not an admin screen: changing the
+  replacement cap needs a restart. The handbook sets no cap, so the seeded value is an assumption
+  (OQ-53, OQ-54).
+- The upload-time PDF readability check uses `pdfplumber` text extraction and falls back to a
+  printable-text heuristic when a PDF cannot be parsed. A valid but unusual PDF is therefore
+  accepted with a warning rather than blocked; a reviewer can still reject it with a reason code
+  (OQ-57).
 - The demo SLA dates in the seed are illustrative scaffolding. Real SLA durations and compliance
   thresholds must come from editable configuration and be reviewed against the current AICTE
   Approval Process Handbook.
