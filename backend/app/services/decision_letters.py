@@ -40,7 +40,11 @@ from app.models.enums import (
 from app.models.security_deposit import SecurityDeposit
 from app.models.user import User
 from app.services.audit import AuditService
-from app.services.deadlines import compute_due_at, start_timer
+from app.services.deadlines import (
+    compute_due_at,
+    end_of_day,
+    start_event_timers,
+)
 from app.services.workflow_errors import WorkflowConfigurationError
 
 _TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "letters"
@@ -457,24 +461,30 @@ def issue_letter(
 
     if letter_type == DecisionLetterType.LOA:
         application.loa_valid_until = date(issued_on.year + 2, issued_on.month, issued_on.day)
-        application.security_deposit_due_on = issued_on + timedelta(
-            days=deposit_rule.duration_days
-        )
-        _create_security_deposits(db, application, issued_on=issued_on)
-        start_timer(
+        start_event_timers(
             db,
             application,
-            deposit_rule,
-            started_at=start,
+            rule_code="LOA_VALIDITY",
+            started_at=now,
             audit=audit,
         )
+        # The EC recommendation normally starts the deposit clock; this branch
+        # keeps a directly-issued LoA working on an older file.
+        if application.security_deposit_due_on is None:
+            intimate_security_deposit(
+                db,
+                application,
+                intimated_on=issued_on,
+                audit=audit,
+            )
     if appeal_deadline is not None:
         application.appeal_deadline = appeal_deadline
-        start_timer(
+        start_event_timers(
             db,
             application,
-            appeal_rule,
+            rule_code="APPEAL_WINDOW",
             started_at=start,
+            letter=letter,
             audit=audit,
         )
 
@@ -493,6 +503,44 @@ def issue_letter(
         request=request,
     )
     return letter
+
+
+def intimate_security_deposit(
+    db: Session,
+    application: Application,
+    *,
+    intimated_on: date,
+    audit: AuditService | None = None,
+) -> None:
+    """Create the deposit rows, due date and 15-day clock (APH 2.25f).
+
+    The clock starts when the Executive Committee recommends the LoA, which is
+    the intimation event in the APH cycle. The function is idempotent so a
+    retried workflow step or a later LoA letter does not duplicate the clock.
+    """
+    rule = db.scalar(
+        select(DeadlineRule).where(DeadlineRule.code == "SECURITY_DEPOSIT")
+    )
+    if rule is None:
+        raise WorkflowConfigurationError(
+            "SECURITY_DEPOSIT deadline rule must be configured."
+        )
+    application.security_deposit_due_on = intimated_on + timedelta(
+        days=rule.duration_days
+    )
+    if not db.scalar(
+        select(SecurityDeposit.id)
+        .where(SecurityDeposit.application_id == application.id)
+        .limit(1)
+    ):
+        _create_security_deposits(db, application, issued_on=intimated_on)
+    start_event_timers(
+        db,
+        application,
+        rule_code="SECURITY_DEPOSIT",
+        started_at=end_of_day(intimated_on),
+        audit=audit,
+    )
 
 
 def _create_security_deposits(

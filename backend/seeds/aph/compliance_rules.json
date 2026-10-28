@@ -78,7 +78,8 @@
     },
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "UG Planning faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold} (S divided by 16)."
   },
   {
     "code": "APH-FSR-UG-MANAGEMENT",
@@ -98,7 +99,8 @@
     },
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "UG Management faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold} (S divided by 25)."
   },
   {
     "code": "APH-FSR-PG-MANAGEMENT",
@@ -118,7 +120,8 @@
     },
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "PG Management (MBA/PGDM) faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold} (S divided by 20)."
   },
   {
     "code": "APH-FSR-UG-MCA",
@@ -138,7 +141,8 @@
     },
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "UG Computer Applications (BCA) faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold} (S divided by 25)."
   },
   {
     "code": "APH-FSR-PG-MCA",
@@ -156,6 +160,154 @@
       "family": "COMPUTER_APPLICATIONS",
       "level": "PG"
     },
+    "penalty_codes": [
+      "7.4c"
+    ],
+    "explanation_template": "MCA faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold} (S divided by 20)."
+  },
+  {
+    "code": "APH-FSR-PG-PLANNING",
+    "name": "Faculty:student ratio for PG Planning",
+    "category": "Faculty",
+    "description": "Required faculty = S / 10 for PG Planning.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 10,
+    "severity": "CRITICAL",
+    "applies_to_family": "PLANNING",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "PLANNING",
+      "level": "PG"
+    },
+    "explanation_template": "PG Planning faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-APPLIED-ARTS",
+    "name": "Faculty:student ratio for UG Applied Arts & Crafts",
+    "category": "Faculty",
+    "description": "Required faculty = S / 15 for UG Applied Arts & Crafts.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "CRITICAL",
+    "applies_to_family": "APPLIED_ARTS_CRAFTS",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "APPLIED_ARTS_CRAFTS",
+      "level": "UG"
+    },
+    "explanation_template": "UG Applied Arts & Crafts faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-APPLIED-ARTS",
+    "name": "Faculty:student ratio for PG Applied Arts & Crafts",
+    "category": "Faculty",
+    "description": "Required faculty = S / 15 for PG Applied Arts & Crafts.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "CRITICAL",
+    "applies_to_family": "APPLIED_ARTS_CRAFTS",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "APPLIED_ARTS_CRAFTS",
+      "level": "PG"
+    },
+    "explanation_template": "PG Applied Arts & Crafts faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-DESIGN",
+    "name": "Faculty:student ratio for UG Design",
+    "category": "Faculty",
+    "description": "Required faculty = S / 15 for UG Design.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "CRITICAL",
+    "applies_to_family": "DESIGN",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "DESIGN",
+      "level": "UG"
+    },
+    "explanation_template": "UG Design faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-DESIGN",
+    "name": "Faculty:student ratio for PG Design",
+    "category": "Faculty",
+    "description": "Required faculty = S / 15 for PG Design.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 15,
+    "severity": "CRITICAL",
+    "applies_to_family": "DESIGN",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "DESIGN",
+      "level": "PG"
+    },
+    "explanation_template": "PG Design faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-UG-HMCT",
+    "name": "Faculty:student ratio for UG HMCT",
+    "category": "Faculty",
+    "description": "Required faculty = S / 20 for UG HMCT.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 20,
+    "severity": "CRITICAL",
+    "applies_to_family": "HMCT",
+    "applies_to_level": "UG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "HMCT",
+      "level": "UG"
+    },
+    "explanation_template": "UG HMCT faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FSR-PG-HMCT",
+    "name": "Faculty:student ratio for PG HMCT",
+    "category": "Faculty",
+    "description": "Required faculty = S / 12 for PG HMCT.",
+    "metric_key": "faculty.fsr_for",
+    "operator": "<=",
+    "threshold": 12,
+    "severity": "CRITICAL",
+    "applies_to_family": "HMCT",
+    "applies_to_level": "PG",
+    "apH_clause": "APH 6.14, Annexure-5",
+    "metric_params": {
+      "family": "HMCT",
+      "level": "PG"
+    },
+    "explanation_template": "PG HMCT faculty:student ratio is {observed} {unit}; {clause} requires at most {threshold}.",
     "penalty_codes": [
       "7.4c"
     ]
@@ -224,7 +376,8 @@
     "apH_clause": "APH 6.14, Annexure-5",
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "A Diploma institution needs one Head of Department per department ({clause}): {result}."
   },
   {
     "code": "APH-FAC-PG-PHD",
@@ -238,18 +391,37 @@
     "apH_clause": "APH 6.14f",
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "Every PG course needs a PhD-holding Professor, or a PhD Associate Professor when no qualified Professor is available ({clause}): {result}."
   },
   {
     "code": "APH-FAC-ADJUNCT-CAP",
     "name": "Adjunct faculty within the permitted share",
     "category": "Faculty",
-    "description": "Adjunct faculty and Professors of Practice together may not exceed 15% of required faculty (Design 20%, Planning 30%).",
-    "metric_key": "faculty.adjunct_pct",
+    "description": "Adjunct faculty and Professors of Practice together may not exceed the permitted share of required faculty: 15% generally, 20% for Design and 30% for Planning (APH 6.14d).",
+    "metric_key": "faculty.adjunct_excess",
     "operator": "<=",
-    "threshold": 15,
+    "threshold": 0,
     "severity": "MEDIUM",
     "apH_clause": "APH 6.14d",
+    "unit": "posts",
+    "explanation_template": "Adjunct and Professor-of-Practice posts above the permitted share: {observed} {unit}. {clause} allows 15% of required faculty, 20% for Design and 30% for Planning.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-POP-MIN",
+    "name": "Minimum Professors of Practice",
+    "category": "Faculty",
+    "description": "Professors of Practice must be at least 10% of the required faculty (APH 6.14d).",
+    "metric_key": "faculty.prof_of_practice_shortfall",
+    "operator": "<=",
+    "threshold": 0,
+    "severity": "MEDIUM",
+    "apH_clause": "APH 6.14d",
+    "unit": "posts",
+    "explanation_template": "Professor of Practice shortfall against the 10% minimum: {observed} {unit}. {clause} requires at least 10% of required faculty as Professors of Practice.",
     "penalty_codes": [
       "7.4c"
     ]
@@ -266,7 +438,8 @@
     "apH_clause": "APH 6.14a",
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "{observed} {unit} of faculty salaries are paid through ECS/RTGS/NEFT from a nationalised or scheduled commercial bank; {clause} requires {threshold} {unit}."
   },
   {
     "code": "APH-FAC-BIOMETRIC",
@@ -280,7 +453,8 @@
     "apH_clause": "APH 6.14j",
     "penalty_codes": [
       "7.4c"
-    ]
+    ],
+    "explanation_template": "{observed} {unit} of faculty attendance is captured biometrically; {clause} requires {threshold} {unit}."
   },
   {
     "code": "APH-FAC-ID-LAG",
@@ -296,6 +470,40 @@
     "unit": "days",
     "penalty_codes": [
       "7.4c"
+    ],
+    "explanation_template": "The longest lag between a joining or leaving date and the AICTE portal update is {observed} {unit}; {clause} requires the update in the same month, at most {threshold} {unit}."
+  },
+  {
+    "code": "APH-FAC-REGULAR",
+    "name": "Faculty appointed on a regular basis",
+    "category": "Faculty",
+    "description": "Faculty must be appointed on a regular basis; contractual appointments are permitted only briefly in extraordinary circumstances (APH 6.14e). The 90% regular-share threshold is a configurable project assumption because the handbook sets no percentage.",
+    "metric_key": "faculty.regular_pct",
+    "operator": ">=",
+    "threshold": 90,
+    "severity": "HIGH",
+    "apH_clause": "APH 6.14e",
+    "needs_verification": true,
+    "unit": "%",
+    "explanation_template": "Regular faculty share is {observed}%; {clause} requires regularly appointed faculty and permits contractual appointments only briefly in extraordinary cases. The {threshold}% minimum is a project assumption pending verification.",
+    "penalty_codes": [
+      "7.4c"
+    ]
+  },
+  {
+    "code": "APH-FAC-HEAD-VACANCY",
+    "name": "Principal/Director vacancy at most 12 months",
+    "category": "Faculty",
+    "description": "A Principal/Director vacancy lasting more than 12 months is a penal violation (APH 7.4b).",
+    "metric_key": "faculty.head_vacancy_months",
+    "operator": "<=",
+    "threshold": 12,
+    "severity": "CRITICAL",
+    "apH_clause": "APH 7.4b",
+    "unit": "months",
+    "explanation_template": "The Principal/Director post has been vacant for {observed} {unit}; {clause} makes a vacancy beyond {threshold} months a violation.",
+    "penalty_codes": [
+      "7.4b"
     ]
   },
   {
@@ -325,7 +533,8 @@
     "apH_clause": "APH 6.17d",
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "The campus must comprise at most three plots, with the academic, instructional, administrative and amenity areas on one plot ({clause}): {result}."
   },
   {
     "code": "APH-LAND-DISTANCE",
@@ -339,7 +548,8 @@
     "apH_clause": "APH 6.17d",
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "Every plot must lie within 2 km of the others, and hill and North-Eastern regions may use up to three pieces within 2 km ({clause}): {result}."
   },
   {
     "code": "APH-LAND-CONTIGUOUS",
@@ -353,7 +563,8 @@
     "apH_clause": "APH 6.17d",
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "Land parcels must be contiguous ({clause}): {result}."
   },
   {
     "code": "APH-LAND-OBSTACLES",
@@ -367,38 +578,38 @@
     "apH_clause": "APH 6.17d",
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "No river, canal, railway line, highway or high-tension line may cross the land ({clause}): {result}."
   },
   {
     "code": "APH-LAND-LEASE-30",
     "name": "Lease tenure of at least 30 years",
     "category": "Land and building",
-    "description": "Leased land must have a registered lease of at least 30 years. Owned land is not assessed against this rule.",
-    "metric_key": "land.lease_years_total",
-    "operator": ">=",
-    "threshold": 30,
+    "description": "Leased land must have a registered lease of at least 30 years. Owned land satisfies this rule through its title.",
+    "metric_key": "land.lease_tenure_ok",
+    "operator": "EXISTS",
+    "threshold": 0,
     "severity": "HIGH",
-    "mandatory": false,
     "apH_clause": "APH 6.17a",
-    "unit": "years"
+    "explanation_template": "Owned land needs no lease; leased land needs a registered lease of at least 30 years ({clause}): {result}.",
+    "penalty_codes": [
+      "7.4f"
+    ]
   },
   {
     "code": "APH-LAND-LEASE-LIVE",
     "name": "Live lease covers the longest course",
     "category": "Land and building",
-    "description": "The remaining lease must be at least as long as the longest course offered. Owned land is not assessed against this rule.",
-    "metric_key": "land.lease_years_live",
-    "operator": "RATIO",
-    "threshold": 1,
+    "description": "The remaining lease must be at least as long as the longest course offered. Owned land satisfies this rule through its title.",
+    "metric_key": "land.lease_live_ok",
+    "operator": "EXISTS",
+    "threshold": 0,
     "severity": "HIGH",
-    "mandatory": false,
     "apH_clause": "APH 6.17a",
-    "unit": "ratio",
-    "metric_params": {
-      "numerator": "land.lease_years_live",
-      "denominator": "land.longest_course_years",
-      "compare": ">="
-    }
+    "explanation_template": "The live lease must run at least as long as the longest course ({clause}): {result}.",
+    "penalty_codes": [
+      "7.4f"
+    ]
   },
   {
     "code": "APH-AREA-INSTRUCTIONAL",
@@ -429,7 +640,8 @@
     "unit": "sq. m",
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "Built-up area falls {observed} {unit} short of the Annexure-3 requirement of instructional, administrative and amenities area plus about 25% access and circulation ({clause})."
   },
   {
     "code": "APH-AREA-ADMIN",
@@ -449,7 +661,8 @@
     },
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "Administrative area is {observed} times the 750 sq. m minimum for an intake up to 300 ({clause}): {result}."
   },
   {
     "code": "APH-AREA-AMENITIES",
@@ -469,7 +682,8 @@
     },
     "penalty_codes": [
       "7.4f"
-    ]
+    ],
+    "explanation_template": "Amenities area is {observed} times the 500 sq. m minimum for an intake up to 300 ({clause}): {result}."
   },
   {
     "code": "APH-AREA-CIRCULATION",
@@ -480,10 +694,10 @@
     "operator": ">=",
     "threshold": 25,
     "severity": "MEDIUM",
-    "mandatory": false,
     "apH_clause": "APH Annexure-3 3.2",
     "needs_verification": true,
-    "unit": "%"
+    "unit": "%",
+    "explanation_template": "Access and circulation is {observed} {unit} of the instructional, administrative and amenities area; {clause} expects about {threshold} {unit}."
   },
   {
     "code": "APH-LIB-TITLES",
@@ -498,7 +712,8 @@
     "unit": "titles",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Library titles fall {observed} {unit} short of the Annexure-4 requirement of 100 titles in the first year for E&T UG and 50 for Diploma, Management and Computer Applications, plus 50 per later year ({clause})."
   },
   {
     "code": "APH-LIB-VOLUMES",
@@ -513,7 +728,8 @@
     "unit": "volumes",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Library volumes fall {observed} {unit} short of the Annexure-4 requirement of 5 x titles x divisions for UG and Diploma and 4 x titles x divisions for PG ({clause})."
   },
   {
     "code": "APH-LIB-JOURNALS",
@@ -528,7 +744,8 @@
     "unit": "journals",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Subscribed indexed journals fall {observed} {unit} short of six per course per level for UG and PG programmes ({clause})."
   },
   {
     "code": "APH-LIB-SEATS",
@@ -543,7 +760,8 @@
     "unit": "seats",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Reading-room seats fall {observed} {unit} short of 15% of students (maximum 150) for UG and Diploma and 25% (maximum 100) for PG ({clause})."
   },
   {
     "code": "APH-LIB-NDL",
@@ -554,8 +772,8 @@
     "operator": "EXISTS",
     "threshold": 0,
     "severity": "LOW",
-    "mandatory": false,
-    "apH_clause": "APH 6.54"
+    "apH_clause": "APH 6.54",
+    "explanation_template": "National Digital Library membership is required by {clause}: {result}."
   },
   {
     "code": "APH-COMP-PCS",
@@ -570,7 +788,8 @@
     "unit": "count",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Computers fall {observed} {unit} short of the PC:student ratio, which carries a minimum of 20 computers ({clause})."
   },
   {
     "code": "APH-COMP-PRINTERS",
@@ -585,7 +804,8 @@
     "unit": "%",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Printers are {observed} {unit} of the installed computers; {clause} requires at least {threshold} {unit}."
   },
   {
     "code": "APH-COMP-BANDWIDTH",
@@ -600,7 +820,8 @@
     "unit": "Mbps",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Internet bandwidth falls {observed} {unit} short of the tier for the sanctioned intake (100 Mbps up to 300, 300 Mbps for 301-600, 500 Mbps for 601-900 and 1 Gbps above 900) ({clause})."
   },
   {
     "code": "APH-COMP-LANG-LAB",
@@ -615,7 +836,8 @@
     "unit": "count",
     "penalty_codes": [
       "7.4d"
-    ]
+    ],
+    "explanation_template": "Language-laboratory computers fall {observed} {unit} short of 20 per 300 intake pro rata ({clause})."
   },
   {
     "code": "APH-ESS-ANTIRAGGING",
@@ -638,7 +860,8 @@
     },
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "The Anti-Ragging Committee, squad and CCTV coverage are {observed} of the {threshold} required elements ({clause})."
   },
   {
     "code": "APH-ESS-IC",
@@ -652,7 +875,8 @@
     "apH_clause": "APH 6.48",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "An Internal Committee with the prescribed composition is required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-IC-REPORT",
@@ -666,7 +890,8 @@
     "apH_clause": "APH 6.48g",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "The Internal Committee annual report must be uploaded on the portal by 30 June ({clause}): {result}."
   },
   {
     "code": "APH-ESS-SCST",
@@ -680,7 +905,8 @@
     "apH_clause": "APH 6.49",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "An SC/ST committee of five members, at least two SC/ST and at least one woman, is required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-GRIEVANCE",
@@ -702,7 +928,8 @@
     },
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Grievance redressal and the Ombudsperson are {observed} of the {threshold} required elements ({clause})."
   },
   {
     "code": "APH-ESS-IIC",
@@ -716,7 +943,8 @@
     "apH_clause": "APH 6.51",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "An Institution's Innovation Council with its certificate and registration number is required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-BARRIER-FREE",
@@ -730,7 +958,8 @@
     "apH_clause": "APH 6.52",
     "penalty_codes": [
       "7.4j"
-    ]
+    ],
+    "explanation_template": "Barrier-free facilities as per CPWD and NBC are required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-ABC",
@@ -744,7 +973,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4l"
-    ]
+    ],
+    "explanation_template": "Academic Bank of Credits registration and compliance is mandatory ({clause}): {result}."
   },
   {
     "code": "APH-ESS-CAMPUS-SAFETY",
@@ -758,7 +988,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Campus safety and security arrangements are required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-FOOD-SAFETY",
@@ -772,7 +1003,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Food Safety and Standards Act compliance for the canteen and mess is required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-DIGITAL-PAYMENTS",
@@ -786,7 +1018,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "All payments to and from students must be through digital modes ({clause}): {result}."
   },
   {
     "code": "APH-ESS-LETTERS",
@@ -800,7 +1033,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "LoA and EoA letters since inception and the accreditation status must be displayed on the institution website ({clause}): {result}."
   },
   {
     "code": "APH-ESS-MANDATORY-DISCLOSURE",
@@ -814,7 +1048,8 @@
     "apH_clause": "APH Annexure-18",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "The Annexure-18 mandatory disclosure must be published in full on the website and in the brochure ({clause}): {result}."
   },
   {
     "code": "APH-ESS-MENTAL-HEALTH",
@@ -828,7 +1063,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "A mental-health counselling platform must be available to students ({clause}): {result}."
   },
   {
     "code": "APH-ESS-WOMEN-HELPLINE",
@@ -842,7 +1078,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "A 24x7 women helpline must be operational ({clause}): {result}."
   },
   {
     "code": "APH-ESS-FIRST-AID",
@@ -856,7 +1093,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "First aid and medical facilities must be available on campus ({clause}): {result}."
   },
   {
     "code": "APH-ESS-POTABLE-WATER",
@@ -870,7 +1108,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Potable drinking water must be available on campus ({clause}): {result}."
   },
   {
     "code": "APH-ESS-WASTE",
@@ -884,7 +1123,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Waste management and green-campus practices must be in place ({clause}): {result}."
   },
   {
     "code": "APH-ESS-INSURANCE",
@@ -898,7 +1138,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Student safety insurance and a group accident policy for employees are required ({clause}): {result}."
   },
   {
     "code": "APH-ESS-SEL",
@@ -912,7 +1153,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "A social and emotional learning mechanism must be in place ({clause}): {result}."
   },
   {
     "code": "APH-ESS-INTERNSHIP",
@@ -926,7 +1168,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "A compulsory internship with a published Internship Policy is required for final-year students ({clause}): {result}."
   },
   {
     "code": "APH-ESS-SWAYAM",
@@ -940,7 +1183,8 @@
     "apH_clause": "APH 6.11",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "SWAYAM and MOOC electives must be offered, and up to 40% of courses may be delivered through them ({clause}): {result}."
   },
   {
     "code": "APH-ESS-SKILLING",
@@ -954,7 +1198,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "Skilling credits must be offered to students ({clause}): {result}."
   },
   {
     "code": "APH-ESS-IIC-CELL",
@@ -968,7 +1213,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "An industry-institution cell must be established ({clause}): {result}."
   },
   {
     "code": "APH-ESS-LANGUAGE-LAB",
@@ -982,7 +1228,8 @@
     "apH_clause": "APH 6.53(q)",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "A language laboratory must be available ({clause}): {result}."
   },
   {
     "code": "APH-ESS-IQAC",
@@ -996,7 +1243,8 @@
     "apH_clause": "APH 6.53",
     "penalty_codes": [
       "7.4e"
-    ]
+    ],
+    "explanation_template": "An IQAC must be constituted with the prescribed affidavit ({clause}): {result}."
   },
   {
     "code": "APH-ADM-EXCESS",
@@ -1026,7 +1274,8 @@
     "apH_clause": "APH 2.25n",
     "penalty_codes": [
       "7.4m"
-    ]
+    ],
+    "explanation_template": "Student enrolment data must be uploaded on the portal before 30 November ({clause}): {result}."
   },
   {
     "code": "APH-ADM-LOW-ENROLMENT",
@@ -1039,7 +1288,8 @@
     "severity": "HIGH",
     "apH_clause": "APH 6.12a",
     "unit": "%",
-    "penalty_codes": []
+    "penalty_codes": [],
+    "explanation_template": "The lowest admission rate of the last five years is {observed} {unit}; {clause} treats a fall below {threshold} {unit} of the approved intake as the reduced-enrolment trigger."
   },
   {
     "code": "APH-DOC-AFFIDAVIT2",
@@ -1053,7 +1303,8 @@
     "apH_clause": "APH 6.39",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "The portal-generated common Affidavit 2 with its 33 declarations must be uploaded with the application ({clause}): {result}."
   },
   {
     "code": "APH-DOC-AFFIDAVIT2-DSC",
@@ -1067,7 +1318,8 @@
     "apH_clause": "APH 6.39",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "Affidavit 2 must carry a digital signature certificate ({clause}): {result}."
   },
   {
     "code": "APH-DOC-OCCUPANCY",
@@ -1096,7 +1348,8 @@
     "apH_clause": "APH Annexure-2.1(v)",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "A valid Fire Safety Certificate must be uploaded with the application ({clause}): {result}."
   },
   {
     "code": "APH-DOC-STRUCTURAL",
@@ -1110,7 +1363,8 @@
     "apH_clause": "APH 6.17h",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "A Structural Stability Certificate is required for buildings older than 30 years and stays valid for five years ({clause}): {result}."
   },
   {
     "code": "APH-DOC-ANNEXURE21",
@@ -1125,7 +1379,8 @@
     "unit": "count",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "Mandatory Annexure-2.1 documents missing from the application: {observed}. {clause} requires every mandatory document for the application type before the EoA is downloaded."
   },
   {
     "code": "APH-DOC-DSC",
@@ -1140,7 +1395,8 @@
     "unit": "count",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "Uploads without a digital signature: {observed}. {clause} requires every document to be digitally signed."
   },
   {
     "code": "APH-DOC-EXPIRED",
@@ -1155,7 +1411,8 @@
     "unit": "count",
     "penalty_codes": [
       "7.4a"
-    ]
+    ],
+    "explanation_template": "Certificates that are expired on the reference date: {observed}. {clause} treats an expired certificate as not uploaded."
   },
   {
     "code": "DEMO-LAND-AREA",

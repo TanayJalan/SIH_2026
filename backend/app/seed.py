@@ -120,7 +120,7 @@ DEADLINE_RULES = (
     ),
     (
         "SECURITY_DEPOSIT",
-        "DECISION_UPLOADED",
+        "EC_RECOMMENDS_LOA",
         15,
         Role.INSTITUTION_ADMIN,
         [
@@ -131,6 +131,16 @@ DEADLINE_RULES = (
         "APH 2.25f",
         False,
         False,
+    ),
+    (
+        "LOA_VALIDITY",
+        "LOA_ISSUED",
+        730,
+        Role.INSTITUTION_ADMIN,
+        [],
+        "APH 1.10b",
+        False,
+        True,
     ),
     (
         "ENROLMENT_UPLOAD",
@@ -356,8 +366,8 @@ ALERT_RULES = (
     ),
     (
         "APPEAL-WINDOW-CLOSING",
-        "Appeal window closing",
-        "Warns the institution before the seven-day appeal window closes.",
+        "Appeal window closing: 3 days",
+        "Warns the institution three days before the appeal window closes.",
         AlertTrigger.APPEAL_WINDOW_CLOSING,
         3,
         Severity.HIGH,
@@ -370,11 +380,26 @@ ALERT_RULES = (
         Role.REGIONAL_OFFICER,
     ),
     (
-        "DEPOSIT-DUE-7",
-        "Security Deposit due: 7 days",
-        "Early warning for the Security Deposit and Affidavit 3.",
+        "APPEAL-WINDOW-CLOSING-1",
+        "Appeal window closing: 1 day",
+        "Final warning before the appeal window closes.",
+        AlertTrigger.APPEAL_WINDOW_CLOSING,
+        1,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The appeal window for {institution} (application "
+            "{application_reference}) closes on {due_date}. One day remain(s) "
+            "to file the single appeal."
+        ),
+        Role.REGIONAL_OFFICER,
+    ),
+    (
+        "DEPOSIT-DUE-5",
+        "Security Deposit due: day 10 of 15",
+        "Mid-window warning for the Security Deposit and Affidavit 3.",
         AlertTrigger.DEPOSIT_DUE,
-        7,
+        5,
         Severity.MEDIUM,
         ("IN_APP", "EMAIL"),
         (
@@ -386,7 +411,7 @@ ALERT_RULES = (
     ),
     (
         "DEPOSIT-DUE-1",
-        "Security Deposit due: 1 day",
+        "Security Deposit due: day 14 of 15",
         "Final warning before the Security Deposit clock closes.",
         AlertTrigger.DEPOSIT_DUE,
         1,
@@ -399,7 +424,92 @@ ALERT_RULES = (
         ),
         Role.REGIONAL_OFFICER,
     ),
+    (
+        "APPEAL-EXPIRED",
+        "Appeal window expired",
+        "Tells the Bureau and Regional Officer that the appeal window closed.",
+        AlertTrigger.APPEAL_EXPIRED,
+        0,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The appeal window for {institution} (application "
+            "{application_reference}) closed on {due_date}. The decision now "
+            "becomes final because no appeal was filed (APH 1.11a)."
+        ),
+        Role.REGULATION_BUREAU_OFFICER,
+    ),
+    (
+        "DEPOSIT-OVERDUE",
+        "Security Deposit overdue",
+        "Tells the Bureau and Regional Officer that the deposit clock expired.",
+        AlertTrigger.DEPOSIT_OVERDUE,
+        0,
+        Severity.CRITICAL,
+        ("IN_APP", "EMAIL"),
+        (
+            "The Security Deposit for {institution} (application "
+            "{application_reference}) was due on {due_date} and is now "
+            "overdue. Apply the penalty ladder in APH 2.25f."
+        ),
+        Role.REGULATION_BUREAU_OFFICER,
+    ),
+    (
+        "DEPOSIT-PENALTY",
+        "Security Deposit penalty applied",
+        "Records each 10%/20% penalty step and the eventual withdrawal.",
+        AlertTrigger.DEPOSIT_PENALTY,
+        0,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The Security Deposit for {institution} (application "
+            "{application_reference}) is now at {penalty_percent}% penalty "
+            "({outcome}). This step is recorded against the APH 2.25f ladder."
+        ),
+        Role.REGULATION_BUREAU_OFFICER,
+    ),
+    (
+        "LOA-EXPIRED",
+        "Letter of Approval expired",
+        "Tells the Bureau and Regional Officer that the LoA validity ended.",
+        AlertTrigger.LOA_EXPIRED,
+        0,
+        Severity.HIGH,
+        ("IN_APP", "EMAIL"),
+        (
+            "The Letter of Approval for {institution} (application "
+            "{application_reference}) expired on {due_date}. A fresh EoA is "
+            "required for the next academic year (APH 1.10b)."
+        ),
+        Role.REGULATION_BUREAU_OFFICER,
+    ),
 )
+
+
+# Clause citations for the alert rules above. Warning thresholds are project
+# reminders (the handbook fixes the obligation, not the reminder point), so
+# they stay flagged for verification; the statutory event rows cite APH.
+ALERT_RULE_CLAUSES: dict[str, tuple[str, bool]] = {
+    "DEADLINE-7": ("DEMO", True),
+    "DEADLINE-3": ("DEMO", True),
+    "DEADLINE-1": ("DEMO", True),
+    "SLA-BREACH": ("DEMO", True),
+    "DEFICIENCY-DUE": ("APH 2.4", True),
+    "DEFICIENCY-OVERDUE": ("APH 2.25c", False),
+    "DOCUMENT-EXPIRING": ("APH 6.17h", True),
+    "COMPLIANCE-RED": ("APH 7.13", False),
+    "STATUS-CHANGED": ("APH 1.4.3", False),
+    "INSPECTION-SCHEDULED": ("APH 1.9a", False),
+    "APPEAL-WINDOW-CLOSING": ("APH 1.11a", True),
+    "APPEAL-WINDOW-CLOSING-1": ("APH 1.11a", True),
+    "DEPOSIT-DUE-5": ("APH 2.25f", True),
+    "DEPOSIT-DUE-1": ("APH 2.25f", True),
+    "APPEAL-EXPIRED": ("APH 1.11a", False),
+    "DEPOSIT-OVERDUE": ("APH 2.25f", False),
+    "DEPOSIT-PENALTY": ("APH 2.25f", False),
+    "LOA-EXPIRED": ("APH 1.10b", False),
+}
 
 
 # The compliance rule library and calculator norms are data files under
@@ -1484,6 +1594,9 @@ def _ensure_alert_rules(db: Session, audit: AuditService) -> int:
         existing = db.scalar(select(AlertRule).where(AlertRule.code == code))
         if existing is not None:
             continue
+        apH_clause, needs_verification = ALERT_RULE_CLAUSES.get(
+            code, ("DEMO", True)
+        )
         rule = AlertRule(
             code=code,
             name=name,
@@ -1494,8 +1607,8 @@ def _ensure_alert_rules(db: Session, audit: AuditService) -> int:
             channel_list=list(channels),
             template=template,
             escalation_role=escalation_role,
-            apH_clause="DEMO",
-            needs_verification=True,
+            apH_clause=apH_clause,
+            needs_verification=needs_verification,
             is_active=True,
         )
         db.add(rule)
@@ -2408,6 +2521,28 @@ def seed() -> None:
                     }
                     for index in range(1, 10)
                 ],
+                # APH 6.14d: at least 10% of the 12 required posts (2) must be
+                # Professors of Practice when the adjunct route is used. The
+                # clean demo institution therefore engages two, each with the
+                # 8 years of industry experience the clause asks for.
+                {
+                    "name": "Prof. Rohan Varma (Fictional, Professor of Practice)",
+                    "portal_faculty_id": "DEMO-SOUTH-POP-01",
+                    "cadre": "PROF_OF_PRACTICE",
+                    "qualification": "MBA (14 years industry practice)",
+                    "has_phd": False,
+                    "regular": False,
+                    "programme_id": south_programmes[0].id,
+                },
+                {
+                    "name": "Prof. Nandita Iyer (Fictional, Professor of Practice)",
+                    "portal_faculty_id": "DEMO-SOUTH-POP-02",
+                    "cadre": "PROF_OF_PRACTICE",
+                    "qualification": "PGDM (11 years industry practice)",
+                    "has_phd": False,
+                    "regular": False,
+                    "programme_id": south_programmes[0].id,
+                },
             ],
         )
         created["intake_ledger"] += _ensure_intake_ledger(

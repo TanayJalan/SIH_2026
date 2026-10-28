@@ -50,16 +50,14 @@ from app.models.user import User
 from app.models.workflow import WorkflowEvent
 from app.services.alert_triggers import first_rule_for_handler, rules_for_handler
 from app.services.audit import AuditService
+from app.services.deadlines import refresh_timer_status
 
-_ESCALATION_ROLES = frozenset(
-    {
-        Role.REGIONAL_OFFICER,
-        Role.REGULATION_BUREAU_OFFICER,
-        Role.EXECUTIVE_COMMITTEE_MEMBER,
-        Role.SUPER_ADMIN,
-    }
+_ESCALATION_CHAIN = (
+    Role.REGULATION_BUREAU_OFFICER,
+    Role.REGIONAL_OFFICER,
+    Role.SUPER_ADMIN,
 )
-"""Roles an alert rule may escalate to; the process chain is RB/RO → EC → Council."""
+"""Escalation order for an unacknowledged or SLA-breached alert."""
 
 logger = logging.getLogger("app.alerts")
 
@@ -81,13 +79,36 @@ SEVERITY_RANK = {
     Severity.CRITICAL: 3,
 }
 
-# Statutory clocks that get their own warning trigger instead of the stage-SLA
-# one. The key is the ``deadline_rules.code`` value; the value is the engine
-# handler (see ``alert_trigger_catalogue``).
+# Statutory clocks that get their own warning and expiry triggers instead of
+# the stage-SLA one. The tuple is
+# ``(deadline_rules.code, warning trigger, expiry trigger, keep for terminal)``;
+# the engine handler is the catalogue ``handler_key`` (see
+# ``alert_trigger_catalogue``).
 _TIMER_ALERTS = (
-    ("APPEAL_WINDOW", AlertTrigger.APPEAL_WINDOW_CLOSING),
-    ("SECURITY_DEPOSIT", AlertTrigger.DEPOSIT_DUE),
+    (
+        "APPEAL_WINDOW",
+        AlertTrigger.APPEAL_WINDOW_CLOSING,
+        AlertTrigger.APPEAL_EXPIRED,
+        False,
+    ),
+    (
+        "SECURITY_DEPOSIT",
+        AlertTrigger.DEPOSIT_DUE,
+        AlertTrigger.DEPOSIT_OVERDUE,
+        False,
+    ),
+    (
+        "LOA_VALIDITY",
+        None,
+        AlertTrigger.LOA_EXPIRED,
+        True,
+    ),
 )
+_EXPIRY_TITLES = {
+    AlertTrigger.APPEAL_EXPIRED: "Appeal window expired: {institution}",
+    AlertTrigger.DEPOSIT_OVERDUE: "Security Deposit overdue: {institution}",
+    AlertTrigger.LOA_EXPIRED: "LoA expired: {institution}",
+}
 SEVERITY_RAISED = {
     Severity.LOW: Severity.MEDIUM,
     Severity.MEDIUM: Severity.HIGH,
@@ -526,18 +547,17 @@ class AlertEngine:
             )
 
     def _scan_timers(self) -> None:
-        """Warn the institution before the appeal and Security Deposit clocks close.
+        """Warn, then expire, the statutory clocks started by workflow events.
 
-        These two statutory clocks are ``Timer`` rows started by the decision
-        letter (APH 1.11a, 2.25f). They are separate from the stage SLA, so
-        they have their own triggers and go to the institution admin who has to
-        act on them.
+        The appeal window (APH 1.11a), the Security Deposit clock (APH 2.25f)
+        and LoA validity (APH 1.10b) are ``Timer`` rows, not the stage SLA.
+        Warnings go to the institution that has to act; an expired clock goes
+        to the Regulation Bureau officer and the Regional Officer, and records
+        one ``timer_expire`` event. The workflow sweep then applies the final
+        status change through the normal state machine.
         """
         today = self._now().date()
-        for rule_code, trigger in _TIMER_ALERTS:
-            rules = self._rules(trigger)
-            if not rules:
-                continue
+        for rule_code, warning_trigger, expiry_trigger, keep_for_terminal in _TIMER_ALERTS:
             timers = self._db.scalars(
                 select(Timer)
                 .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
@@ -552,15 +572,41 @@ class AlertEngine:
                     Timer.status.in_((TimerStatus.PENDING, TimerStatus.DUE)),
                 )
             ).unique().all()
+            if not timers:
+                continue
+            warning_rules = (
+                self._rules(warning_trigger) if warning_trigger is not None else []
+            )
+            expiry_rules = self._rules(expiry_trigger)
             for timer in timers:
                 application = timer.application
-                if application is None or self._is_inactive(application):
+                if application is None or application.is_withdrawn:
                     continue
+                if keep_for_terminal:
+                    # An ACTIVE_LOA application is terminal for SLA purposes but
+                    # its two-academic-year clock is still running.
+                    if application.status != ApplicationStatus.ACTIVE_LOA:
+                        continue
+                elif application.status in TERMINAL_STATUSES:
+                    continue
+
+                refresh_timer_status(timer, self._now())
                 days_until = (timer.due_at.date() - today).days
-                if days_until < 0:
+                if timer.status == TimerStatus.BREACHED:
+                    self._expire_timer(
+                        timer,
+                        application,
+                        rule_code=rule_code,
+                        trigger=expiry_trigger,
+                        rules=expiry_rules,
+                    )
                     continue
-                rule = self._window_rule(rules, days_until)
+                if not warning_rules or warning_trigger is None:
+                    continue
+                rule = self._window_rule(warning_rules, days_until)
                 if rule is None:
+                    continue
+                if self._timer_fired(timer, f"WARN-{rule.days_before}"):
                     continue
                 recipients = (
                     self._institution_admin_recipients(application)
@@ -574,21 +620,140 @@ class AlertEngine:
                 title = (
                     "Appeal window closing: "
                     f"{context['application_reference']}"
-                    if trigger is AlertTrigger.APPEAL_WINDOW_CLOSING
+                    if warning_trigger is AlertTrigger.APPEAL_WINDOW_CLOSING
                     else f"Security Deposit due: {context['institution']}"
                 )
-                self._create_alert(
+                created = self._create_alert(
                     rule=rule,
-                    trigger=trigger,
+                    trigger=warning_trigger,
                     recipients=recipients,
                     context=context,
                     dedupe_base=(
-                        f"{trigger.value.lower()}:{timer.id}:{rule.days_before}:"
-                        f"{timer.due_at.date().isoformat()}"
+                        f"{warning_trigger.value.lower()}:{timer.id}:"
+                        f"{rule.days_before}:{timer.due_at.date().isoformat()}"
                     ),
                     title=title,
                     application=application,
                 )
+                if created:
+                    self._mark_timer_fired(
+                        timer,
+                        f"WARN-{rule.days_before}",
+                        warning_trigger,
+                    )
+
+    def _expire_timer(
+        self,
+        timer: Timer,
+        application: Application,
+        *,
+        rule_code: str,
+        trigger: AlertTrigger,
+        rules: Sequence[AlertRule],
+    ) -> None:
+        """Mark ``timer`` breached and emit the expiry alert and event once."""
+        timer.status = TimerStatus.BREACHED
+        if self._timer_fired(timer, "EXPIRED"):
+            return
+        now = self._now()
+        self._audit.log(
+            None,
+            "timer.expire",
+            "Timer",
+            timer.id,
+            before={"status": TimerStatus.DUE.value},
+            after={
+                "application_id": str(application.id),
+                "deadline_rule": rule_code,
+                "status": TimerStatus.BREACHED.value,
+                "due_at": timer.due_at.isoformat(),
+            },
+        )
+        self._db.add(
+            WorkflowEvent(
+                application_id=application.id,
+                from_status=application.status,
+                to_status=application.status,
+                actor_id=None,
+                action="timer_expire",
+                comment=f"Statutory clock {rule_code} expired.",
+                apH_clause=timer.deadline_rule.apH_clause,
+                details={
+                    "timer_id": str(timer.id),
+                    "deadline_rule": rule_code,
+                    "due_at": timer.due_at.isoformat(),
+                },
+                created_at=now,
+            )
+        )
+        self._db.flush()
+
+        rule = rules[0] if rules else None
+        if rule is not None:
+            context = self._context(
+                application=application,
+                due_date=timer.due_at,
+                days_remaining=0,
+            )
+            title = _EXPIRY_TITLES[trigger].format(
+                institution=context["institution"]
+            )
+            self._create_alert(
+                rule=rule,
+                trigger=trigger,
+                recipients=self._oversight_recipients(application),
+                context=context,
+                dedupe_base=(
+                    f"{trigger.value.lower()}:{timer.id}:expired:"
+                    f"{timer.due_at.date().isoformat()}"
+                ),
+                title=title,
+                application=application,
+            )
+        self._mark_timer_fired(timer, "EXPIRED", trigger)
+
+    @staticmethod
+    def _timer_fired(timer: Timer, level: str) -> bool:
+        """Return whether ``level`` has already produced its alert/event."""
+        return any(
+            str(item.get("level")) == level
+            for item in (timer.fired_levels or [])
+            if isinstance(item, dict)
+        )
+
+    def _mark_timer_fired(
+        self,
+        timer: Timer,
+        level: str,
+        trigger: AlertTrigger,
+    ) -> None:
+        """Append a fired level to the timer's JSON history."""
+        levels = [
+            item for item in (timer.fired_levels or []) if isinstance(item, dict)
+        ]
+        levels.append(
+            {
+                "level": level,
+                "trigger": trigger.value,
+                "at": self._now().isoformat(),
+            }
+        )
+        timer.fired_levels = levels
+
+    def _oversight_recipients(self, application: Application) -> list[User]:
+        """Return the Regulation Bureau officer and Regional Officer.
+
+        Expiry is an oversight event, so it reaches the Bureau and the region
+        rather than the institution. A super admin is the final fallback when
+        no regional officer is configured.
+        """
+        recipients = [
+            *self._users_for_role(application, Role.REGULATION_BUREAU_OFFICER),
+            *self._users_for_role(application, Role.REGIONAL_OFFICER),
+        ]
+        if not recipients:
+            recipients = self._users_for_role(application, Role.SUPER_ADMIN)
+        return list({user.id: user for user in recipients}.values())
 
     def _scan_slas(self) -> None:
         rules = self._rules(AlertTrigger.SLA_BREACHED)
@@ -809,7 +974,13 @@ class AlertEngine:
                     Alert.escalation_level == 0,
                     Alert.channel == AlertChannel.IN_APP,
                     Alert.status != AlertStatus.ACKED,
-                    User.role.not_in((Role.REGIONAL_OFFICER, Role.SUPER_ADMIN)),
+                    User.role.not_in(
+                        (
+                            Role.REGULATION_BUREAU_OFFICER,
+                            Role.REGIONAL_OFFICER,
+                            Role.SUPER_ADMIN,
+                        )
+                    ),
                 )
                 .order_by(Alert.created_at.asc())
             ).all()
@@ -841,6 +1012,9 @@ class AlertEngine:
                 .order_by(Alert.escalation_level.asc(), Alert.created_at.asc())
             ).all()
             highest_level = max((alert.escalation_level for alert in existing_levels), default=0)
+            if highest_level >= len(_ESCALATION_CHAIN):
+                continue
+            next_level = highest_level + 1
 
             if highest_level == 0:
                 source = max(
@@ -850,70 +1024,54 @@ class AlertEngine:
                         -alert.created_at.timestamp(),
                     ),
                 )
-                target_role = self._first_escalation_role(source)
-                recipients = self._users_for_role(application, target_role)
-                if not recipients and target_role != Role.SUPER_ADMIN:
-                    target_role = Role.SUPER_ADMIN
-                    recipients = self._users_for_role(application, Role.SUPER_ADMIN)
-                if not recipients:
-                    continue
-                escalation = self._create_escalation(
-                    application=application,
-                    source=source,
-                    level=1,
-                    target_role=target_role,
-                    recipients=recipients,
-                )
-                self._mark_application_escalated(
-                    application,
-                    escalation=escalation,
-                    source=source,
-                    level=1,
-                    target_role=target_role,
-                    reason="sla_breached" if breached else "unacknowledged",
-                )
-                continue
-
-            if highest_level >= 2:
-                continue
-            level_one = next(
-                (
-                    alert
-                    for alert in existing_levels
-                    if alert.escalation_level == 1
-                    and alert.channel == AlertChannel.IN_APP
-                ),
-                None,
-            )
-            if level_one is None:
-                level_one = next(
-                    (alert for alert in existing_levels if alert.escalation_level == 1),
+            else:
+                source = next(
+                    (
+                        alert
+                        for alert in existing_levels
+                        if alert.escalation_level == highest_level
+                        and alert.channel == AlertChannel.IN_APP
+                    ),
                     None,
                 )
-            if level_one is None:
-                continue
-            if level_one.status == AlertStatus.ACKED:
-                continue
-            if not breached and level_one.created_at + timedelta(
-                days=max(config.escalation_after_days, 0)
-            ) > now:
-                continue
-            recipients = self._users_for_role(application, Role.SUPER_ADMIN)
-            if not recipients:
+                if source is None:
+                    source = next(
+                        (
+                            alert
+                            for alert in existing_levels
+                            if alert.escalation_level == highest_level
+                        ),
+                        None,
+                    )
+                if source is None or source.status == AlertStatus.ACKED:
+                    continue
+                if not breached and source.created_at + timedelta(
+                    days=max(config.escalation_after_days, 0)
+                ) > now:
+                    continue
+
+            target_role: Role | None = None
+            recipients: list[User] = []
+            for role in _ESCALATION_CHAIN[next_level - 1 :]:
+                recipients = self._users_for_role(application, role)
+                if recipients:
+                    target_role = role
+                    break
+            if target_role is None or not recipients:
                 continue
             escalation = self._create_escalation(
                 application=application,
-                source=level_one,
-                level=2,
-                target_role=Role.SUPER_ADMIN,
+                source=source,
+                level=next_level,
+                target_role=target_role,
                 recipients=recipients,
             )
             self._mark_application_escalated(
                 application,
                 escalation=escalation,
-                source=level_one,
-                level=2,
-                target_role=Role.SUPER_ADMIN,
+                source=source,
+                level=next_level,
+                target_role=target_role,
                 reason="sla_breached" if breached else "unacknowledged",
             )
 
@@ -1003,15 +1161,6 @@ class AlertEngine:
             },
         )
 
-    def _first_escalation_role(self, source: Alert) -> Role:
-        rule = self._db.get(AlertRule, source.rule_id) if source.rule_id else None
-        role = rule.escalation_role if rule is not None else Role.REGIONAL_OFFICER
-        if role not in _ESCALATION_ROLES:
-            role = Role.REGIONAL_OFFICER
-        if source.recipient is not None and source.recipient.role == role:
-            role = Role.SUPER_ADMIN
-        return role
-
     # ------------------------------------------------------------------
     # Rule matching and recipients
     # ------------------------------------------------------------------
@@ -1069,7 +1218,7 @@ class AlertEngine:
 
     def _users_for_role(self, application: Application, role: Role) -> list[User]:
         query = select(User).where(User.role == role, User.is_active.is_(True))
-        if role in {Role.REGIONAL_OFFICER, Role.REGULATION_BUREAU_OFFICER}:
+        if role == Role.REGIONAL_OFFICER:
             region = application.institution.region
             if region is not None:
                 query = query.where(User.region == region)
@@ -1203,6 +1352,74 @@ def create_compliance_red_alerts(
     return len(created)
 
 
+def notify_deposit_step(
+    db: Session,
+    application: Application,
+    clock: SimulatedClock,
+    *,
+    settings: Settings | None = None,
+    notifications: NotificationService | None = None,
+) -> int:
+    """Alert the institution and Bureau after a Security Deposit ladder step.
+
+    The workflow event and audit row are written by the state machine; this
+    helper adds the rule-driven notification. The dedupe key contains the
+    applied percentage and the resulting status, so the 10%, 20% and withdrawal
+    steps each fire once even though the periodic scan runs repeatedly.
+    """
+    data = application.data if isinstance(application.data, dict) else {}
+    percent = int(data.get("deposit_penalty_percent") or 0)
+    withdrawn = application.status == ApplicationStatus.WITHDRAWN
+    engine = AlertEngine(
+        db,
+        clock,
+        settings=settings,
+        notifications=notifications,
+    )
+    rule = first_rule_for_handler(db, AlertTrigger.DEPOSIT_PENALTY.value)
+    if rule is None:
+        return 0
+
+    recipients = [
+        *engine._institution_admin_recipients(application),  # noqa: SLF001
+        *engine._users_for_role(  # noqa: SLF001
+            application, Role.REGULATION_BUREAU_OFFICER
+        ),
+    ]
+    recipients = list({user.id: user for user in recipients}.values())
+    context = engine._context(  # noqa: SLF001
+        application=application,
+        extra={
+            "penalty_percent": str(percent),
+            "outcome": "withdrawn" if withdrawn else "penalty",
+        },
+    )
+    if withdrawn:
+        title = f"Approval withdrawn for unpaid Security Deposit: {context['institution']}"
+    else:
+        title = (
+            f"Security Deposit penalty {percent}%: {context['institution']}"
+        )
+    created = engine._create_alert(  # noqa: SLF001
+        rule=rule,
+        trigger=AlertTrigger.DEPOSIT_PENALTY,
+        recipients=recipients,
+        context=context,
+        dedupe_base=(
+            f"deposit_penalty:{application.id}:{percent}:"
+            f"{application.status.value}"
+        ),
+        title=title,
+        application=application,
+    )
+    if not created:
+        return 0
+    db.commit()
+    engine.deliver_pending(created)
+    db.commit()
+    return len(created)
+
+
 def notify_workflow_event(
     db: Session,
     event: WorkflowEvent,
@@ -1261,7 +1478,19 @@ def notify_workflow_event(
         else:
             rules = engine._rules(AlertTrigger.APPLICATION_STATUS_CHANGED)  # noqa: SLF001
             if rules:
-                if event.action == "communicate_deficiency":
+                letter_number = (event.details or {}).get("letter_number")
+                # Letters and the automatic Deficiency Report belong to the
+                # institution, not to the reviewing officer.
+                institution_action = event.action in {
+                    "communicate_deficiency",
+                    "run_self_disclosure_check",
+                    "issue_letter",
+                    "issue_loa",
+                    "issue_eoa",
+                    "issue_lod",
+                    "issue_lor",
+                } or bool(letter_number)
+                if institution_action:
                     recipients = (
                         engine._institution_admin_recipients(  # noqa: SLF001
                             application
@@ -1278,7 +1507,6 @@ def notify_workflow_event(
                         "action": event.action or "",
                     },
                 )
-                letter_number = (event.details or {}).get("letter_number")
                 title = (
                     f"Decision letter issued: {letter_number}"
                     if letter_number

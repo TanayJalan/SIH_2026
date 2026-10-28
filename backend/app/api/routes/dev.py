@@ -12,6 +12,7 @@ from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.services.alert_engine import AlertEngine
+from app.services.workflow_jobs import sweep
 
 router = APIRouter(prefix="/dev", tags=["development"])
 
@@ -70,10 +71,12 @@ def _replay_scan(
 ) -> AlertScanRead:
     """Walk the simulated clock forward one day at a time and scan each day.
 
-    Replaying daily keeps thresholds such as T-7, T-3 and T-1 observable in a
-    single demo call instead of jumping past every intermediate alert window.
-    Delivery is deferred to one final SMTP/SMS pass so a short demo does not
-    depend on a running relay between scans.
+    Replaying daily keeps thresholds such as T-3 and T-1 observable in a single
+    demo call instead of jumping past every intermediate alert window. Each day
+    also runs the workflow clock sweep, so an expired appeal window or Security
+    Deposit ladder step happens on the day the demo crosses it. Delivery is
+    deferred to one final SMTP/SMS pass so a short demo does not depend on a
+    running relay between scans.
     """
     alerts_created = 0
     escalations = 0
@@ -83,6 +86,8 @@ def _replay_scan(
         with SessionLocal() as scan_db:
             engine = AlertEngine(scan_db, clock, settings=settings)
             result = engine.scan()
+            scan_db.commit()
+            sweep(scan_db, clock, settings=settings)
             scan_db.commit()
             alerts_created += result.alerts_created
             escalations += result.escalations

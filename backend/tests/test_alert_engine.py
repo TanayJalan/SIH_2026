@@ -360,6 +360,91 @@ def test_appeal_and_deposit_timers_warn_the_institution(
     assert deposit_alert.recipient_user_id == expected_admin
 
 
+def test_expired_appeal_window_notifies_oversight_once(test_data: TestData) -> None:
+    """A closed appeal window expires the timer and warns the Bureau once.
+
+    APH 1.11a gives the institution a single seven-day appeal window. When it
+    closes with no appeal the clock is breached, the Regulation Bureau officer
+    and Regional Officer are told, and a ``timer_expire`` event is recorded
+    exactly once even though the scan keeps running.
+    """
+    clock = SimulatedClock()
+    now = clock.now()
+    with SessionLocal() as db:
+        application = _make_application(
+            db,
+            test_data,
+            due_days=10,
+            status=ApplicationStatus.APPEAL_WINDOW,
+            stage=WorkflowStage.DECISION,
+        )
+        appeal_rule = db.scalar(
+            select(DeadlineRule).where(DeadlineRule.code == "APPEAL_WINDOW")
+        )
+        assert appeal_rule is not None
+        timer = Timer(
+            application_id=application.id,
+            deadline_rule_id=appeal_rule.id,
+            started_at=now - timedelta(days=8),
+            due_at=now - timedelta(days=1),
+            status=TimerStatus.PENDING,
+        )
+        db.add(timer)
+        db.commit()
+        application_id = application.id
+        timer_id = timer.id
+
+        _scan(db, clock)
+        alerts = db.scalars(
+            select(Alert).where(
+                Alert.application_id == application_id,
+                Alert.type == "APPEAL_EXPIRED",
+            )
+        ).all()
+        expire_events = db.scalar(
+            select(func.count())
+            .select_from(WorkflowEvent)
+            .where(
+                WorkflowEvent.application_id == application_id,
+                WorkflowEvent.action == "timer_expire",
+            )
+        )
+        expired = db.get(Timer, timer_id)
+        assert expired is not None
+        first_status = expired.status
+        first_fired = [entry["level"] for entry in expired.fired_levels]
+
+        _scan(db, clock)
+        alerts_again = db.scalar(
+            select(func.count())
+            .select_from(Alert)
+            .where(
+                Alert.application_id == application_id,
+                Alert.type == "APPEAL_EXPIRED",
+            )
+        )
+        events_again = db.scalar(
+            select(func.count())
+            .select_from(WorkflowEvent)
+            .where(
+                WorkflowEvent.application_id == application_id,
+                WorkflowEvent.action == "timer_expire",
+            )
+        )
+
+    assert first_status == TimerStatus.BREACHED
+    assert "EXPIRED" in first_fired
+    assert len(alerts) >= 2
+    recipients = {alert.recipient_user_id for alert in alerts}
+    assert test_data.users["regulation"].id in recipients
+    assert test_data.users["regional"].id in recipients
+    assert len(recipients) == len(alerts)
+    assert all(alert.severity == Severity.HIGH for alert in alerts)
+    assert expire_events == 1
+    assert alerts_again == len(alerts)
+    assert events_again == 1
+
+
 def test_escalation_chain_raises_severity_and_records_workflow_events(
     test_data: TestData,
 ) -> None:
@@ -390,12 +475,12 @@ def test_escalation_chain_raises_severity_and_records_workflow_events(
         source_id = source.id
 
         first = _scan(db, clock)
-        level_one = db.scalar(
+        level_ones = db.scalars(
             select(Alert).where(
                 Alert.application_id == application_id,
                 Alert.escalation_level == 1,
             )
-        )
+        ).all()
         db.refresh(application)
         first_events = db.scalar(
             select(func.count())
@@ -407,15 +492,19 @@ def test_escalation_chain_raises_severity_and_records_workflow_events(
         )
 
         assert first.escalations >= 1
-        assert level_one is not None
-        assert level_one.recipient_user_id == test_data.users["regional"].id
-        assert level_one.severity == Severity.HIGH
-        assert level_one.parent_alert_id == source_id
+        assert level_ones
+        assert any(
+            alert.recipient_user_id == test_data.users["regulation"].id
+            for alert in level_ones
+        )
+        assert all(alert.severity == Severity.HIGH for alert in level_ones)
+        assert all(alert.parent_alert_id == source_id for alert in level_ones)
         assert application.is_escalated is True
         assert first_events == 1
 
-        level_one.created_at = now - timedelta(days=20)
-        level_one.updated_at = now - timedelta(days=20)
+        for alert in level_ones:
+            alert.created_at = now - timedelta(days=20)
+            alert.updated_at = now - timedelta(days=20)
         db.commit()
 
         second = _scan(db, clock)
@@ -434,14 +523,43 @@ def test_escalation_chain_raises_severity_and_records_workflow_events(
             )
         )
 
-    assert second.escalations >= 1
-    assert level_twos
+        assert second.escalations >= 1
+        assert level_twos
+        assert any(
+            alert.recipient_user_id == test_data.users["regional"].id
+            for alert in level_twos
+        )
+        assert any(alert.severity == Severity.CRITICAL for alert in level_twos)
+        assert second_events == 2
+
+        for alert in level_twos:
+            alert.created_at = now - timedelta(days=20)
+            alert.updated_at = now - timedelta(days=20)
+        db.commit()
+
+        third = _scan(db, clock)
+        level_threes = db.scalars(
+            select(Alert).where(
+                Alert.application_id == application_id,
+                Alert.escalation_level == 3,
+            )
+        ).all()
+        third_events = db.scalar(
+            select(func.count())
+            .select_from(WorkflowEvent)
+            .where(
+                WorkflowEvent.application_id == application_id,
+                WorkflowEvent.action == "escalate",
+            )
+        )
+
+    assert third.escalations >= 1
+    assert level_threes
     assert any(
         alert.recipient_user_id == test_data.users["super"].id
-        for alert in level_twos
+        for alert in level_threes
     )
-    assert any(alert.severity == Severity.CRITICAL for alert in level_twos)
-    assert second_events == 2
+    assert third_events == 3
     assert SEVERITY_RAISED[Severity.MEDIUM] == Severity.HIGH
     assert SEVERITY_RAISED[Severity.HIGH] == Severity.CRITICAL
 
@@ -482,20 +600,20 @@ def test_acknowledging_the_escalation_stops_the_next_chain_step(
         db.commit()
 
         _scan(db, clock)
-        level_one = db.scalar(
+        level_ones = db.scalars(
             select(Alert).where(
                 Alert.application_id == application.id,
                 Alert.escalation_level == 1,
                 Alert.channel == AlertChannel.IN_APP,
             )
-        )
-        assert level_one is not None
+        ).all()
+        assert level_ones
 
         # A delivery receipt from the same escalation must not count as the
         # escalations acknowledgement record.
         db.add(
             Alert(
-                recipient_user_id=test_data.users["regional"].id,
+                recipient_user_id=test_data.users["regulation"].id,
                 application_id=application.id,
                 rule_id=rule.id,
                 parent_alert_id=source.id,
@@ -511,13 +629,14 @@ def test_acknowledging_the_escalation_stops_the_next_chain_step(
                 updated_at=now - timedelta(days=20),
             )
         )
-        acknowledge_alert(
-            db,
-            level_one,
-            db.get(User, test_data.users["regional"].id),
-            now=now,
-        )
-        level_one.created_at = now - timedelta(days=20)
+        for alert in level_ones:
+            acknowledge_alert(
+                db,
+                alert,
+                db.get(User, test_data.users["regulation"].id),
+                now=now,
+            )
+            alert.created_at = now - timedelta(days=20)
         db.commit()
 
         _scan(db, clock)

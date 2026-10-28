@@ -115,7 +115,7 @@ def run_alert_scan_job(*, clock: SimulatedClock, settings: Settings) -> None:
 
     try:
         with SessionLocal() as db:
-            advanced = sweep(db, clock)
+            advanced = sweep(db, clock, settings=settings)
         logger.info(
             "Workflow clock sweep completed",
             extra={"event": "workflow.sweep.completed", "advanced": advanced},

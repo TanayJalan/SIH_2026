@@ -16,12 +16,14 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.core.clock import SimulatedClock
+from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.models import (
     AcademicCalendarEvent,
+    Alert,
     Application,
     ApplicationCategory,
     ApplicationProgram,
@@ -666,6 +668,104 @@ def test_missed_appeal_window_makes_the_decision_final(
         assert application is not None
         assert application.data["final_outcome"] == "LOR"
         assert application.data["appeal_window_closed"]
+
+
+class _FixedClock:
+    """A clock stub for a future ladder window (the demo clock only moves forward)."""
+
+    def __init__(self, now: datetime) -> None:
+        self._now = now
+
+    def now(self) -> datetime:
+        return self._now
+
+
+def test_deposit_ladder_sweep_applies_10_then_20_then_withdrawal(
+    test_data: TestData,
+    workspace_applications: list[uuid.UUID],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The scheduler walks the APH 2.25f ladder and alerts each step once."""
+    application_id = _seed_application(
+        test_data,
+        workspace_applications,
+        status=ApplicationStatus.SECURITY_DEPOSIT_PENDING,
+        stage=WorkflowStage.DECISION,
+        security_deposit_due_on=date(2027, 5, 1),
+        data={"pending_outcome": "LOA"},
+    )
+    regulation = test_data.users["regulation"]
+    monkeypatch.setattr(
+        workflow_jobs,
+        "_system_actor",
+        lambda db: db.get(User, regulation.id),
+    )
+    settings = Settings(environment="test", notifications_enabled=False)
+
+    def _sweep_on(day: date) -> int:
+        with SessionLocal() as db:
+            advanced = workflow_jobs.sweep(
+                db,
+                _FixedClock(datetime(day.year, day.month, day.day, 12, tzinfo=UTC)),
+                settings=settings,
+            )
+            db.commit()
+            return advanced
+
+    first = _sweep_on(date(2027, 5, 20))
+    with SessionLocal() as db:
+        application = db.get(Application, application_id)
+        assert application is not None
+        assert application.status == ApplicationStatus.SECURITY_DEPOSIT_PENDING
+        assert application.data["deposit_penalty_percent"] == 10
+
+    second = _sweep_on(date(2027, 6, 10))
+    with SessionLocal() as db:
+        application = db.get(Application, application_id)
+        assert application is not None
+        assert application.status == ApplicationStatus.SECURITY_DEPOSIT_PENDING
+        assert application.data["deposit_penalty_percent"] == 20
+
+    third = _sweep_on(date(2027, 8, 1))
+    with SessionLocal() as db:
+        application = db.get(Application, application_id)
+        assert application is not None
+        assert application.status == ApplicationStatus.WITHDRAWN
+        assert application.data["security_deposit_forfeited"]
+
+        alerts = db.scalars(
+            select(Alert)
+            .where(
+                Alert.application_id == application_id,
+                Alert.type == "DEPOSIT_PENALTY",
+            )
+            .order_by(Alert.created_at.asc())
+        ).all()
+        admin_id = test_data.users["institution_admin_west"].id
+        admin_alerts = [
+            alert for alert in alerts if alert.recipient_user_id == admin_id
+        ]
+        first_count = len(alerts)
+
+    repeat = _sweep_on(date(2027, 8, 1))
+    with SessionLocal() as db:
+        after_repeat = db.scalar(
+            select(func.count())
+            .select_from(Alert)
+            .where(
+                Alert.application_id == application_id,
+                Alert.type == "DEPOSIT_PENALTY",
+            )
+        )
+
+    assert (first, second, third) == (1, 1, 1)
+    assert repeat == 0
+    assert after_repeat == first_count
+    assert len(admin_alerts) == 3
+    assert len({alert.dedupe_key for alert in alerts}) == len(alerts)
+    assert any("10%" in alert.title for alert in admin_alerts)
+    assert any("20%" in alert.title for alert in admin_alerts)
+    assert any("withdrawn" in alert.title.lower() for alert in admin_alerts)
 
 
 def test_security_deposit_penalty_then_withdrawal(

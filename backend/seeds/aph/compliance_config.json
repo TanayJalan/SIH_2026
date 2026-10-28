@@ -31,6 +31,11 @@
     "DESIGN|UG": [1, 2, 6],
     "DESIGN|PG": [1, 1, 1]
   },
+  "adjunct_caps": {
+    "default_pct": 15,
+    "min_professors_of_practice_pct": 10,
+    "by_family": { "DESIGN": 20, "PLANNING": 30 }
+  },
   "area_norms": {
     "administrative_sqm": 750,
     "amenities_sqm": 500,

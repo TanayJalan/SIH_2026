@@ -16,8 +16,13 @@ from sqlalchemy.orm import Session
 from app.models.application import Application
 from app.models.calendar import AcademicCalendarEvent
 from app.models.deadline import DeadlineRule, Timer, TimerStatus
-from app.models.decision import DecisionLetter
-from app.models.enums import CalendarEventKey, DecisionLetterType
+from app.models.decision import Decision, DecisionLetter
+from app.models.enums import (
+    CalendarEventKey,
+    DecisionBody,
+    DecisionLetterType,
+    DecisionOutcome,
+)
 from app.models.security_deposit import SecurityDeposit
 from app.services.audit import AuditService
 
@@ -114,6 +119,37 @@ def resolve_start_event(
             )
         return end_of_day(deposit.created_on)
 
+    if event == "EC_RECOMMENDS_LOA":
+        decision = db.scalar(
+            select(Decision)
+            .where(
+                Decision.application_id == application.id,
+                Decision.body == DecisionBody.EC,
+                Decision.outcome == DecisionOutcome.LOA,
+            )
+            .order_by(Decision.decided_on.desc(), Decision.created_at.desc())
+            .limit(1)
+        )
+        if decision is None:
+            raise DeadlineError(
+                f"Application {application.id} has no EC recommendation for an LoA"
+            )
+        return end_of_day(decision.decided_on)
+
+    if event == "LOA_ISSUED":
+        letter = db.scalar(
+            select(DecisionLetter)
+            .where(
+                DecisionLetter.application_id == application.id,
+                DecisionLetter.letter_type == DecisionLetterType.LOA,
+            )
+            .order_by(DecisionLetter.issued_on.desc(), DecisionLetter.created_at.desc())
+            .limit(1)
+        )
+        if letter is None:
+            raise DeadlineError(f"Application {application.id} has no LoA letter")
+        return _as_datetime(letter.published_at or letter.issued_on)
+
     if event == "SHOW_CAUSE_ISSUED":
         show_cause = db.scalar(
             select(DecisionLetter)
@@ -173,17 +209,78 @@ def start_timer(
     return timer
 
 
+def open_timer(
+    db: Session,
+    application: Application,
+    *,
+    rule_code: str,
+) -> Timer | None:
+    """Return the open timer for ``rule_code``, if one is already running."""
+    return db.scalar(
+        select(Timer)
+        .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
+        .where(
+            Timer.application_id == application.id,
+            DeadlineRule.code == rule_code,
+            Timer.status.in_((TimerStatus.PENDING, TimerStatus.DUE)),
+        )
+        .order_by(Timer.created_at.desc())
+        .limit(1)
+    )
+
+
+def start_event_timers(
+    db: Session,
+    application: Application,
+    *,
+    rule_code: str,
+    started_at: datetime | None = None,
+    letter: DecisionLetter | None = None,
+    audit: AuditService | None = None,
+) -> Timer:
+    """Start the statutory clock for ``rule_code`` exactly once.
+
+    Lifecycle events (a published letter, an EC recommendation) can be observed
+    more than once by retries and scheduled scans. Reusing an open timer keeps
+    the clock idempotent while still allowing a fresh clock after the previous
+    one was completed (for example a second LoR after an SAC send-back).
+    """
+    rule = db.scalar(select(DeadlineRule).where(DeadlineRule.code == rule_code))
+    if rule is None:
+        raise DeadlineError(f"Deadline rule {rule_code!r} is not configured.")
+    existing = open_timer(db, application, rule_code=rule_code)
+    if existing is not None:
+        return existing
+    return start_timer(
+        db,
+        application,
+        rule,
+        started_at=started_at,
+        letter=letter,
+        audit=audit,
+    )
+
+
 def timer_status_at(timer: Timer, now: datetime) -> TimerStatus:
-    """Return the status of ``timer`` at ``now`` without mutating it."""
+    """Return the status of ``timer`` at ``now`` without mutating it.
+
+    A clock is ``DUE`` from the start of its due date until the due instant and
+    ``BREACHED`` the moment that instant passes. Comparing the instant as well
+    as the date keeps the timer and the workflow guard that closes the window
+    in agreement (APH 1.11a, 2.25f).
+    """
     if timer.status in {TimerStatus.COMPLETED, TimerStatus.CANCELLED}:
         return timer.status
     if now.tzinfo is None:
         now = now.replace(tzinfo=UTC)
-    if now.date() < timer.due_at.date():
-        return TimerStatus.PENDING
-    if now.date() == timer.due_at.date():
+    due_at = timer.due_at
+    if due_at.tzinfo is None:
+        due_at = due_at.replace(tzinfo=UTC)
+    if now > due_at:
+        return TimerStatus.BREACHED
+    if now.date() == due_at.date():
         return TimerStatus.DUE
-    return TimerStatus.BREACHED
+    return TimerStatus.PENDING
 
 
 def refresh_timer_status(timer: Timer, now: datetime) -> TimerStatus:

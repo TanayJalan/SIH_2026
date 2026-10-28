@@ -287,6 +287,17 @@ def _cadre_weights_for(
     return table.get(f"{family}|{level}") or table.get(f"{family}|UG") or DEFAULT_CADRE_WEIGHTS
 
 
+def cadre_weights_for(
+    family: str,
+    level: str,
+    cadre_ratios: Mapping[str, Sequence[int]] | None = None,
+) -> Sequence[int]:
+    """Public accessor for the configured Professor:Associate:Assistant weights."""
+    return _cadre_weights_for(
+        normalise_family(family), normalise_level(level), cadre_ratios
+    )
+
+
 def faculty_requirement(
     programmes: Iterable[ProgrammeInput],
     *,
@@ -412,22 +423,106 @@ def cadre_compliance(
     )
 
 
-def adjunct_cap(required: int, family: str, level: str) -> dict[str, int]:
+def adjunct_cap(
+    required: int,
+    family: str,
+    level: str,
+    *,
+    caps: Mapping[str, Any] | None = None,
+) -> dict[str, int]:
     """Adjunct / Professor-of-Practice caps (APH 6.14d).
 
     Up to 15% of required faculty may be adjunct, but not less than 10% must
     be Professors of Practice. Design allows 20% adjunct and Planning 30%.
+    The percentages are data: ``caps`` may override them per family.
+
+    The cap is rounded up. Rounding it down makes the two APH constraints
+    unsatisfiable for a small establishment: at 12 required posts, 15% is 1.8
+    posts while the mandatory 10% Professor-of-Practice share is already 1.2
+    posts, so flooring the cap would allow 1 post but require 2. Rounding the
+    cap up keeps the mandatory share achievable without changing the percentage
+    for any establishment that is a multiple of 20.
     """
+    settings = dict(caps or {})
     family = normalise_family(family)
-    cap_pct = 30 if family == PLANNING else 20 if family == DESIGN else 15
-    cap = math.floor(required * cap_pct / 100)
-    minimum_practice = math.ceil(required * 0.10)
+    by_family = settings.get("by_family") or {}
+    fallback_pct = 20 if family == DESIGN else 30 if family == PLANNING else 15
+    cap_pct = float(
+        by_family.get(family, settings.get("default_pct", fallback_pct))
+        if isinstance(by_family, Mapping)
+        else fallback_pct
+    )
+    min_pct = float(settings.get("min_professors_of_practice_pct", 10))
+    minimum_practice = math.ceil(required * min_pct / 100)
+    cap = max(math.ceil(required * cap_pct / 100), minimum_practice)
     return {"cap": cap, "cap_pct": cap_pct, "min_professors_of_practice": minimum_practice}
+
+
+def adjunct_allowance(
+    requirement: FacultyRequirement,
+    *,
+    caps: Mapping[str, Any] | None = None,
+) -> dict[str, int]:
+    """Allowed adjunct and Professor-of-Practice counts across every group.
+
+    The cap is a share of the required establishment, so it is summed over the
+    programme family/level groups rather than applied to the headcount on the
+    payroll.
+    """
+    allowed = 0
+    minimum_practice = 0
+    for key, group in requirement.groups.items():
+        family, _, level = key.partition("|")
+        info = adjunct_cap(
+            int(group.get("required") or 0),
+            family,
+            level or "UG",
+            caps=caps,
+        )
+        allowed += info["cap"]
+        minimum_practice += info["min_professors_of_practice"]
+    return {"cap": allowed, "min_professors_of_practice": minimum_practice}
 
 
 # ---------------------------------------------------------------------------
 # Land and building
 # ---------------------------------------------------------------------------
+
+
+def lease_checks(
+    *,
+    land_ownership: str | None,
+    lease_years_total: int | None,
+    lease_years_live: int | None,
+    longest_course_years: float,
+) -> dict[str, bool | None]:
+    """Per-constraint title and lease checks (APH 6.17a, 2.1e).
+
+    ``total_ok`` is the 30-year registered-lease test and ``live_ok`` is the
+    remaining-lease-covers-the-longest-course test. Callers report the rule as
+    unassessed when the institution has not declared how it holds the land.
+    """
+    owned = str(land_ownership or "").upper() in {"OWNED", "GOVERNMENT", "GOVT"}
+    if owned:
+        return {
+            "title_ok": True,
+            "total_ok": True,
+            "live_ok": True,
+            "tenure_ok": True,
+            "lease_ok": True,
+        }
+    total_ok = lease_years_total is not None and lease_years_total >= 30
+    live_ok = (
+        lease_years_live is not None
+        and lease_years_live >= math.ceil(longest_course_years)
+    )
+    return {
+        "title_ok": False,
+        "total_ok": total_ok,
+        "live_ok": live_ok,
+        "tenure_ok": bool(total_ok and live_ok),
+        "lease_ok": bool(total_ok and live_ok),
+    }
 
 
 def lease_compliance(
@@ -442,18 +537,15 @@ def lease_compliance(
     Owned land needs a clear title. Leased land needs a total lease of at
     least 30 years and a live lease at least as long as the longest course.
     """
-    owned = str(land_ownership or "").upper() in {"OWNED", "GOVERNMENT", "GOVT"}
-    if owned:
-        return {"title_ok": True, "lease_ok": True, "tenure_ok": True}
-    total_ok = lease_years_total is not None and lease_years_total >= 30
-    live_ok = (
-        lease_years_live is not None
-        and lease_years_live >= math.ceil(longest_course_years)
+    checks = lease_checks(
+        land_ownership=land_ownership,
+        lease_years_total=lease_years_total,
+        lease_years_live=lease_years_live,
+        longest_course_years=longest_course_years,
     )
     return {
-        "title_ok": False,
-        "lease_ok": bool(total_ok and live_ok),
-        "tenure_ok": bool(total_ok and live_ok),
+        key: bool(checks[key])
+        for key in ("title_ok", "lease_ok", "tenure_ok")
     }
 
 

@@ -10,6 +10,7 @@ still being an illustrative project threshold.
 from __future__ import annotations
 
 import json
+import string
 import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -214,12 +215,27 @@ def test_cadre_compliance_allows_upward_substitution_only() -> None:
 
 
 def test_adjunct_cap_varies_by_family() -> None:
-    assert calc.adjunct_cap(12, "ENGINEERING_TECHNOLOGY", "UG")["cap"] == 1
-    assert calc.adjunct_cap(12, "PLANNING", "UG")["cap"] == 3
-    assert calc.adjunct_cap(12, "DESIGN", "UG")["cap"] == 2
+    # The cap is rounded up so the mandatory 10% Professor-of-Practice share is
+    # achievable at a 12-post establishment (15% of 12 is 1.8 posts).
+    assert calc.adjunct_cap(12, "ENGINEERING_TECHNOLOGY", "UG")["cap"] == 2
+    assert calc.adjunct_cap(12, "PLANNING", "UG")["cap"] == 4
+    assert calc.adjunct_cap(12, "DESIGN", "UG")["cap"] == 3
     assert calc.adjunct_cap(12, "ENGINEERING_TECHNOLOGY", "UG")[
         "min_professors_of_practice"
     ] == 2
+
+
+def test_adjunct_cap_never_falls_below_the_professor_of_practice_minimum() -> None:
+    for required in range(1, 250):
+        info = calc.adjunct_cap(required, "ENGINEERING_TECHNOLOGY", "UG")
+        assert info["cap"] >= info["min_professors_of_practice"], required
+
+
+def test_adjunct_allowance_sums_the_programme_groups() -> None:
+    requirement = calc.faculty_requirement([_engineering_ug(), _management_pg()])
+    allowance = calc.adjunct_allowance(requirement)
+    assert allowance["cap"] >= allowance["min_professors_of_practice"]
+    assert allowance["cap"] == 2 + 2
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +278,35 @@ def test_leased_land_needs_30_years_total_and_a_live_lease() -> None:
         longest_course_years=4,
     )
     assert short_live["lease_ok"] is False
+
+
+def test_lease_checks_report_each_constraint_separately() -> None:
+    owned = calc.lease_checks(
+        land_ownership="OWNED",
+        lease_years_total=None,
+        lease_years_live=None,
+        longest_course_years=4,
+    )
+    assert owned["total_ok"] is True
+    assert owned["live_ok"] is True
+
+    short_total = calc.lease_checks(
+        land_ownership="LEASED",
+        lease_years_total=20,
+        lease_years_live=12,
+        longest_course_years=4,
+    )
+    assert short_total["total_ok"] is False
+    assert short_total["live_ok"] is True
+
+    short_live = calc.lease_checks(
+        land_ownership="LEASED",
+        lease_years_total=30,
+        lease_years_live=3,
+        longest_course_years=4,
+    )
+    assert short_live["total_ok"] is True
+    assert short_live["live_ok"] is False
 
 
 def test_land_parcels_are_capped_and_must_be_close() -> None:
@@ -427,29 +472,56 @@ def test_illustrative_rules_are_advisory_and_flagged() -> None:
 
 
 def test_real_rules_are_mandatory_and_do_not_claim_demo_clauses() -> None:
-    """Only the documented advisory rules may be non-mandatory.
+    """Every non-illustrative rule must block Nil Deficiency when it fails.
 
-    The lease detail rules are advisory because owned land has no lease term
-    (the combined tenure rule is mandatory), the circulation rule is advisory
-    because the built-up total already includes circulation, and the NDL
-    subscription is advisory until its clause is confirmed. Any other advisory
-    flag would silently weaken Nil Deficiency, so it fails the build.
+    An advisory flag on a real rule would silently weaken the Nil Deficiency
+    result, so it fails the build.
     """
-    advisory = {
-        "APH-LAND-LEASE-30",
-        "APH-LAND-LEASE-LIVE",
-        "APH-AREA-CIRCULATION",
-        "APH-LIB-NDL",
-    }
     for row in _seed_rules():
         if row.get("illustrative"):
             continue
         code = str(row["code"])
         assert str(row["apH_clause"]).startswith("APH "), code
-        if code in advisory:
-            assert row.get("mandatory") is False, code
-        else:
-            assert row.get("mandatory", True) is True, code
+        assert row.get("mandatory", True) is True, code
+
+
+def test_every_real_rule_explains_itself_with_a_clause_quoting_template() -> None:
+    """A rule a reviewer cannot explain is not shippable.
+
+    Every real rule must carry an explanation template that quotes its APH
+    clause, and the template may only use the placeholders the engine fills in.
+    A stray placeholder would leave raw braces in the Deficiency Report.
+    """
+    allowed = {"observed", "threshold", "unit", "clause", "name", "code", "result"}
+    missing: list[str] = []
+    unknown: list[tuple[str, set[str]]] = []
+    for row in _seed_rules():
+        if row.get("illustrative"):
+            continue
+        code = str(row["code"])
+        template = str(row.get("explanation_template") or "")
+        if "{clause}" not in template:
+            missing.append(code)
+            continue
+        fields = {
+            field.split(".")[0].split("[")[0]
+            for _, field, _, _ in string.Formatter().parse(template)
+            if field
+        }
+        if fields - allowed:
+            unknown.append((code, fields - allowed))
+        rendered = template.format(
+            observed="12",
+            threshold="10",
+            unit="count",
+            clause=row["apH_clause"],
+            name=row["name"],
+            code=code,
+            result="not compliant",
+        )
+        assert str(row["apH_clause"]) in rendered, code
+    assert not missing, f"real rules without a clause-quoting template: {missing}"
+    assert not unknown, f"templates using unsupported placeholders: {unknown}"
 
 
 def test_rule_operators_and_aggregate_operands_are_known() -> None:

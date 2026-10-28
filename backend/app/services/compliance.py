@@ -162,8 +162,16 @@ _METRIC_METADATA: dict[str, tuple[str, str | None]] = {
     "faculty.hod_present": ("Head of Department present", None),
     "faculty.pg_phd_professor_present": ("PhD Professor for PG", None),
     "faculty.adjunct_pct": ("Adjunct faculty share", "%"),
+    "faculty.adjunct_count": ("Adjunct and Professor-of-Practice faculty", "count"),
+    "faculty.adjunct_allowed": ("Permitted adjunct and Professor-of-Practice posts", "count"),
+    "faculty.adjunct_excess": ("Adjunct posts above the permitted share", "count"),
     "faculty.prof_of_practice_pct": ("Professor of Practice share", "%"),
+    "faculty.prof_of_practice_count": ("Professors of Practice", "count"),
+    "faculty.prof_of_practice_min": ("Minimum Professors of Practice", "count"),
+    "faculty.prof_of_practice_shortfall": ("Professor of Practice shortfall", "count"),
     "faculty.regular_pct": ("Regular faculty share", "%"),
+    "faculty.regular_count": ("Regular faculty", "count"),
+    "faculty.contractual_count": ("Contractual faculty", "count"),
     "faculty.ecs_pct": ("Faculty paid through ECS", "%"),
     "faculty.biometric_pct": ("Faculty with biometric attendance", "%"),
     "faculty.id_update_lag_days": ("Faculty portal ID update lag", "days"),
@@ -176,6 +184,8 @@ _METRIC_METADATA: dict[str, tuple[str, str | None]] = {
     "land.tenure_ok": ("Title or lease tenure", None),
     "land.lease_years_total": ("Lease tenure", "years"),
     "land.lease_years_live": ("Live lease remaining", "years"),
+    "land.lease_tenure_ok": ("Lease tenure of at least 30 years", None),
+    "land.lease_live_ok": ("Live lease covers the longest course", None),
     "land.longest_course_years": ("Longest course duration", "years"),
     "land.plot_count": ("Land parcels", "count"),
     "land.max_plot_distance_km": ("Maximum distance between plots", "km"),
@@ -288,6 +298,7 @@ def load_norm_config(db: Session) -> dict[str, Any]:
         if row.key in {
             "fsr_ratios",
             "cadre_ratios",
+            "adjunct_caps",
             "area_norms",
             "bandwidth_tiers",
             "library_norms",
@@ -628,6 +639,7 @@ def _build_metrics(
             ledger,
             reference_date,
             config,
+            essential_profile,
         )
     )
 
@@ -698,6 +710,44 @@ def _active_faculty(faculty: Sequence[Faculty], reference_date: date) -> list[Fa
     ]
 
 
+def _head_vacancy_months(
+    faculty: Sequence[Faculty],
+    essential_profile: Mapping[str, Any],
+    reference_date: date,
+) -> MetricValue:
+    """Months the Principal/Director post has been vacant (APH 7.4b).
+
+    An explicit ``principal_vacancy_months`` in the institution profile wins.
+    Otherwise a filled post is zero and an empty post is measured from the most
+    recent departure. With no roster evidence at all the value stays missing.
+    """
+    override = essential_profile.get("principal_vacancy_months")
+    if override is not None:
+        try:
+            return max(0.0, float(override))
+        except (TypeError, ValueError):
+            return None
+    heads = [
+        member
+        for member in faculty
+        if member.cadre == FacultyCadre.PRINCIPAL_DIRECTOR
+        and (member.left_on is None or member.left_on >= reference_date)
+    ]
+    if heads:
+        return 0.0
+    departures = [
+        member.left_on
+        for member in faculty
+        if member.cadre == FacultyCadre.PRINCIPAL_DIRECTOR
+        and member.left_on is not None
+        and member.left_on <= reference_date
+    ]
+    if not departures:
+        return None
+    days = (reference_date - max(departures)).days
+    return round(max(0, days) / 30.44, 2)
+
+
 def _faculty_metrics(
     faculty: Sequence[Faculty],
     programme_inputs: Sequence[calc.ProgrammeInput],
@@ -705,6 +755,7 @@ def _faculty_metrics(
     ledger: Sequence[ApprovedIntakeLedger],
     reference_date: date,
     config: Mapping[str, Any] | None = None,
+    essential_profile: Mapping[str, Any] | None = None,
 ) -> dict[str, MetricValue]:
     active = _active_faculty(faculty, reference_date)
     average_admission = _average_admission_pct(ledger)
@@ -718,8 +769,15 @@ def _faculty_metrics(
         cadre_ratios=cadre_ratios,
     )
     total_required = requirement.total_required
+    allowance = calc.adjunct_allowance(
+        requirement, caps=options.get("adjunct_caps")
+    )
     metrics: dict[str, MetricValue] = {
         "faculty.required_total": float(total_required),
+        "faculty.adjunct_allowed": float(allowance["cap"]),
+        "faculty.prof_of_practice_min": float(
+            allowance["min_professors_of_practice"]
+        ),
     }
 
     counts = {
@@ -751,17 +809,44 @@ def _faculty_metrics(
         metrics["faculty.phd_faculty_ratio"] = round(
             sum(1 for member in active if member.has_phd) / active_total * 100, 2
         )
+        adjunct_count = (
+            counts[FacultyCadre.ADJUNCT] + counts[FacultyCadre.PROF_OF_PRACTICE]
+        )
+        pop_count = counts[FacultyCadre.PROF_OF_PRACTICE]
+        metrics["faculty.adjunct_count"] = float(adjunct_count)
         metrics["faculty.adjunct_pct"] = round(
-            (counts[FacultyCadre.ADJUNCT] + counts[FacultyCadre.PROF_OF_PRACTICE])
-            / active_total
-            * 100,
-            2,
+            adjunct_count / active_total * 100, 2
         )
+        metrics["faculty.adjunct_excess"] = float(
+            max(0, adjunct_count - allowance["cap"])
+        )
+        metrics["faculty.prof_of_practice_count"] = float(pop_count)
         metrics["faculty.prof_of_practice_pct"] = round(
-            counts[FacultyCadre.PROF_OF_PRACTICE] / active_total * 100, 2
+            pop_count / active_total * 100, 2
         )
-        metrics["faculty.regular_pct"] = round(
-            sum(1 for member in active if member.regular) / active_total * 100, 2
+        metrics["faculty.prof_of_practice_shortfall"] = float(
+            max(0, allowance["min_professors_of_practice"] - pop_count)
+        )
+        regular_count = sum(
+            1
+            for member in active
+            if member.regular
+            and member.cadre
+            not in {FacultyCadre.ADJUNCT, FacultyCadre.PROF_OF_PRACTICE}
+        )
+        # Adjunct and Professor-of-Practice posts are governed by the separate
+        # 15%/10% rule. They are not "contractual" appointments in the sense of
+        # APH 6.14e, so they are excluded from the regular-share denominator;
+        # otherwise a compliant institution that also engages Professors of
+        # Practice could never reach 100% regular.
+        establishment_count = active_total - adjunct_count
+        contractual_count = max(0, establishment_count - regular_count)
+        metrics["faculty.regular_count"] = float(regular_count)
+        metrics["faculty.contractual_count"] = float(contractual_count)
+        metrics["faculty.regular_pct"] = (
+            round(regular_count / establishment_count * 100, 2)
+            if establishment_count
+            else None
         )
         metrics["faculty.ecs_pct"] = round(
             sum(1 for member in active if member.salary_via_ecs) / active_total * 100, 2
@@ -769,11 +854,16 @@ def _faculty_metrics(
         metrics["faculty.biometric_pct"] = round(
             sum(1 for member in active if member.biometric) / active_total * 100, 2
         )
+        cadre_weights = None
+        if len(requirement.groups) == 1:
+            family, _, level = next(iter(requirement.groups)).partition("|")
+            cadre_weights = calc.cadre_weights_for(family, level, cadre_ratios)
         metrics["faculty.cadre_compliant"] = calc.cadre_compliance(
             professors_effective,
             counts[FacultyCadre.ASSOC_PROFESSOR],
             counts[FacultyCadre.ASST_PROFESSOR],
             total_required,
+            weights=cadre_weights or calc.DEFAULT_CADRE_WEIGHTS,
         )
         metrics["faculty.head_present"] = counts[FacultyCadre.PRINCIPAL_DIRECTOR] > 0
         metrics["faculty.hod_present"] = counts[FacultyCadre.HOD] > 0
@@ -793,9 +883,6 @@ def _faculty_metrics(
             if event_date is not None and member.portal_updated_on is not None:
                 lags.append(max(0, (member.portal_updated_on - event_date).days))
         metrics["faculty.id_update_lag_days"] = float(max(lags)) if lags else None
-        metrics["faculty.head_vacancy_months"] = (
-            0.0 if counts[FacultyCadre.PRINCIPAL_DIRECTOR] > 0 else None
-        )
     else:
         # Fall back to the draft totals when the roster has not been imported.
         if faculty_section and faculty_section.total:
@@ -804,15 +891,24 @@ def _faculty_metrics(
             metrics["faculty.hod_present"] = None
             metrics["faculty.pg_phd_professor_present"] = None
         for key in (
+            "faculty.adjunct_count",
             "faculty.adjunct_pct",
+            "faculty.adjunct_excess",
+            "faculty.prof_of_practice_count",
             "faculty.prof_of_practice_pct",
+            "faculty.prof_of_practice_shortfall",
+            "faculty.regular_count",
+            "faculty.contractual_count",
             "faculty.regular_pct",
             "faculty.ecs_pct",
             "faculty.biometric_pct",
             "faculty.id_update_lag_days",
-            "faculty.head_vacancy_months",
         ):
             metrics.setdefault(key, None)
+
+    metrics["faculty.head_vacancy_months"] = _head_vacancy_months(
+        faculty, essential_profile or {}, reference_date
+    )
 
     total_students = sum(item.total_intake for item in programme_inputs)
     if active_total and total_students:
@@ -925,7 +1021,7 @@ def _area_metrics(
         institution.land_ownership.value if institution is not None else None
     )
     longest = calc.longest_course_duration(programme_inputs)
-    lease_info = calc.lease_compliance(
+    lease_info = calc.lease_checks(
         land_ownership=ownership,
         lease_years_total=total_lease,
         lease_years_live=live_lease,
@@ -941,6 +1037,12 @@ def _area_metrics(
             else None,
             "land.title_ok": bool(lease_info["title_ok"]) if ownership else None,
             "land.lease_ok": bool(lease_info["lease_ok"])
+            if ownership is not None
+            else None,
+            "land.lease_tenure_ok": bool(lease_info["total_ok"])
+            if ownership is not None
+            else None,
+            "land.lease_live_ok": bool(lease_info["live_ok"])
             if ownership is not None
             else None,
         }
@@ -965,6 +1067,57 @@ def _document_is_valid(document: Document, reference_date: date) -> bool:
         return False
     valid_until = document.valid_until or document.expiry_date
     return valid_until is None or valid_until >= reference_date
+
+
+def _document_condition_applies(
+    expression: str | None, values: Mapping[str, Any]
+) -> bool:
+    """Evaluate a simple, safe document-condition expression.
+
+    Seeded conditions are of the form ``name == 'VALUE'`` or ``name >= 30``.
+    Anything that cannot be evaluated keeps the document required, which is the
+    conservative choice: an unparsed condition must never excuse a mandatory
+    upload.
+    """
+    if not expression or not expression.strip():
+        return True
+    for operator in (">=", "<=", "==", "!=", ">", "<"):
+        if operator in expression:
+            name, _, raw = expression.partition(operator)
+            break
+    else:
+        return True
+    name = name.strip()
+    raw = raw.strip()
+    if name not in values or values[name] is None:
+        return True
+    actual = values[name]
+    if hasattr(actual, "value"):
+        actual = actual.value
+    lowered = raw.lower()
+    if lowered in {"true", "false"}:
+        expected: Any = lowered == "true"
+    else:
+        expected = raw.strip("'\"")
+        if isinstance(actual, (int, float)):
+            try:
+                expected = float(expected)
+            except ValueError:
+                return True
+    try:
+        if operator == ">=":
+            return actual >= expected
+        if operator == "<=":
+            return actual <= expected
+        if operator == ">":
+            return actual > expected
+        if operator == "<":
+            return actual < expected
+        if operator == "!=":
+            return actual != expected
+        return actual == expected
+    except TypeError:
+        return True
 
 
 def _document_metrics(
@@ -1030,13 +1183,29 @@ def _document_metrics(
         for value in (document.doc_code, document.doc_type)
         if value
     }
-    missing = [
+    completion_year = infra_profile.get("building_completion_year")
+    condition_values = {
+        "land_ownership": getattr(institution, "land_ownership", None),
+        "building_age_years": (
+            reference_date.year - int(completion_year)
+            if completion_year is not None
+            else None
+        ),
+    }
+    applicable = [
         requirement
         for requirement in required_documents
+        if _document_condition_applies(
+            getattr(requirement, "condition_expr", None), condition_values
+        )
+    ]
+    missing = [
+        requirement
+        for requirement in applicable
         if (requirement.doc_code or requirement.doc_type).upper() not in uploaded_codes
     ]
     metrics["document.annexure21.missing_count"] = (
-        float(len(missing)) if required_documents else None
+        float(len(missing)) if applicable else None
     )
     metrics["document.annexure21.missing_codes"] = ",".join(
         sorted((requirement.doc_code or requirement.doc_type) for requirement in missing)
@@ -1202,9 +1371,13 @@ def _derived_metrics(
     infrastructure = data.infrastructure
     faculty = data.faculty
     finance = data.finance
-    total_intake = sum(programme.total_intake for programme in programme_inputs)
+    # ``derived.total_intake`` is the annual approved intake (seats admitted in
+    # one academic year). The S used by the faculty calculator sums the intake
+    # across every year of the programme, which lives on ``ProgrammeInput``.
+    annual_intake = sum(programme.intake for programme in programme_inputs)
+    total_intake = annual_intake
     derived: dict[str, MetricValue] = {
-        "derived.total_intake": float(total_intake) if programme_inputs else None,
+        "derived.total_intake": float(annual_intake) if programme_inputs else None,
     }
     if faculty and faculty.total:
         senior = (faculty.professors or 0) + (faculty.associate_professors or 0) + (
@@ -1730,9 +1903,11 @@ def _evaluate_rule(
         evidence=evidence,
         explanation=explanation,
         apH_clause=rule.apH_clause,
-        needs_verification=rule.needs_verification,
-        mandatory=rule.mandatory,
-        illustrative=rule.illustrative,
+        needs_verification=(
+            False if rule.needs_verification is None else bool(rule.needs_verification)
+        ),
+        mandatory=True if rule.mandatory is None else bool(rule.mandatory),
+        illustrative=False if rule.illustrative is None else bool(rule.illustrative),
         weight=float(rule.weight) if rule.weight is not None else None,
         penalty_codes=list(rule.penalty_codes or []),
         penal_action_suggestions=[
@@ -1811,6 +1986,7 @@ def _scope_metrics(context: RuleContext) -> dict[str, MetricValue]:
     pc_ratios = options.get("pc_ratios")
     scope: dict[str, dict[str, MetricValue]] = {}
     active = _active_faculty(context.faculty, context.reference_date)
+    average_admission = _average_admission_pct(context.ledger)
     total_pcs = (
         _numeric((context.institution.computing_profile or {}).get("pcs"))
         if context.institution
@@ -1818,11 +1994,13 @@ def _scope_metrics(context: RuleContext) -> dict[str, MetricValue]:
     )
     requirement = calc.faculty_requirement(
         context.programme_inputs,
+        average_admission_pct=average_admission,
         fsr_ratios=fsr_ratios,
         cadre_ratios=cadre_ratios,
     )
     any_mapped = any(member.programme_id is not None for member in active)
     single_group = len(requirement.groups) == 1
+    cadre_results: list[bool] = []
     for group in requirement.groups:
         family, level = group.split("|", 1)
         group_inputs = [
@@ -1850,6 +2028,7 @@ def _scope_metrics(context: RuleContext) -> dict[str, MetricValue]:
             faculty_count = None
         group_requirement = calc.faculty_requirement(
             group_inputs,
+            average_admission_pct=average_admission,
             fsr_ratios=fsr_ratios,
             cadre_ratios=cadre_ratios,
         )
@@ -1874,7 +2053,9 @@ def _scope_metrics(context: RuleContext) -> dict[str, MetricValue]:
                     if member.cadre == FacultyCadre.ASST_PROFESSOR
                 ),
                 required,
+                weights=calc.cadre_weights_for(family, level, cadre_ratios),
             )
+            cadre_results.append(bool(cadre_value))
         scope[group] = {
             "required": float(required),
             "fsr": (
@@ -1892,7 +2073,12 @@ def _scope_metrics(context: RuleContext) -> dict[str, MetricValue]:
                 else None
             ),
         }
-    return {"_scope": scope}
+    # The unscoped cadre rule must use the configured R for the institution's
+    # programme mix, not the 1:2:6 default.
+    aggregate_cadre: MetricValue = None
+    if cadre_results:
+        aggregate_cadre = all(cadre_results)
+    return {"_scope": scope, "faculty.cadre_compliant": aggregate_cadre}
 
 
 def _nil_deficiency(previews: Sequence[ComplianceRulePreview]) -> bool:

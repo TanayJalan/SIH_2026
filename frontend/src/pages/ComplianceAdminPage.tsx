@@ -865,6 +865,90 @@ function RuleDialog({
   );
 }
 
+function ClauseDialog({
+  rule,
+  onClose,
+}: {
+  rule: ComplianceRule;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{rule.name}</DialogTitle>
+          <DialogDescription>
+            {rule.code} · {rule.category}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 space-y-3 text-13 leading-5 text-ink-700">
+          <div className="rounded-panel border border-line bg-paper p-3">
+            <p className="text-11 font-medium uppercase tracking-wide text-ink-500">
+              Handbook clause
+            </p>
+            <p className="mt-1 font-mono text-13 text-ink">{rule.apH_clause}</p>
+            <p className="mt-2 text-12 text-ink-500">
+              The clause identifies the norm this rule implements. Read it in the current AICTE
+              Approval Process Handbook before relying on the threshold; the reference copy used by
+              this prototype is docs/reference/APH_SPEC.md.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-11 font-medium uppercase tracking-wide text-ink-500">Norm</p>
+            <p className="mt-1">{rule.description}</p>
+          </div>
+
+          <div>
+            <p className="text-11 font-medium uppercase tracking-wide text-ink-500">Condition</p>
+            <p className="mt-1 font-mono text-12">{conditionText(rule)}</p>
+          </div>
+
+          <div>
+            <p className="text-11 font-medium uppercase tracking-wide text-ink-500">Scope</p>
+            <p className="mt-1 text-12">
+              {humanizeEnum(rule.applies_to)}
+              {rule.applies_to_family ? ` · ${humanizeEnum(rule.applies_to_family)}` : ""}
+              {rule.applies_to_level ? ` · ${humanizeEnum(rule.applies_to_level)}` : ""}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            <span className="rounded-pill bg-paper px-2 py-0.5 text-11 text-ink-700">
+              {rule.mandatory ? "Mandatory" : "Advisory"}
+            </span>
+            {rule.illustrative ? (
+              <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                Illustrative, not an AICTE norm
+              </span>
+            ) : null}
+            {rule.needs_verification ? (
+              <span className="rounded-pill bg-watch-soft px-2 py-0.5 text-11 text-watch-strong">
+                Needs verification
+              </span>
+            ) : null}
+            {(rule.penalty_codes ?? []).map((code) => (
+              <span
+                key={code}
+                className="rounded-pill bg-paper px-2 py-0.5 font-mono text-11 text-ink-700"
+              >
+                APH {code}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function RuleHistoryDialog({
   token,
   rule,
@@ -1545,6 +1629,7 @@ export default function ComplianceAdminPage() {
   const { toast } = useToast();
   const [editor, setEditor] = useState<{ rule: ComplianceRule | null } | null>(null);
   const [historyRule, setHistoryRule] = useState<ComplianceRule | null>(null);
+  const [clauseRule, setClauseRule] = useState<ComplianceRule | null>(null);
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
   const [filters, setFilters] = useState<RuleFilters>(EMPTY_FILTERS);
 
@@ -2025,7 +2110,14 @@ export default function ComplianceAdminPage() {
                           </div>
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-12 text-ink-700">
-                          {rule.apH_clause}
+                          <button
+                            type="button"
+                            onClick={() => setClauseRule(rule)}
+                            className="rounded-pill border border-line bg-paper px-2 py-0.5 font-mono text-11 text-ink-700 hover:border-ink-300 hover:text-ink"
+                            title={`Read the ${rule.apH_clause} reference`}
+                          >
+                            {rule.apH_clause}
+                          </button>
                         </TableCell>
                         <TableCell className="whitespace-nowrap tabular-nums">
                           {conditionText(rule)}
@@ -2183,6 +2275,10 @@ export default function ComplianceAdminPage() {
           rule={historyRule}
           onClose={() => setHistoryRule(null)}
         />
+      ) : null}
+
+      {clauseRule ? (
+        <ClauseDialog rule={clauseRule} onClose={() => setClauseRule(null)} />
       ) : null}
     </>
   );

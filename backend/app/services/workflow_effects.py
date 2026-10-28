@@ -526,6 +526,15 @@ def _record_ec_decision(ctx: TransitionContext, outcome: DecisionOutcome) -> str
     _store_data(ctx, data)
     if outcome == DecisionOutcome.LOA:
         ctx.application.decision_type = None
+        # APH 2.25f: the Security Deposit and Affidavit 3 are intimated with the
+        # EC recommendation, not when the LoA letter is later issued.
+        if bool(ctx.definition.config.get("security_deposit")):
+            decision_letters.intimate_security_deposit(
+                ctx.db,
+                ctx.application,
+                intimated_on=ctx.now.date(),
+                audit=ctx.audit,
+            )
     ctx.add_detail("decision_id", str(decision.id))
     ctx.add_detail("outcome", outcome.value)
     ctx.add_detail("quorum_met", bool(ctx.payload.quorum_met))

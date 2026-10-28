@@ -69,7 +69,11 @@ def test_admin_rule_endpoints_are_role_gated(
     super_admin_headers = auth_headers(
         api_client, test_data.users["super"], test_data.password
     )
-    listing = api_client.get("/compliance/rules", headers=super_admin_headers)
+    listing = api_client.get(
+        "/compliance/rules",
+        params={"search": TEST_RULE_CODE},
+        headers=super_admin_headers,
+    )
     assert listing.status_code == 200
     assert listing.json()["total"] >= 1
     assert any(

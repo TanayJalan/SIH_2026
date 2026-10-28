@@ -171,8 +171,8 @@ class ComplianceConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint(
             "key IN ('severity_weights', 'rag_breakpoints', 'committee_compositions', "
-            "'fsr_ratios', 'cadre_ratios', 'area_norms', 'bandwidth_tiers', "
-            "'library_norms', 'pc_ratios', 'penalty_actions')",
+            "'fsr_ratios', 'cadre_ratios', 'adjunct_caps', 'area_norms', "
+            "'bandwidth_tiers', 'library_norms', 'pc_ratios', 'penalty_actions')",
             name="compliance_config_key_allowed",
         ),
     )

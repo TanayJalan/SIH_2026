@@ -488,7 +488,7 @@ the evaluator, and every rule cites the APH clause it implements.
 
 | Part | Location |
 | ---- | -------- |
-| Rule library (90 rows) | `backend/seeds/aph/compliance_rules.json` |
+| Rule library (100 rows) | `backend/seeds/aph/compliance_rules.json` |
 | Calculator norms and scoring config | `backend/seeds/aph/compliance_config.json` |
 | Pure APH calculators | `backend/app/services/compliance_calculators.py` |
 | Metric extraction, safe evaluator, scoring | `backend/app/services/compliance.py` |
@@ -504,7 +504,7 @@ before/after values.
 > they are advisory, carry an “Illustrative, not an AICTE norm” badge and are flagged
 > `needs_verification`. Every figure must still be checked against the current AICTE Approval
 > Process Handbook before an approval decision relies on it. Ambiguous readings are listed in
-> `docs/OPEN_QUESTIONS.md` (OQ-38 … OQ-50).
+> `docs/OPEN_QUESTIONS.md` (OQ-38 … OQ-60).
 
 ### Calculators (APH 6.14, 6.17, 6.19, Annexure-3, Annexure-4)
 
@@ -515,6 +515,7 @@ Calculators are pure functions with unit tests built from the worked examples in
 | `faculty_requirement` | `S = approved intake × programme duration`; required faculty `= ceil(S / ratio)`; ratios `20` (E&T UG), `15` (E&T PG), `25` (Diploma). The Principal/Director is the first Professor post. |
 | `cadre_split` | `1:2:6` (R = 9): Professors and Associate Professors round down, the remainder goes to Assistant Professors, so 12 posts → 1 / 2 / 9. |
 | `cadre_compliance` | Upward substitution is allowed (a Professor may cover an Associate post), downward is not. |
+| `adjunct_cap`, `adjunct_allowance` | Adjunct/Professor-of-Practice posts capped at 15% of required faculty (Design 20%, Planning 30%), with at least 10% Professors of Practice. The cap rounds up so the mandatory 10% share stays achievable at a 12-post establishment. |
 | `instructional_area` | Classroom/tutorial/workshop formula from Annexure-3 3.2. |
 | `required_built_up_area` | `(instructional + 750 administrative + 500 amenities) × 1.25 circulation`. |
 | `library_requirement` | Titles (100 first year + 50 per later year), volumes, journals and reading-room seats. |
@@ -523,9 +524,9 @@ Calculators are pure functions with unit tests built from the worked examples in
 | `lease_compliance`, `plot_compliance` | 30-year lease, live lease ≥ longest course, at most three plots within 2 km. |
 | `reduced_enrolment_trigger`, `excess_admission` | Five-year admission ledger checks (APH 6.12a, 7.4g). |
 
-The numeric inputs above live in `area_norms`, `fsr_ratios`, `cadre_ratios`, `library_norms`,
-`pc_ratios` and `bandwidth_tiers` rows of `compliance_config`, so the **Norm calculators** tab can
-correct them without a code change.
+The numeric inputs above live in `area_norms`, `fsr_ratios`, `cadre_ratios`, `adjunct_caps`,
+`library_norms`, `pc_ratios` and `bandwidth_tiers` rows of `compliance_config`, so the **Norm
+calculators** tab can correct them without a code change.
 
 Each rule cites the handbook clause that *states the norm* — Chapter VI (`6.11`–`6.54`) or an
 Annexure — not the chapter that punishes a breach. Chapter VII (`7.1`–`7.13`) is penal action, so
@@ -551,6 +552,11 @@ application types (for example `NEW_INSTITUTION`, `EOA_SELF_DISCLOSURE`, `INCREA
 programme levels (`UG`, `PG`) or `ALL`; `applies_to_family`/`applies_to_level` narrow a rule to one
 programme family and level. A family/level-scoped metric with no matching programme group is
 reported as **data missing**, never as the institution-wide value.
+
+Every real rule also carries an `explanation_template` that quotes `{clause}` alongside
+`{observed}`, `{threshold}`, `{unit}` and `{result}`, so the Deficiency Report states the norm, the
+measurement and the handbook clause in one sentence. The template may only use those placeholders;
+a test fails the build if a real rule is missing its clause-quoting template.
 
 Severity is `CRITICAL`, `HIGH`, `MEDIUM` or `LOW`. An optional per-rule `weight` overrides the
 severity weight (25 / 15 / 8 / 4). Status bands are RED below 70 and AMBER below 85. All are
