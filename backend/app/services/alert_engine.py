@@ -48,6 +48,7 @@ from app.models.institution import Institution
 from app.models.sla import SLAConfig
 from app.models.user import User
 from app.models.workflow import WorkflowEvent
+from app.services.alert_stream import publish_clock, publish_created_alerts
 from app.services.alert_triggers import first_rule_for_handler, rules_for_handler
 from app.services.audit import AuditService
 from app.services.deadlines import refresh_timer_status
@@ -306,6 +307,15 @@ class AlertEngine:
         self.created_alerts = 0
         self.escalations = 0
         self._created: list[Alert] = []
+
+    @property
+    def created_inapp_alerts(self) -> list[Alert]:
+        """Rows this scan created on the user-facing IN_APP channel.
+
+        The SSE bridge publishes only these; EMAIL/SMS rows are delivery
+        records and must not reach the browser.
+        """
+        return [alert for alert in self._created if alert.channel == AlertChannel.IN_APP]
 
     # ------------------------------------------------------------------
     # Public operations
@@ -636,9 +646,17 @@ class AlertEngine:
                     application=application,
                 )
                 if created:
+                    level = f"WARN-{rule.days_before}"
+                    self._record_timer_warning(
+                        timer,
+                        application,
+                        rule_code=rule_code,
+                        trigger=warning_trigger,
+                        level=level,
+                    )
                     self._mark_timer_fired(
                         timer,
-                        f"WARN-{rule.days_before}",
+                        level,
                         warning_trigger,
                     )
 
@@ -711,6 +729,55 @@ class AlertEngine:
                 application=application,
             )
         self._mark_timer_fired(timer, "EXPIRED", trigger)
+
+    def _record_timer_warning(
+        self,
+        timer: Timer,
+        application: Application,
+        *,
+        rule_code: str,
+        trigger: AlertTrigger,
+        level: str,
+    ) -> None:
+        """Record a warning step as a ``WorkflowEvent`` and an audit row.
+
+        Warnings do not change the application status, but they are statutory
+        steps of the clock, so the same who/what/when trail as an expiry is
+        kept. The timer's ``fired_levels`` history makes the write idempotent.
+        """
+        self._audit.log(
+            None,
+            "timer.warn",
+            "Timer",
+            timer.id,
+            after={
+                "application_id": str(application.id),
+                "deadline_rule": rule_code,
+                "level": level,
+                "trigger": trigger.value,
+                "due_at": timer.due_at.isoformat(),
+            },
+        )
+        self._db.add(
+            WorkflowEvent(
+                application_id=application.id,
+                from_status=application.status,
+                to_status=application.status,
+                actor_id=None,
+                action="timer_warn",
+                comment=f"Statutory clock {rule_code} warning ({level}).",
+                apH_clause=timer.deadline_rule.apH_clause,
+                details={
+                    "timer_id": str(timer.id),
+                    "deadline_rule": rule_code,
+                    "level": level,
+                    "trigger": trigger.value,
+                    "due_at": timer.due_at.isoformat(),
+                },
+                created_at=self._now(),
+            )
+        )
+        self._db.flush()
 
     @staticmethod
     def _timer_fired(timer: Timer, level: str) -> bool:
@@ -1212,9 +1279,22 @@ class AlertEngine:
         )
 
     def _institution_admin_recipients(self, application: Application) -> list[User]:
-        """Return the institution admin as a recipient list."""
-        admin = self._institution_admin(application)
-        return [admin] if admin is not None else []
+        """Return every active institution administrator for the applicant.
+
+        Letters, the Deficiency Report and the statutory clocks go to the
+        institution's representatives, not only to the first account created.
+        """
+        return list(
+            self._db.scalars(
+                select(User)
+                .where(
+                    User.role == Role.INSTITUTION_ADMIN,
+                    User.institution_id == application.institution_id,
+                    User.is_active.is_(True),
+                )
+                .order_by(User.created_at.asc())
+            ).all()
+        )
 
     def _users_for_role(self, application: Application, role: Role) -> list[User]:
         query = select(User).where(User.role == role, User.is_active.is_(True))
@@ -1662,9 +1742,13 @@ def run_alert_scan(
     with SessionLocal() as db:
         engine = AlertEngine(db, clock, settings=settings)
         result = engine.scan()
+        # Only publish after the commit: subscribers must never be told about
+        # rows that a rollback could still discard.
         db.commit()
         sent = engine.deliver_pending() if deliver else 0
         db.commit()
+        publish_created_alerts(engine)
+        publish_clock(clock)
         return AlertScanResult(
             alerts_created=result.alerts_created,
             escalations=result.escalations,

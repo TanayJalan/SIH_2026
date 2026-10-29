@@ -37,6 +37,7 @@ import {
   navItemsFor,
   type NavIcon,
 } from "../lib/roles";
+import { useAlertStream } from "../lib/useAlertStream";
 import { cn } from "../lib/utils";
 
 const NAV_ICONS: Record<NavIcon, LucideIcon> = {
@@ -221,6 +222,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  useAlertStream();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(

@@ -2,12 +2,13 @@
 
 import uuid
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, func, select
 
+from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.main import create_app
@@ -192,6 +193,203 @@ def test_debug_time_requires_authentication(debug_api_client: TestClient) -> Non
     response = debug_api_client.get("/dev/simulate-time")
 
     assert response.status_code == 401
+
+
+def test_appeal_sweep_uses_the_timer_when_the_read_model_is_missing(
+    test_data: TestData,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The scheduler finalises from the ``Timer`` even without a read-model date.
+
+    APH 1.11a is enforced by the running clock. Keeping the fallback tested
+    means an application created before the read-model columns were populated
+    still becomes final instead of staying in ``APPEAL_WINDOW`` forever.
+    """
+    now = datetime.now(UTC)
+    with SessionLocal() as db:
+        application = Application(
+            institution_id=test_data.institutions["west"],
+            track=ApplicationTrack.NEW_INSTITUTION,
+            application_type="NEW_INSTITUTION",
+            category=ApplicationCategory.CAT1_CUTOFF,
+            academic_year="2026-27",
+            portal_application_no=f"DEMO/2026-27/{uuid.uuid4().hex[:4].upper()}",
+            status=ApplicationStatus.APPEAL_WINDOW,
+            current_stage=WorkflowStage.DECISION,
+            assigned_officer_id=test_data.users["scrutiny"].id,
+            submitted_at=now,
+            stage_entered_at=now,
+            sla_due_at=now + timedelta(days=30),
+            data={
+                "reference": f"TEST-APPEAL-{uuid.uuid4().hex[:8]}",
+                "demo": True,
+                "pending_outcome": "LOR",
+            },
+        )
+        db.add(application)
+        db.flush()
+        db.add(
+            DecisionLetter(
+                application_id=application.id,
+                letter_type=DecisionLetterType.LOR,
+                letter_number=f"AICTE-DEMO/2026/{uuid.uuid4().hex[:8].upper()}",
+                issued_on=(now - timedelta(days=8)).date(),
+                published_at=now - timedelta(days=8),
+                body_text="Fictional Speaking Order for the timer fallback test.",
+            )
+        )
+        rule = db.scalar(
+            select(DeadlineRule).where(DeadlineRule.code == "APPEAL_WINDOW")
+        )
+        assert rule is not None
+        timer = Timer(
+            application_id=application.id,
+            deadline_rule_id=rule.id,
+            started_at=now - timedelta(days=8),
+            due_at=now - timedelta(days=1),
+            status=TimerStatus.PENDING,
+        )
+        db.add(timer)
+        db.commit()
+        application_id = application.id
+        timer_id = timer.id
+
+    regulation = test_data.users["regulation"]
+    monkeypatch.setattr(
+        workflow_jobs,
+        "_system_actor",
+        lambda db: db.get(User, regulation.id),
+    )
+    try:
+        with SessionLocal() as db:
+            advanced = workflow_jobs.sweep_appeal_windows(db, SimulatedClock())
+            db.commit()
+
+        with SessionLocal() as db:
+            application = db.get(Application, application_id)
+            assert application is not None
+            assert advanced == 1
+            assert application.status == ApplicationStatus.FINAL_LOR
+            assert application.data["final_outcome"] == "LOR"
+            assert application.data["appeal_window_closed"]
+            assert db.get(Timer, timer_id).status == TimerStatus.COMPLETED
+    finally:
+        with SessionLocal() as db:
+            db.execute(delete(Application).where(Application.id == application_id))
+            db.commit()
+
+
+def test_simulating_the_deposit_window_warns_then_applies_the_first_penalty(
+    test_data: TestData,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Acceptance: the demo clock drives the deposit warnings and 10% step.
+
+    APH 2.25f gives 15 days, a day-10 and day-14 reminder, then the 10% window
+    to 31 May. The simulation is advanced one day at a time so the scheduler
+    must produce both warnings, expire the timer, and let the workflow sweep
+    apply the first penalty through the normal state machine.
+    """
+    regulation = test_data.users["regulation"]
+    monkeypatch.setattr(
+        workflow_jobs,
+        "_system_actor",
+        lambda db: db.get(User, regulation.id),
+    )
+    today = datetime.now(UTC).date()
+    due = date(max(today.year + 1, 2027), 5, 1)
+    days = (due - today).days + 20
+    now = datetime.now(UTC)
+    with SessionLocal() as db:
+        application = Application(
+            institution_id=test_data.institutions["west"],
+            track=ApplicationTrack.NEW_INSTITUTION,
+            application_type="NEW_INSTITUTION",
+            category=ApplicationCategory.CAT1_CUTOFF,
+            academic_year="2026-27",
+            portal_application_no=f"DEMO/2026-27/{uuid.uuid4().hex[:4].upper()}",
+            status=ApplicationStatus.SECURITY_DEPOSIT_PENDING,
+            current_stage=WorkflowStage.DECISION,
+            assigned_officer_id=test_data.users["scrutiny"].id,
+            submitted_at=now,
+            stage_entered_at=now,
+            sla_due_at=now + timedelta(days=30),
+            security_deposit_due_on=due,
+            data={
+                "reference": f"TEST-DEP-{uuid.uuid4().hex[:8]}",
+                "demo": True,
+                "pending_outcome": "LOA",
+            },
+        )
+        db.add(application)
+        db.flush()
+        rule = db.scalar(
+            select(DeadlineRule).where(DeadlineRule.code == "SECURITY_DEPOSIT")
+        )
+        assert rule is not None
+        timer = Timer(
+            application_id=application.id,
+            deadline_rule_id=rule.id,
+            started_at=datetime.combine(due - timedelta(days=15), datetime.min.time(), UTC),
+            due_at=datetime.combine(due, datetime.max.time(), UTC),
+            status=TimerStatus.PENDING,
+        )
+        db.add(timer)
+        db.commit()
+        application_id = application.id
+        timer_id = timer.id
+
+    settings = Settings(
+        debug=True,
+        environment="test",
+        notifications_enabled=False,
+    )
+    try:
+        with TestClient(create_app(settings)) as client:
+            headers = auth_headers(
+                client, test_data.users["super"], test_data.password
+            )
+            response = client.get(
+                f"/dev/simulate-time?days={days}", headers=headers
+            )
+        assert response.status_code == 200, response.text
+
+        with SessionLocal() as db:
+            application = db.get(Application, application_id)
+            assert application is not None
+            assert application.data["deposit_penalty_percent"] == 10
+            assert db.get(Timer, timer_id).status == TimerStatus.BREACHED
+
+            alert_types = dict(
+                db.execute(
+                    select(Alert.type, func.count())
+                    .where(Alert.application_id == application_id)
+                    .group_by(Alert.type)
+                ).all()
+            )
+            actions = set(
+                db.scalars(
+                    select(WorkflowEvent.action).where(
+                        WorkflowEvent.application_id == application_id
+                    )
+                ).all()
+            )
+            audits = set(
+                db.scalars(
+                    select(AuditLog.action).where(
+                        AuditLog.entity_id.in_((application_id, timer_id))
+                    )
+                ).all()
+            )
+
+        assert alert_types["DEPOSIT_DUE"] == 2
+        assert alert_types["DEPOSIT_OVERDUE"] >= 2
+        assert {"timer_warn", "timer_expire", "apply_deposit_penalty"} <= actions
+        assert {"timer.warn", "timer.expire"} <= audits
+    finally:
+        with SessionLocal() as db:
+            db.execute(delete(Application).where(Application.id == application_id))
+            db.commit()
 
 
 def test_simulating_eight_days_expires_and_finalises_the_appeal_window(

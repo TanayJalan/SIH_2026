@@ -23,6 +23,7 @@ from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.models.appeal import Appeal
 from app.models.application import Application
+from app.models.deadline import DeadlineRule, Timer, TimerStatus
 from app.models.enums import ApplicationStatus, Role, WorkflowAction
 from app.models.user import User
 from app.schemas.workflow import WorkflowActionRequest
@@ -54,6 +55,31 @@ def _system_actor(db: Session) -> User | None:
         .order_by(User.name.asc())
         .limit(1)
     )
+
+
+def _appeal_clock_deadline(db: Session, application: Application):
+    """Return the appeal deadline from the read model or its open Timer.
+
+    The timer is the scheduler's source of truth (APH 1.11a). The application
+    column is kept as a read model for the UI, but an older row may only have
+    the ``Timer``, so the sweep falls back to it instead of skipping the case.
+    """
+    if application.appeal_deadline is not None:
+        return application.appeal_deadline
+    timer = db.scalar(
+        select(Timer)
+        .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
+        .where(
+            Timer.application_id == application.id,
+            DeadlineRule.code == "APPEAL_WINDOW",
+            Timer.status.in_(
+                (TimerStatus.PENDING, TimerStatus.DUE, TimerStatus.BREACHED)
+            ),
+        )
+        .order_by(Timer.due_at.desc())
+        .limit(1)
+    )
+    return timer.due_at if timer is not None else None
 
 
 def _has_appeal(db: Session, application: Application) -> bool:
@@ -110,7 +136,7 @@ def sweep_appeal_windows(db: Session, clock: SimulatedClock) -> int:
         select(Application).where(Application.status.in_(_APPEAL_STATUSES))
     ).all()
     for application in applications:
-        deadline = application.appeal_deadline
+        deadline = _appeal_clock_deadline(db, application)
         if deadline is None:
             continue
         if deadline.tzinfo is None:

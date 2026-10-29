@@ -7,6 +7,7 @@ import ApplicationStatusBadge from "../components/ApplicationStatusBadge";
 import ApplicationStatusTracker from "../components/application/ApplicationStatusTracker";
 import EscalationBadge from "../components/EscalationBadge";
 import PageHeader from "../components/PageHeader";
+import UpcomingDeadlinesCard from "../components/dashboard/UpcomingDeadlinesCard";
 import { Button, EmptyState, Skeleton, Stat } from "../components/ui";
 import { getApplications, type UserProfile } from "../lib/api";
 import { formatDate, humanizeEnum, shortId } from "../lib/format";
@@ -224,6 +225,9 @@ export default function OverviewPage() {
         </section>
 
         <aside className="min-w-0 space-y-6">
+          {user.role === "INSTITUTION_ADMIN" ? (
+            <UpcomingDeadlinesCard token={token ?? ""} />
+          ) : null}
           <section className="rounded-panel border border-line bg-surface p-5">
             <p className="text-12 font-semibold uppercase tracking-[0.12em] text-ink-500">
               Role-based access

@@ -44,19 +44,17 @@ def _unauthorized() -> HTTPException:
     )
 
 
-def get_current_user(
-    request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
-    db: DbSession,
-) -> User:
-    """Resolve and validate the active user from a Bearer token."""
-    if credentials is None or credentials.scheme.lower() != "bearer":
-        raise _unauthorized()
+def resolve_user_from_token(request: Request, token: str, db: Session) -> User:
+    """Resolve an active user from a raw access token.
 
+    Shared by the Bearer dependency and the SSE route, whose EventSource
+    clients cannot set an Authorization header and pass the token as a query
+    parameter instead.
+    """
     settings = request.app.state.settings
     try:
         payload = decode_access_token(
-            token=credentials.credentials,
+            token=token,
             secret_key=settings.secret_key.get_secret_value(),
             algorithm=settings.jwt_algorithm,
         )
@@ -68,6 +66,17 @@ def get_current_user(
     if user is None or not user.is_active:
         raise _unauthorized()
     return user
+
+
+def get_current_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
+    db: DbSession,
+) -> User:
+    """Resolve and validate the active user from a Bearer token."""
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise _unauthorized()
+    return resolve_user_from_token(request, credentials.credentials, db)
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

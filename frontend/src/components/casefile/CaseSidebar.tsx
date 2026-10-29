@@ -12,6 +12,7 @@ import {
   type ApplicationDetail,
   type CompliancePreview,
   type WorkflowAction,
+  type WorkflowDefinition,
 } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
@@ -154,9 +155,11 @@ function computeRiskExplanation(
 function NextStepPanel({
   application,
   actions,
+  definition,
 }: {
   application: ApplicationDetail;
   actions: AllowedAction[];
+  definition?: WorkflowDefinition;
 }) {
   if (application.is_withdrawn) {
     return (
@@ -181,6 +184,11 @@ function NextStepPanel({
       </Panel>
     );
   }
+  // The clause comes from the configured workflow edge, not from the frontend.
+  const transitionClause = definition?.transitions.find(
+    (transition) =>
+      transition.from_state === application.status && transition.action === primary.action,
+  )?.apH_clause;
   return (
     <Panel title="Next step">
       <dl className="space-y-3 text-13">
@@ -205,6 +213,16 @@ function NextStepPanel({
             </dd>
           </div>
         </div>
+        {transitionClause ? (
+          <div className="border-t border-line pt-3">
+            <dt className="text-12 font-medium text-ink-500">Clause</dt>
+            <dd className="mt-0.5">
+              <span className="rounded-pill bg-neutral-soft px-2 py-0.5 text-11 font-medium text-ink-700">
+                {transitionClause}
+              </span>
+            </dd>
+          </div>
+        ) : null}
       </dl>
     </Panel>
   );
@@ -407,9 +425,11 @@ function RelatedAlerts({
 export default function CaseSidebar({
   application,
   token,
+  definition,
 }: {
   application: ApplicationDetail;
   token: string;
+  definition?: WorkflowDefinition;
 }) {
   const { actions } = useWorkflowActions();
   const complianceQuery = useQuery({
@@ -433,7 +453,7 @@ export default function CaseSidebar({
 
   return (
     <aside className="min-w-0 space-y-6 self-start xl:sticky xl:top-6">
-      <NextStepPanel application={application} actions={sortedActions} />
+      <NextStepPanel application={application} actions={sortedActions} definition={definition} />
       <DocumentWaitingPanel applicationId={application.id} token={token} />
       <RiskExplanationPanel
         explanation={explanation}

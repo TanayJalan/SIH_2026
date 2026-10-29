@@ -19,7 +19,7 @@ from sqlalchemy import func, select
 
 from app.models.application_type_route import ApplicationTypeRoute
 from app.models.calendar import AcademicCalendarEvent
-from app.models.deadline import DeadlineRule
+from app.models.deadline import DeadlineRule, Timer
 from app.models.decision import Decision, DecisionLetter
 from app.models.deficiency import Deficiency
 from app.models.enums import (
@@ -31,6 +31,7 @@ from app.models.enums import (
     DeficiencyStatus,
     Role,
     SecurityDepositStatus,
+    TimerStatus,
 )
 from app.models.security_deposit import SecurityDeposit
 from app.services.fee_calculator import (
@@ -50,6 +51,7 @@ PAYLOAD_GUARDS: frozenset[str] = frozenset(
         "decision_eoa",
         "decision_lod",
         "decision_lor",
+        "ec_quorum_met",
         "speaking_order_present",
         "shc_outcome_present",
         "deposit_proof_present",
@@ -129,7 +131,24 @@ def _appeal_deadline(ctx: TransitionContext) -> datetime | None:
     if ctx.application.appeal_deadline is not None:
         return ctx.application.appeal_deadline
     letter = _latest_letter(ctx)
-    return letter.appeal_deadline if letter is not None else None
+    if letter is not None and letter.appeal_deadline is not None:
+        return letter.appeal_deadline
+    # The Timer is the scheduler's source of truth (APH 1.11a). Older files can
+    # have a running clock without the application/letter read-model columns.
+    timer = ctx.db.scalar(
+        select(Timer)
+        .join(DeadlineRule, DeadlineRule.id == Timer.deadline_rule_id)
+        .where(
+            Timer.application_id == ctx.application.id,
+            DeadlineRule.code == "APPEAL_WINDOW",
+            Timer.status.in_(
+                (TimerStatus.PENDING, TimerStatus.DUE, TimerStatus.BREACHED)
+            ),
+        )
+        .order_by(Timer.due_at.desc())
+        .limit(1)
+    )
+    return timer.due_at if timer is not None else None
 
 
 def _outcome(ctx: TransitionContext) -> str | None:

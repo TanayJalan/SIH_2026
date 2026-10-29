@@ -1,21 +1,104 @@
 """Role-scoped alert inbox, acknowledgement and summary endpoints."""
 
+import asyncio
 import uuid
+from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import func, select
 
-from app.api.dependencies import ClockDep, CurrentUser, DbSession
+from app.api.dependencies import (
+    ClockDep,
+    CurrentUser,
+    DbSession,
+    resolve_user_from_token,
+)
 from app.models.alert import Alert
 from app.models.enums import AlertChannel, AlertStatus, Severity
+from app.models.user import User
 from app.schemas.alert import AlertPage, AlertRead, AlertSummaryRead
 from app.services.alert_engine import acknowledge_alert
+from app.services.alert_stream import format_sse, get_alert_stream_broker
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 _UNREAD_STATUSES = (AlertStatus.PENDING, AlertStatus.SENT)
+
+_stream_bearer = HTTPBearer(auto_error=False)
+
+# Seconds between SSE keepalive comments; well below typical proxy timeouts.
+_STREAM_KEEPALIVE_SECONDS = 15.0
+
+
+def get_stream_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_stream_bearer)],
+    db: DbSession,
+    token: Annotated[str | None, Query()] = None,
+) -> User:
+    """Authenticate an SSE subscriber from a Bearer header or query token.
+
+    ``EventSource`` cannot set headers, so the token query parameter is the
+    fallback the browser uses. The token is validated with exactly the same
+    rules as the Bearer dependency.
+    """
+    if credentials is not None and credentials.scheme.lower() == "bearer":
+        token = credentials.credentials
+    if not token:
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return resolve_user_from_token(request, token, db)
+
+
+@router.get(
+    "/stream",
+    summary="Server-Sent Events stream of the current user's new alerts",
+)
+async def stream_alerts(
+    current_user: Annotated[User, Depends(get_stream_user)],
+) -> StreamingResponse:
+    """Stream committed alert rows and simulated-clock advances live.
+
+    Frames are ``alert`` (one new in-app alert row) and ``time`` (the demo
+    clock moved, so every countdown and deadline view is stale). Comments are
+    emitted as keepalives so proxies keep the connection open.
+    """
+    broker = get_alert_stream_broker()
+    user_id = str(current_user.id)
+    events = broker.register(user_id)
+
+    async def event_publisher() -> AsyncIterator[str]:
+        try:
+            yield "event: connected\ndata: {}\n\n"
+            while True:
+                try:
+                    event = await asyncio.wait_for(
+                        events.queue.get(), timeout=_STREAM_KEEPALIVE_SECONDS
+                    )
+                except TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
+                yield format_sse(event)
+        finally:
+            broker.unregister(user_id, events)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        event_publisher(),
+        media_type="text/event-stream",
+        headers=headers,
+    )
 
 
 @router.get(

@@ -9,6 +9,7 @@ from app.api.routes import (
     applications,
     audit_logs,
     auth,
+    casefile,
     committees,
     compliance_admin,
     health,
@@ -26,6 +27,7 @@ api_router.include_router(auth.router)
 api_router.include_router(applications.router)
 api_router.include_router(application_workspace.router)
 api_router.include_router(workflow.router)
+api_router.include_router(casefile.router)
 api_router.include_router(workflow_definition.router)
 api_router.include_router(letters.router)
 api_router.include_router(compliance_admin.router)

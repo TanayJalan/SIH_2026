@@ -2390,3 +2390,214 @@ export function listExpertPool(
     { token },
   );
 }
+
+// ---------------------------------------------------------------------------
+// Case-file read models: deadlines, decisions, appeals, letters, fee movements
+// ---------------------------------------------------------------------------
+
+/** The single seven-day appeal window of the latest decision (APH 1.11a). */
+export interface AppealDeadline {
+  deadline: string | null;
+  days_left: number | null;
+  letter_type: string | null;
+  apH_clause: string;
+}
+
+/** Security Deposit clock: grace and the penalty ladder windows (APH 2.25f). */
+export interface DepositDeadline {
+  due_on: string | null;
+  days_left: number | null;
+  intimated_on: string | null;
+  penalty_percent: number | null;
+  first_penalty_until: string | null;
+  second_penalty_until: string | null;
+  withdrawal_after: string | null;
+  current_stage: string | null;
+  apH_clause: string;
+}
+
+/** Two academic years of LoA validity (APH 1.10b). */
+export interface LoaValidity {
+  valid_until: string;
+  days_left: number;
+  expired: boolean;
+  apH_clause: string;
+}
+
+export interface CasefileTimer {
+  id: string;
+  deadline_rule_code: string;
+  status: "PENDING" | "DUE" | "BREACHED" | "COMPLETED" | "CANCELLED";
+  started_at: string;
+  due_at: string;
+  days_left: number;
+  apH_clause: string;
+}
+
+/** Every statutory clock the case-file stage track must show. */
+export interface ApplicationDeadlines {
+  application_id: string;
+  as_of: string;
+  appeal: AppealDeadline | null;
+  security_deposit: DepositDeadline | null;
+  loa_validity: LoaValidity | null;
+  timers: CasefileTimer[];
+}
+
+export function getApplicationDeadlines(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationDeadlines> {
+  return request<ApplicationDeadlines>(
+    `/applications/${applicationId}/deadlines`,
+    { token },
+  );
+}
+
+/** Council ratification of one EC decision (APH 2.25a). */
+export interface CouncilRatificationRecord {
+  ratified_on: string;
+  ec_recommendation_ref: string | null;
+  apH_clause: string;
+}
+
+/** One recorded EC / SAC / Council decision or recommendation. */
+export interface DecisionRecord {
+  id: string;
+  application_id: string;
+  body: "EC" | "COUNCIL" | "SAC" | "SHC";
+  outcome:
+    | "LOA"
+    | "EOA"
+    | "LOD"
+    | "LOR"
+    | "RECOMMEND"
+    | "NOT_RECOMMEND"
+    | "SEND_BACK";
+  decided_on: string;
+  quorum_met: boolean;
+  notes: string;
+  apH_clause: string;
+  created_at: string;
+  committee_name: string | null;
+  ratification: CouncilRatificationRecord | null;
+}
+
+export function listApplicationDecisions(
+  token: string,
+  applicationId: string,
+): Promise<DecisionRecord[]> {
+  return request<DecisionRecord[]>(
+    `/applications/${applicationId}/decisions`,
+    { token },
+  );
+}
+
+/** The single appeal and its SAC / Council trail (APH 1.11). */
+export interface AppealRecord {
+  id: string;
+  application_id: string;
+  filed_at: string | null;
+  within_deadline: boolean;
+  loop_no: number;
+  sac_recommendation: string | null;
+  council_decision: string | null;
+  decided_at: string | null;
+  apH_clause: string;
+}
+
+export function listApplicationAppeals(
+  token: string,
+  applicationId: string,
+): Promise<AppealRecord[]> {
+  return request<AppealRecord[]>(
+    `/applications/${applicationId}/appeal`,
+    { token },
+  );
+}
+
+export function listApplicationFeeTransactions(
+  token: string,
+  applicationId: string,
+): Promise<FeeTransaction[]> {
+  return request<FeeTransaction[]>(
+    `/applications/${applicationId}/fee/transactions`,
+    { token },
+  );
+}
+
+/** One letter published on the portal, with its statutory clocks. */
+export interface DecisionLetterRecord {
+  id: string;
+  application_id: string;
+  decision_id: string | null;
+  letter_type:
+    | "LOA"
+    | "EOA"
+    | "LOD"
+    | "LOR"
+    | "SPEAKING_ORDER"
+    | "DEFICIENCY_REPORT"
+    | "SHOW_CAUSE";
+  letter_number: string;
+  issued_on: string;
+  published_at: string | null;
+  appeal_clock_start: string | null;
+  appeal_deadline: string | null;
+  body_text: string;
+  acknowledged_at: string | null;
+  download_url: string | null;
+}
+
+export function listApplicationLetters(
+  token: string,
+  applicationId: string,
+): Promise<DecisionLetterRecord[]> {
+  return request<DecisionLetterRecord[]>(
+    `/applications/${applicationId}/letters`,
+    { token },
+  );
+}
+
+export function acknowledgeLetter(
+  token: string,
+  letterId: string,
+): Promise<DecisionLetterRecord> {
+  return request<DecisionLetterRecord>(`/letters/${letterId}/acknowledge`, {
+    method: "POST",
+    token,
+  });
+}
+
+/** Download a letter PDF through the browser exactly like an application document. */
+export async function downloadLetterPdf(
+  token: string,
+  letter: DecisionLetterRecord,
+): Promise<void> {
+  const url = letter.download_url;
+  if (!url) {
+    throw new ApiError(404, "The letter PDF is not available");
+  }
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    throw buildApiError(response.status, payload);
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+  link.href = objectUrl;
+  link.download = `${letter.letter_number.replace("/", "_")}.pdf`;
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}

@@ -25,6 +25,7 @@ from app.models import (
     AcademicCalendarEvent,
     AlertRule,
     AlertTrigger,
+    AlertTriggerCatalogue,
     Application,
     ApplicationCategory,
     ApplicationProgram,
@@ -510,6 +511,113 @@ ALERT_RULE_CLAUSES: dict[str, tuple[str, bool]] = {
     "DEPOSIT-PENALTY": ("APH 2.25f", False),
     "LOA-EXPIRED": ("APH 1.10b", False),
 }
+
+
+# The alert-trigger vocabulary is data, not a code enum. ``handler_key`` selects
+# the engine handler, so a new statutory trigger only needs a catalogue row and
+# a rule (see docs/OPEN_QUESTIONS.md OQ-25). The list is repeated in migration
+# 0023 so an existing database that missed the earlier data insert is repaired
+# by ``alembic upgrade head`` as well as by ``make seed``.
+ALERT_TRIGGERS = (
+    (
+        "DEADLINE_APPROACHING",
+        "DEADLINE_APPROACHING",
+        "An application deadline is approaching.",
+        "APH 1.2",
+        False,
+    ),
+    (
+        "SLA_BREACHED",
+        "SLA_BREACHED",
+        "A configured processing deadline has passed.",
+        "DEMO",
+        True,
+    ),
+    (
+        "DEFICIENCY_DUE",
+        "DEFICIENCY_DUE",
+        "A deficiency response is due.",
+        "APH 2.4",
+        False,
+    ),
+    (
+        "DEFICIENCY_OVERDUE",
+        "DEFICIENCY_OVERDUE",
+        "A deficiency response is overdue.",
+        "APH 2.25c",
+        False,
+    ),
+    (
+        "DOCUMENT_EXPIRING",
+        "DOCUMENT_EXPIRING",
+        "A document is approaching its expiry date.",
+        "APH 6.17h",
+        False,
+    ),
+    (
+        "COMPLIANCE_RED",
+        "COMPLIANCE_RED",
+        "An institution has moved to RED compliance status.",
+        "APH 7.13",
+        False,
+    ),
+    (
+        "APPLICATION_STATUS_CHANGED",
+        "APPLICATION_STATUS_CHANGED",
+        "An application moved to a new workflow status.",
+        "APH 1.4.3",
+        False,
+    ),
+    (
+        "INSPECTION_SCHEDULED",
+        "INSPECTION_SCHEDULED",
+        "An Expert Visit Committee inspection was scheduled.",
+        "APH 1.9a",
+        False,
+    ),
+    (
+        "APPEAL_WINDOW_CLOSING",
+        "APPEAL_WINDOW_CLOSING",
+        "The seven-day appeal window against a Speaking Order is closing.",
+        "APH 1.11a",
+        False,
+    ),
+    (
+        "APPEAL_EXPIRED",
+        "APPEAL_EXPIRED",
+        "The seven-day appeal window closed with no appeal.",
+        "APH 1.11a",
+        False,
+    ),
+    (
+        "DEPOSIT_DUE",
+        "DEPOSIT_DUE",
+        "The Security Deposit and Affidavit 3 are due after an LoA.",
+        "APH 2.25f",
+        False,
+    ),
+    (
+        "DEPOSIT_OVERDUE",
+        "DEPOSIT_OVERDUE",
+        "The Security Deposit clock expired without payment.",
+        "APH 2.25f",
+        False,
+    ),
+    (
+        "DEPOSIT_PENALTY",
+        "DEPOSIT_PENALTY",
+        "A Security Deposit ladder step was applied by the scheduler.",
+        "APH 2.25f",
+        False,
+    ),
+    (
+        "LOA_EXPIRED",
+        "LOA_EXPIRED",
+        "The two-academic-year LoA validity period ended.",
+        "APH 1.10b",
+        False,
+    ),
+)
 
 
 # The compliance rule library and calculator norms are data files under
@@ -1486,6 +1594,7 @@ def _ensure_workflow_definitions(db: Session, audit: AuditService) -> int:
 def _ensure_aph_reference_data(db: Session, audit: AuditService) -> dict[str, int]:
     """Load every generated APH seed file in dependency order."""
     return {
+        "alert_triggers": _ensure_alert_triggers(db, audit),
         "deadline_rules": _ensure_deadline_rules(db, audit),
         "workflow_definitions": _ensure_workflow_definitions(db, audit),
         "application_type_routes": _ensure_application_type_routes(db, audit),
@@ -1571,6 +1680,42 @@ def _ensure_sla_configs(db: Session, audit: AuditService) -> int:
                 "escalate_to_role": escalate_to_role.value,
                 "apH_clause": "DEMO",
                 "needs_verification": True,
+            },
+        )
+        created += 1
+    return created
+
+
+def _ensure_alert_triggers(db: Session, audit: AuditService) -> int:
+    """Ensure every rule trigger has a catalogue row without overwriting edits."""
+    created = 0
+    for code, handler_key, description, apH_clause, needs_verification in ALERT_TRIGGERS:
+        existing = db.scalar(
+            select(AlertTriggerCatalogue).where(
+                AlertTriggerCatalogue.code == code
+            )
+        )
+        if existing is not None:
+            continue
+        trigger = AlertTriggerCatalogue(
+            code=code,
+            handler_key=handler_key,
+            description=description,
+            apH_clause=apH_clause,
+            needs_verification=needs_verification,
+        )
+        db.add(trigger)
+        db.flush()
+        audit.log(
+            None,
+            "seed.alert_trigger.create",
+            "AlertTriggerCatalogue",
+            trigger.id,
+            after={
+                "code": trigger.code,
+                "handler_key": trigger.handler_key,
+                "apH_clause": trigger.apH_clause,
+                "needs_verification": trigger.needs_verification,
             },
         )
         created += 1

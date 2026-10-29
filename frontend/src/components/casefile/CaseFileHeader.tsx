@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronDown, MoreHorizontal, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronDown, MoreHorizontal, Pencil, ScrollText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import ApplicationStatusBadge from "../ApplicationStatusBadge";
@@ -12,8 +12,10 @@ import {
   getAllowedActions,
   type ApplicationDetail,
   type AllowedAction,
+  type WorkflowDefinition,
 } from "@/lib/api";
 import { humanizeEnum } from "@/lib/format";
+import { calendarDaysUntil, useSimulatedNow } from "@/lib/useSimulatedNow";
 
 interface SlaSummary {
   value: number;
@@ -21,24 +23,23 @@ interface SlaSummary {
   state: SlaState;
 }
 
-function slaSummary(application: ApplicationDetail): SlaSummary | null {
+function slaSummary(application: ApplicationDetail, now: Date): SlaSummary | null {
   const { sla_due_at, submitted_at } = application;
   if (!sla_due_at || !submitted_at || application.current_stage === "COMPLETED") {
     return null;
   }
   const due = new Date(sla_due_at).getTime();
-  if (Number.isNaN(due)) {
+  if (Number.isNaN(due) || submitted_at === null) {
     return null;
   }
   const startedAt = new Date(submitted_at).getTime();
-  const now = Date.now();
-  const daysLeft = Math.ceil((due - now) / 86_400_000);
+  const daysLeft = calendarDaysUntil(now, sla_due_at) ?? 0;
   const state: SlaState =
     daysLeft < 0 ? "breach" : daysLeft <= 3 ? "watch" : "ok";
   const window = due - startedAt;
   const value =
     Number.isFinite(window) && window > 0
-      ? ((now - startedAt) / window) * 100
+      ? ((now.getTime() - startedAt) / window) * 100
       : 100;
   return { value, daysLeft, state };
 }
@@ -56,11 +57,13 @@ export default function CaseFileHeader({
   token,
   userRole,
   risk,
+  definition,
 }: {
   application: ApplicationDetail;
   token: string;
   userRole: string;
   risk: RiskSummary;
+  definition?: WorkflowDefinition;
 }) {
   const { openAction } = useWorkflowActions();
   const allowedQuery = useQuery({
@@ -75,7 +78,8 @@ export default function CaseFileHeader({
   const dangerActions = actions.filter((action) => action.tone === "danger");
   const canEditDraft =
     userRole === "INSTITUTION_ADMIN" && application.status === "DRAFT";
-  const sla = slaSummary(application);
+  const now = useSimulatedNow();
+  const sla = slaSummary(application, now);
 
   return (
     <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
@@ -94,6 +98,40 @@ export default function CaseFileHeader({
               status={application.status}
               isWithdrawn={application.is_withdrawn}
             />
+            {definition ? (
+              <Tooltip
+                content={definition.label}
+              >
+                <span
+                  tabIndex={0}
+                  className="rounded-pill bg-neutral-soft px-2 py-0.5 text-11 font-medium text-ink-700"
+                >
+                  {definition.track.replace("TRACK_", "Track ")}
+                </span>
+              </Tooltip>
+            ) : null}
+            {application.decision_type ? (
+              <Tooltip
+                content={
+                  application.decision_uploaded_at
+                    ? `Decision recorded on ${new Date(application.decision_uploaded_at).toLocaleDateString("en-IN")}`
+                    : "A final decision has been recorded on this file."
+                }
+              >
+                <span
+                  tabIndex={0}
+                  className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-paper px-2 py-0.5 text-11 font-medium text-ink-700"
+                >
+                  <ScrollText aria-hidden="true" className="size-3" />
+                  Decision: {application.decision_type}
+                </span>
+              </Tooltip>
+            ) : null}
+            {application.portal_application_no ? (
+              <span className="text-12 text-ink-500">
+                Portal no. <span className="font-medium text-ink-700">{application.portal_application_no}</span>
+              </span>
+            ) : null}
             {application.is_escalated ? (
               <EscalationBadge />
             ) : null}

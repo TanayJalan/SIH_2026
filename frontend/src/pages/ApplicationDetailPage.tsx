@@ -8,8 +8,11 @@ import DeficiencyReportPanel from "../components/application/DeficiencyReportPan
 import ReopenApplicationPanel from "../components/application/ReopenApplicationPanel";
 import CaseCommittees from "../components/casefile/CaseCommittees";
 import CaseCompliance from "../components/casefile/CaseCompliance";
+import CaseDeadlinesStrip from "../components/casefile/CaseDeadlinesStrip";
+import CaseDecisionLetters from "../components/casefile/CaseDecisionLetters";
 import CaseDeficiencies from "../components/casefile/CaseDeficiencies";
 import CaseDocuments from "../components/casefile/CaseDocuments";
+import CaseFees from "../components/casefile/CaseFees";
 import CaseFileHeader, { type RiskSummary } from "../components/casefile/CaseFileHeader";
 import CaseInspection from "../components/casefile/CaseInspection";
 import CaseOverview from "../components/casefile/CaseOverview";
@@ -31,6 +34,7 @@ import {
   ApiError,
   getApplication,
   getApplicationCompliance,
+  getApplicationDeadlines,
   getWorkflowDefinition,
   getWorkflowTimeline,
   listDeficiencies,
@@ -43,10 +47,9 @@ const TABS = [
   { value: "overview", label: "Overview" },
   { value: "documents", label: "Documents" },
   { value: "compliance", label: "Compliance" },
-  { value: "deficiencies", label: "Deficiencies" },
-  { value: "inspection", label: "Inspection" },
   { value: "committees", label: "Committees" },
-  { value: "deficiency-report", label: "Deficiency Report" },
+  { value: "decisions", label: "Decision & letters" },
+  { value: "fees", label: "Fees" },
   { value: "timeline", label: "Timeline" },
 ];
 
@@ -60,8 +63,7 @@ function riskLevelFor(rules: ComplianceRulePreview[]): RiskLevel {
   return "low";
 }
 
-export default function ApplicationDetailPage() {
-  const { applicationId } = useParams<{ applicationId: string }>();
+export default function ApplicationDetailPage() {  const { applicationId } = useParams<{ applicationId: string }>();
   const { user, token } = useAuth();
 
   const applicationQuery = useQuery({
@@ -87,6 +89,13 @@ export default function ApplicationDetailPage() {
   const complianceQuery = useQuery({
     queryKey: ["compliance-preview", applicationId],
     queryFn: () => getApplicationCompliance(token ?? "", applicationId ?? ""),
+    enabled: Boolean(token && applicationId && applicationQuery.data),
+    retry: false,
+  });
+  // Statutory clocks: appeal window, Security Deposit ladder, LoA validity.
+  const deadlinesQuery = useQuery({
+    queryKey: ["application-deadlines", applicationId],
+    queryFn: () => getApplicationDeadlines(token ?? "", applicationId ?? ""),
     enabled: Boolean(token && applicationId && applicationQuery.data),
     retry: false,
   });
@@ -206,6 +215,7 @@ export default function ApplicationDetailPage() {
           token={token ?? ""}
           userRole={user.role}
           risk={risk}
+          definition={definitionQuery.data}
         />
 
         {application.locked_at && application.status !== "DRAFT" ? (
@@ -232,13 +242,19 @@ export default function ApplicationDetailPage() {
         ) : null}
 
         {caseStages.length > 0 ? (
-          <StageTrack
-            stages={caseStages}
-            current={application.current_stage}
-            events={stageEvents}
-            label="Application workflow stages"
-            className="rounded-panel border border-line bg-surface p-5 sm:p-6"
-          />
+          <>
+            <StageTrack
+              stages={caseStages}
+              current={application.current_stage}
+              events={stageEvents}
+              label="Application workflow stages"
+              className="rounded-panel border border-line bg-surface p-5 sm:p-6"
+            />
+            <CaseDeadlinesStrip
+              deadlines={deadlinesQuery.data}
+              pending={deadlinesQuery.isPending}
+            />
+          </>
         ) : null}
 
         <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -264,47 +280,57 @@ export default function ApplicationDetailPage() {
               </TabsContent>
 
               <TabsContent value="compliance">
-                <CaseCompliance
-                  applicationId={application.id}
-                  token={token ?? ""}
-                  canRaiseDeficiency={officerRole}
-                />
-              </TabsContent>
-
-              <TabsContent value="deficiencies">
-                <CaseDeficiencies
-                  applicationId={application.id}
-                  token={token ?? ""}
-                  canRespond={institutionRole}
-                  canClose={officerRole}
-                />
-              </TabsContent>
-
-              <TabsContent value="inspection">
-                <CaseInspection
-                  applicationId={application.id}
-                  token={token ?? ""}
-                  canSchedule={regionalRole}
-                />
+                <div className="space-y-5">
+                  <CaseCompliance
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    canRaiseDeficiency={officerRole}
+                  />
+                  <CaseDeficiencies
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    canRespond={institutionRole}
+                    canClose={officerRole}
+                  />
+                  <DeficiencyReportPanel
+                    applicationId={application.id}
+                    token={token ?? ""}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="committees">
-                <CaseCommittees
-                  applicationId={application.id}
+                <div className="space-y-5">
+                  <CaseCommittees
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    canSelect={
+                      regionalRole ||
+                      user.role === "REGULATION_BUREAU_OFFICER" ||
+                      user.role === "SUPER_ADMIN"
+                    }
+                  />
+                  <CaseInspection
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    canSchedule={regionalRole}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="decisions">
+                <CaseDecisionLetters
+                  application={application}
                   token={token ?? ""}
-                  canSelect={
-                    regionalRole ||
-                    user.role === "REGULATION_BUREAU_OFFICER" ||
-                    user.role === "SUPER_ADMIN"
-                  }
+                  institutionAdmin={institutionRole}
                 />
               </TabsContent>
 
-              <TabsContent value="deficiency-report">
-                <DeficiencyReportPanel
-                  applicationId={application.id}
+              <TabsContent value="fees">
+                <CaseFees
+                  application={application}
                   token={token ?? ""}
-                  className="mt-4"
+                  institutionAdmin={institutionRole}
                 />
               </TabsContent>
 
@@ -314,7 +340,11 @@ export default function ApplicationDetailPage() {
             </Tabs>
           </div>
 
-          <CaseSidebar application={application} token={token ?? ""} />
+          <CaseSidebar
+            application={application}
+            token={token ?? ""}
+            definition={definitionQuery.data}
+          />
         </div>
       </div>
     </WorkflowDialogHost>

@@ -12,11 +12,15 @@ from app.core.clock import SimulatedClock
 from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.services.alert_engine import AlertEngine
+from app.services.alert_stream import publish_clock, publish_created_alerts
 from app.services.workflow_jobs import sweep
 
 router = APIRouter(prefix="/dev", tags=["development"])
 
 _TIME_ENTITY_ID = uuid.UUID(int=0)
+# Large enough to walk the two-academic-year LoA validity clock (730 days) and
+# the full Security Deposit ladder, not just the seven-day appeal window.
+_MAX_SIMULATION_DAYS = 1000
 
 
 class AlertScanRead(BaseModel):
@@ -41,7 +45,7 @@ class TimeSimulationRead(BaseModel):
 class TimeSimulationUpdate(BaseModel):
     """Advance the demo clock or reset it to real time."""
 
-    days: int = Field(default=0, ge=0, le=30)
+    days: int = Field(default=0, ge=0, le=_MAX_SIMULATION_DAYS)
     reset: bool = False
 
     @model_validator(mode="after")
@@ -89,6 +93,10 @@ def _replay_scan(
             scan_db.commit()
             sweep(scan_db, clock, settings=settings)
             scan_db.commit()
+            # Publish after the commits so the SSE frames can never describe
+            # rows that a rollback might still discard.
+            publish_created_alerts(engine)
+            publish_clock(clock)
             alerts_created += result.alerts_created
             escalations += result.escalations
 
@@ -118,7 +126,7 @@ def get_simulated_time(
     db: DbSession,
     audit: AuditDep,
     request: Request,
-    days: Annotated[int | None, Query(ge=1, le=30)] = None,
+    days: Annotated[int | None, Query(ge=1, le=_MAX_SIMULATION_DAYS)] = None,
 ) -> TimeSimulationRead:
     """Read the simulated clock, optionally replaying daily alert scans.
 
@@ -186,6 +194,7 @@ def update_simulated_time(
     scan: AlertScanRead | None = None
     if payload.reset:
         clock.reset()
+        publish_clock(clock, force=True)
         action = "dev.time.reset"
     else:
         scan = _replay_scan(clock=clock, settings=settings, days=payload.days)

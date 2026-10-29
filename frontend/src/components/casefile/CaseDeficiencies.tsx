@@ -4,6 +4,7 @@ import { Button, Skeleton, StatusPill, type StatusPillTone } from "../ui";
 import { useWorkflowActions } from "../workflow/WorkflowDialogHost";
 import { ApiError, listDeficiencies, type DeficiencyRecord } from "@/lib/api";
 import { formatDate, formatDateTime, humanizeEnum } from "@/lib/format";
+import { useSimulatedNow } from "@/lib/useSimulatedNow";
 
 const DEFICIENCY_TONES: Record<DeficiencyRecord["status"], StatusPillTone> = {
   OPEN: "breach",
@@ -11,18 +12,19 @@ const DEFICIENCY_TONES: Record<DeficiencyRecord["status"], StatusPillTone> = {
   CLOSED: "compliant",
 };
 
-function daysUntil(dueDate: string): number {
+function daysUntil(now: Date, dueDate: string): number {
   const due = new Date(`${dueDate}T00:00:00`).getTime();
   if (Number.isNaN(due)) {
     return 0;
   }
-  const today = new Date();
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   return Math.round((due - today.getTime()) / 86_400_000);
 }
 
 function DueCountdown({ dueDate }: { dueDate: string }) {
-  const days = daysUntil(dueDate);
+  const now = useSimulatedNow();
+  const days = daysUntil(now, dueDate);
   const label =
     days < 0
       ? `${-days} day${days === -1 ? "" : "s"} overdue`

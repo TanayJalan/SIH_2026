@@ -20,6 +20,7 @@ import {
 } from "../components/ui";
 import { ApiError, getApplications, type ApplicationRecord } from "../lib/api";
 import { formatDate, humanizeEnum, shortId } from "../lib/format";
+import { useSimulatedNow } from "../lib/useSimulatedNow";
 import { isClosedStatus } from "../lib/status";
 import {
   ROLE_SCOPE_DESCRIPTIONS,
@@ -48,13 +49,14 @@ function AppReference({ application }: { application: ApplicationRecord }) {
 }
 
 function DueDate({ application }: { application: ApplicationRecord }) {
+  const now = useSimulatedNow();
   if (!application.sla_due_at) {
     return <span className="text-13 text-ink-500">—</span>;
   }
   const due = new Date(application.sla_due_at);
   const closed = isClosedStatus(application.status);
   const overdue =
-    due.getTime() < Date.now() && !closed && !application.is_withdrawn;
+    due.getTime() < now.getTime() && !closed && !application.is_withdrawn;
   return (
     <span className={overdue ? "text-13 font-medium text-breach-strong" : "text-13 text-ink-700"}>
       {formatDate(application.sla_due_at)}
