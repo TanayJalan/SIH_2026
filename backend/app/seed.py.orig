@@ -1,0 +1,534 @@
+"""Idempotent development seed data.
+
+Only clearly fictional data is created: 15 demo institutions across 5 states,
+one account per APH role, and five pre-staged applications that exercise the
+full workflow (EoA self-disclosure, new-institution scrutiny deficiency,
+LoR with 7-day appeal, LoA with Security Deposit, clean institution Nil Deficiency).
+
+Illustrative document rules, SLA durations, alert rules and compliance rules are
+seeded as editable configuration; they are not real AICTE norms or thresholds.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import random
+import uuid
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.config import get_settings
+from app.core.logging import configure_logging
+from app.core.security import hash_password
+from app.db.session import SessionLocal
+from app.models import (
+    AcademicCalendarEvent,
+    AlertRule,
+    AlertTrigger,
+    AlertTriggerCatalogue,
+    Application,
+    ApplicationCategory,
+    ApplicationProgram,
+    ApplicationStatus,
+    ApplicationTrack,
+    ApplicationTypeRoute,
+    ApprovedIntakeLedger,
+    CalendarEventKey,
+    ComplianceConfig,
+    ComplianceRule,
+    ComplianceSnapshot,
+    DeadlineRule,
+    DecisionType,
+    Decision,
+    DecisionLetter,
+    Document,
+    DocumentVerificationStatus,
+    ExpertPool,
+    Faculty,
+    FacultyCadre,
+    Institution,
+    InstitutionClass,
+    InstitutionRegion,
+    LandOwnership,
+    PublicNotice,
+    RequiredDocument,
+    Role,
+    SecurityDepositSchedule,
+    Severity,
+    SLAConfig,
+    User,
+    WorkflowDefinition,
+    WorkflowEvent,
+    WorkflowStage,
+    WorkflowState,
+    WorkflowTransition,
+)
+from app.services.audit import AuditService
+from app.services.compliance import evaluate_institution
+from app.services.portal_number import next_portal_application_no
+
+logger = logging.getLogger("app.seed")
+
+# ---------------------------------------------------------------------------
+# Load 15 institutions from the generated APH seed
+# ---------------------------------------------------------------------------
+SEED_DIR = Path(__file__).resolve().parent.parent / "seeds" / "aph"
+INSTITUTIONS_JSON = (SEED_DIR / "institutions.json").read_text(encoding="utf-8")
+SEED_INSTITUTIONS: list[dict[str, Any]] = json.loads(INSTITUTIONS_JSON)
+
+# Map institution IDs to UUIDs after creation
+INST_ID_MAP: dict[str, uuid.UUID] = {}
+
+# ---------------------------------------------------------------------------
+# Role strings (match Role enum order)
+# ---------------------------------------------------------------------------
+ROLE_NAMES = [
+    "INSTITUTION_ADMIN",
+    "REGULATION_BUREAU_OFFICER",
+    "SCRUTINY_COMMITTEE_MEMBER",
+    "EVC_MEMBER",
+    "REGIONAL_OFFICER",
+    "SHC_MEMBER",
+    "SAC_MEMBER",
+    "EXECUTIVE_COMMITTEE_MEMBER",
+    "COMPLAINT_SCRUTINY_MEMBER",
+    "SUPER_ADMIN",
+]
+
+# ---------------------------------------------------------------------------
+# Main seed function
+# ---------------------------------------------------------------------------
+
+def seed(database: bool = True) -> None:
+    """Run the full seed: institutions → users → applications → rules → config."""
+    if database:
+        import subprocess  # noqa: E402
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            logger.error("alembic upgrade head failed:\n%s", result.stderr)
+            raise SystemExit(result.stderr)
+
+    db: Session = SessionLocal()
+
+    try:
+        # ---- 1. Seed institutions (upsert by aicte_id) ----
+        for inst_data in SEED_INSTITUTIONS:
+            inst = db.scalar(
+                select(Institution).where(Institution.aicte_id == inst_data["aicte_id"])
+            )
+            if inst is None:
+                inst = Institution(
+                    name=inst_data["name"],
+                    aicte_id=inst_data["aicte_id"],
+                    pid=inst_data["pid"],
+                    state=inst_data["state"],
+                    region=inst_data["region"],
+                    aicte_region=inst_data["aicte_region"],
+                    institution_class=inst_data["institution_class"],
+                    type=inst_data["type"],
+                    is_women_only=inst_data.get("is_women_only", False),
+                    is_pwbd=inst_data.get("is_pwbd", False),
+                    in_jk_ladakh_ne=inst_data.get("in_jk_ladakh_ne", False),
+                    affiliating_body=inst_data.get("affiliating_body"),
+                )
+                db.add(inst)
+                db.flush()
+                INST_ID_MAP[inst_data["aicte_id"]] = inst.id
+                logger.info(" seeded institution %s (%s)", inst.name, inst.aicte_id)
+            else:
+                INST_ID_MAP[inst_data["aicte_id"]] = inst.id
+
+        # ---- 2. Create one demo user per APH role ----
+        inst_list = list(INST_ID_MAP.keys())
+        random.shuffle(inst_list)
+        inst_cycle = iter(inst_list * 3)
+
+        created_users: list[User] = []
+        for role_name in ROLE_NAMES:
+            role = Role(role_name)
+            inst_id_str = next(inst_cycle)
+            inst_uuid = INST_ID_MAP.get(inst_id_str)
+            if inst_uuid is None:
+                logger.warning("no institution available for role %s", role_name)
+                continue
+            email = f"{role_name.lower()}@demo.edu"
+            password = "ChangeMe123!"
+
+            existing = db.scalar(select(User).where(User.email == email))
+            if existing:
+                existing.role = role
+                existing.institution_id = inst_uuid
+                db.add_existing(existing)
+                created_users.append(existing)
+                logger.info(" using existing user %s", email)
+                continue
+
+            user = User(
+                name=f"{role_name} Demo",
+                email=email,
+                password_hash=hash_password(password),
+                role=role,
+                institution_id=inst_uuid,
+                region=role_name,
+            )
+            db.add(user)
+            created_users.append(user)
+            logger.info(" seeded user %s (role=%s, inst=%s)", email, role_name, inst_uuid)
+
+        # ---- 3. Pre-stage 5 application cases ----
+        cases = _seed_cases(db, INST_ID_MAP)
+
+        # ---- 4. Seed default alert rules and compliance config (idempotent) ----
+        _seed_default_rules(db)
+
+        db.commit()
+        logger.info(" seed complete: %d institutions, %d users, %d cases",
+                    len(SEED_INSTITUTIONS), len(created_users), len(cases))
+        db.close()
+
+
+def _seed_cases(db: Session, inst_map: dict[str, uuid.UUID]) -> list[Application]:
+    """Create 5 pre-staged application cases exercising the full workflow."""
+    from app.models.deficiency import Deficiency
+    from app.models.document import Document
+    from app.models.alert import Alert, AlertTrigger, Severity as Sev
+    from app.models.decision import Decision, DecisionBody, DecisionOutcome
+    from app.models.decision_letter import DecisionLetter
+    from app.models.security_deposit import SecurityDeposit, SecurityDepositSchedule
+
+    cases: list[Application] = []
+    academic_year = "2026-27"
+
+    # --- Case 1: EoA self-disclosure ready to submit, with deficiencies visible ---
+    inst_1_aicte = random.choice(["MAH-0001", "TN-0001", "KA-0001", "GJ-0001", "DL-0001"])
+    inst_1_id = inst_map[inst_1_aicte]
+    app1 = Application(
+        institution_id=inst_1_id,
+        application_type="EOA_SELF_DISCLOSURE",
+        category="CAT1_CUTOFF",
+        academic_year=academic_year,
+        status="SUBMITTED",
+        current_stage="APPLICATION",
+        portal_application_no="AICTE/2026-27/0000001",
+        decision=None,
+    )
+    db.add(app1)
+    db.flush()
+
+    def1 = Deficiency(
+        application_id=app1.id,
+        title="Expired fire safety certificate",
+        description="Fire certificate expired on 2025-12-31; renewal in progress",
+        severity="HIGH",
+        raised_by_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        document_ref=None,
+        status="RAISED",
+        apH_clause="APH 6.8",
+    )
+    db.add(def1)
+
+    doc1 = Document(
+        application_id=app1.id,
+        document_type="FIRE_CERTIFICATE",
+        file_name="fire_cert_2025.pdf",
+        storage_key="fire_cert_2025.pdf",
+        uploaded_by_uuid=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        verification_status="EXPIRED",
+        verification_notes="Fire safety certificate expired on 2025-12-31",
+    )
+    db.add(doc1)
+
+    alert1 = Alert(
+        application_id=app1.id,
+        rule_id=uuid.uuid4(),
+        recipient_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        severity=Sev.HIGH,
+        title="Deficiency: Expired fire certificate",
+        message="Fire safety certificate expired; renewal required (APH 6.8).",
+        channel="IN_APP",
+        escalation_level=0,
+        dedupe_key=f"deficiency:app1:expired_fire",
+    )
+    db.add(alert1)
+
+    cases.append(app1)
+    logger.info(" seeded Case 1: EoA self-disclosure with deficiency (inst=%s)", inst_1_aicte)
+
+    # --- Case 2: New-institution case at Scrutiny with a deficiency raised ---
+    inst_2_aicte = random.choice([i for i in inst_map.keys() if i != inst_1_aicte])
+    inst_2_id = inst_map[inst_2_aicte]
+    app2 = Application(
+        institution_id=inst_2_id,
+        application_type="NEW_INSTITUTION",
+        category="CAT1_CUTOFF",
+        academic_year=academic_year,
+        status="SCRUTINY",
+        current_stage="SCRUTINY",
+        portal_application_no="AICTE/2026-27/0000002",
+        decision=None,
+    )
+    db.add(app2)
+    db.flush()
+
+    def2 = Deficiency(
+        application_id=app2.id,
+        title="Missing DSC",
+        description="Digital signature certificate not uploaded",
+        severity="CRITICAL",
+        raised_by_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        document_ref=None,
+        status="RAISED",
+        apH_clause="APH 2.24",
+    )
+    db.add(def2)
+
+    doc2 = Document(
+        application_id=app2.id,
+        document_type="DSC_CERTIFICATE",
+        file_name="dsc_cert.pdf",
+        storage_key="dsc_cert.pdf",
+        uploaded_by_uuid=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        verification_status="PENDING",
+        verification_notes="DSC not verified yet",
+    )
+    db.add(doc2)
+
+    alert2 = Alert(
+        application_id=app2.id,
+        rule_id=uuid.uuid4(),
+        recipient_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        severity=Sev.CRITICAL,
+        title="Deficiency: Missing DSC",
+        message="Digital signature certificate required for application (APH 2.24).",
+        channel="IN_APP",
+        escalation_level=0,
+        dedupe_key=f"deficiency:app2:missing_dsc",
+    )
+    db.add(alert2)
+
+    cases.append(app2)
+    logger.info(" seeded Case 2: New-institution scrutiny with DSC deficiency (inst=%s)", inst_2_aicte)
+
+    # --- Case 3: Case with LoR issued and 7-day appeal window running ---
+    inst_3_aicte = random.choice([i for i in inst_map.keys() if i not in (inst_1_aicte, inst_2_aicte)])
+    inst_3_id = inst_map[inst_3_aicte]
+    app3 = Application(
+        institution_id=inst_3_id,
+        application_type="INCREASE_INTAKE",
+        category="CAT1_CUTOFF",
+        academic_year=academic_year,
+        status="EC_DECISION",
+        current_stage="DECISION",
+        portal_application_no="AICTE/2026-27/0000003",
+        decision="LOR",
+    )
+    db.add(app3)
+    db.flush()
+
+    decision3 = Decision(
+        application_id=app3.id,
+        body=DecisionBody.EC,
+        outcome=DecisionOutcome.LOR,
+        quorum_met=True,
+        recorded_at=datetime.now(UTC),
+        recorded_by_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+    )
+    db.add(decision3)
+
+    lod_letter3 = DecisionLetter(
+        application_id=app3.id,
+        letter_type="LOR",
+        letter_number="LoR/AICTE/2026-27/003",
+        issued_at=datetime.now(UTC) - timedelta(days=5),
+        issued_by_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        signing_authority="EXECUTIVE_COMMITTEE_MEMBER",
+        conditions=[],
+    )
+    db.add(lod_letter3)
+
+    # Appeal deadline = 7 days from today so the +7d demo works
+    app3.appeal_deadline = (_today() + timedelta(days=7)).isoformat()
+
+    alert3 = Alert(
+        application_id=app3.id,
+        rule_id=uuid.uuid4(),
+        recipient_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        severity=Sev.MEDIUM,
+        title="Appeal window approaching: 7 days",
+        message="The 7-day appeal window under APH 1.11a closes in 7 days. "
+                "File your appeal before the deadline.",
+        channel="IN_APP",
+        escalation_level=0,
+        dedupe_key=f"appeal:app3:window",
+    )
+    db.add(alert3)
+
+    cases.append(app3)
+    logger.info(" seeded Case 3: LoR issued, 7-day appeal window running (inst=%s)", inst_3_aicte)
+
+    # --- Case 4: LoA recommended with Security Deposit pending ---
+    inst_4_aicte = random.choice([i for i in inst_map.keys() if i not in (inst_1_aicte, inst_2_aicte, inst_3_aicte)])
+    inst_4_id = inst_map[inst_4_aicte]
+    app4 = Application(
+        institution_id=inst_4_id,
+        application_type="INCREASE_INTAKE",
+        category="CAT1_CUTOFF",
+        academic_year=academic_year,
+        status="EC_DECISION",
+        current_stage="DECISION",
+        portal_application_no="AICTE/2026-27/0000004",
+        decision="LOA",
+    )
+    db.add(app4)
+    db.flush()
+
+    decision4 = Decision(
+        application_id=app4.id,
+        body=DecisionBody.EC,
+        outcome=DecisionOutcome.LOA,
+        quorum_met=True,
+        recorded_at=datetime.now(UTC),
+        recorded_by_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+    )
+    db.add(decision4)
+
+    sd4 = SecurityDeposit(
+        application_id=app4.id,
+        level="FIRST",
+        required_paise=20000000,  # 2 lakh rupees in paise
+        doubled_for_leased=False,
+        created_on=_today(),
+        maturity_on=(_today() + timedelta(days=15)).date().isoformat(),
+        status="PENDING",
+        apH_clause="APH 2.25f",
+    )
+    db.add(sd4)
+
+    ssd4_1 = SecurityDepositSchedule(
+        security_deposit_id=sd4.id,
+        level="FIRST",
+        due_on=(_today() + timedelta(days=5)).date().isoformat(),
+        penalty_percent=0,
+        status="DUE",
+    )
+    ssd4_2 = SecurityDepositSchedule(
+        security_deposit_id=sd4.id,
+        level="FIRST",
+        due_on=(_today() + timedelta(days=15)).date().isoformat(),
+        penalty_percent=10,
+        status="DUE",
+    )
+    ssd4_3 = SecurityDepositSchedule(
+        security_deposit_id=sd4.id,
+        level="FIRST",
+        due_on=(_today() + timedelta(days=31)).date().isoformat(),
+        penalty_percent=20,
+        status="DUE",
+    )
+    db.add(ssd4_1)
+    db.add(ssd4_2)
+    db.add(ssd4_3)
+
+    alert4 = Alert(
+        application_id=app4.id,
+        rule_id=uuid.uuid4(),
+        recipient_user_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        severity=Sev.MEDIUM,
+        title="Security Deposit due: day 5 of 15",
+        message="The Security Deposit and Affidavit 3 are due on {due_date} (5 days remaining). "
+                .format(due_date=(_today() + timedelta(days=5)).isoformat()),
+        channel="IN_APP",
+        escalation_level=0,
+        dedupe_key=f"deposit:app4:day5",
+    )
+    db.add(alert4)
+
+    cases.append(app4)
+    logger.info(" seeded Case 4: LoA recommended, Security Deposit pending (inst=%s)", inst_4_aicte)
+
+    # --- Case 5: Clean institution with Nil Deficiency ---
+    inst_5_aicte = random.choice([i for i in inst_map.keys() if i not in (inst_1_aicte, inst_2_aicte, inst_3_aicte, inst_4_aicte)])
+    inst_5_id = inst_map[inst_5_aicte]
+    app5 = Application(
+        institution_id=inst_5_id,
+        application_type="NEW_INSTITUTION",
+        category="CAT1_CUTOFF",
+        academic_year=academic_year,
+        status="ACTIVE_LOA",
+        current_stage="COMPLETED",
+        portal_application_no="AICTE/2026-27/0000005",
+        decision="LOA",
+    )
+    db.add(app5)
+    db.flush()
+
+    cases.append(app5)
+    logger.info(" seeded Case 5: Clean institution, Nil Deficiency (inst=%s)", inst_5_aicte)
+
+    return cases
+
+
+def _seed_default_rules(db: Session) -> None:
+    """Seed default alert rules and compliance config (idempotent, uupsert by code)."""
+    from app.models.alert import AlertRule, AlertTrigger
+    from app.models.compliance import ComplianceConfig, ComplianceRule
+
+    # Ensure at least one compliance config row exists
+    existing = db.scalar(
+        select(ComplianceConfig).where(ComplianceConfig.stage == "DECISION")
+    )
+    if existing is None:
+        cfg = ComplianceConfig(
+            stage="DECISION",
+            min_compliance_score=70,
+            max_deviation_percent=20,
+            apH_clause="APH 7.13",
+            needs_verification=True,
+        )
+        db.add(cfg)
+        logger.info(" seeded default ComplianceConfig")
+
+    # Ensure at least one compliance rule row exists
+    existing_rule = db.scalar(
+        select(ComplianceRule).where(ComplianceRule.code == "FSR-FOR-UG")
+    )
+    if existing_rule is None:
+        rule = ComplianceRule(
+            code="FSR-FOR-UG",
+            name="Faculty:student ratio UG",
+            category="Faculty",
+            description="UG faculty ratio must not exceed 1:20",
+            metric_key="faculty.fsr_for",
+            operator="<=",
+            threshold=20,
+            severity="CRITICAL",
+            applies_to_family="ENGINEERING_TECHNOLOGY",
+            applies_to_level="UG",
+            apH_clause="APH 6.14, Annexure-5",
+            metric_params={"family": "ENGINEERING_TECHNOLOGY", "level": "UG"},
+            explanation_template="UG faculty:student ratio is {{observed}}; APH 6.14 requires at most {{threshold}}.",
+            penalty_codes=["7.4c"],
+            needs_verification=True,
+        )
+        db.add(rule)
+        logger.info(" seeded default ComplianceRule")
+
+    db.flush()
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    seed(database=True)
