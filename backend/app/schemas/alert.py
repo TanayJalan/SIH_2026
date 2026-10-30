@@ -34,7 +34,11 @@ class AlertRead(BaseModel):
     sent_at: datetime | None
     acknowledged_at: datetime | None
     acknowledged_by_id: uuid.UUID | None
+    acknowledged_by_name: str | None = None
+    """Name of the user who acknowledged the alert, when acknowledged."""
     created_at: datetime
+    apH_clause: str | None = None
+    """APH clause backing the rule that raised this alert, when one exists."""
 
 
 class AlertPage(BaseModel):

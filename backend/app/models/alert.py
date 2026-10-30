@@ -102,6 +102,9 @@ class Alert(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     recipient: Mapped[User] = relationship(
         back_populates="alerts", foreign_keys=[recipient_user_id]
     )
+    acknowledged_by: Mapped[User | None] = relationship(
+        back_populates="acknowledged_alerts", foreign_keys=[acknowledged_by_id]
+    )
     application: Mapped[Application | None] = relationship(back_populates="alerts")
     rule: Mapped[AlertRule | None] = relationship("AlertRule")
 

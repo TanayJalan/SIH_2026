@@ -184,19 +184,23 @@ def list_alerts(
     total = db.scalar(select(func.count()).select_from(Alert).where(*conditions)) or 0
     alerts = db.scalars(
         select(Alert)
+        .options(joinedload(Alert.rule), joinedload(Alert.acknowledged_by))
         .where(*conditions)
         .order_by(Alert.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     ).all()
 
-    return AlertPage(
-        items=[AlertRead.model_validate(alert) for alert in alerts],
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
-    )
+    reads = []
+    for alert in alerts:
+        read = AlertRead.model_validate(alert)
+        if alert.rule is not None:
+            read.apH_clause = alert.rule.apH_clause
+        if alert.acknowledged_by is not None:
+            read.acknowledged_by_name = alert.acknowledged_by.name
+        reads.append(read)
+
+    return AlertPage(items=reads, total=total, page=page, page_size=page_size, pages=(total + page_size - 1) // page_size)
 
 
 @router.post(

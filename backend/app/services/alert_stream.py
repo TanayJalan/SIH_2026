@@ -48,6 +48,12 @@ def format_sse(event: ScanEvent) -> str:
 
 def alert_event(alert: Alert) -> ScanEvent:
     """Build the ``alert`` frame for one committed in-app alert row."""
+    ap_h_clause: str | None = None
+    try:
+        if alert.rule is not None:
+            ap_h_clause = alert.rule.apH_clause
+    except Exception:  # rule relationship not loaded or session closed
+        ap_h_clause = None
     return ScanEvent(
         event="alert",
         payload={
@@ -61,6 +67,7 @@ def alert_event(alert: Alert) -> ScanEvent:
             ),
             "escalation_level": alert.escalation_level,
             "channel": alert.channel.value,
+            "apH_clause": ap_h_clause,
         },
     )
 

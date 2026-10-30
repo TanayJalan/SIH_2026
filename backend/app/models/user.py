@@ -63,6 +63,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     alerts: Mapped[list[Alert]] = relationship(
         back_populates="recipient", foreign_keys="Alert.recipient_user_id"
     )
+    acknowledged_alerts: Mapped[list[Alert]] = relationship(
+        back_populates="acknowledged_by", foreign_keys="Alert.acknowledged_by_id"
+    )
     audit_logs: Mapped[list[AuditLog]] = relationship(back_populates="actor")
     ratified_decisions: Mapped[list[CouncilRatification]] = relationship(
         back_populates="ratified_by_user",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, ChevronRight } from "lucide-react";
+import { Bell, BellRing, Check, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "@/auth/AuthContext";
@@ -13,7 +13,7 @@ import {
   type AlertRecord,
   type Severity,
 } from "@/lib/api";
-import { formatDateTime, humanizeEnum, shortId } from "@/lib/format";
+import { formatRelativeTime, humanizeEnum, shortId } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const SEVERITY_DOT: Record<Severity, string> = {
@@ -27,12 +27,16 @@ function unreadAlert(alert: AlertRecord): boolean {
   return alert.status === "PENDING" || alert.status === "SENT";
 }
 
+const BELL_ANIMATION_MS = 900;
+
 export default function NotificationBell() {
   const { user, token } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [ringing, setRinging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastCountRef = useRef<number | null>(null);
 
   const summaryQuery = useQuery({
     queryKey: ["alerts", "summary", user?.id],
@@ -45,7 +49,7 @@ export default function NotificationBell() {
 
   const recentQuery = useQuery({
     queryKey: ["alerts", "bell", user?.id],
-    queryFn: () => getAlerts(token ?? "", { page: 1, pageSize: 6 }),
+    queryFn: () => getAlerts(token ?? "", { page: 1, pageSize: 8 }),
     enabled: Boolean(token && user),
     retry: false,
     staleTime: 30_000,
@@ -69,6 +73,20 @@ export default function NotificationBell() {
       });
     },
   });
+
+  // Ring the bell once when the unread count grows (a live SSE alert arrived).
+  useEffect(() => {
+    const count = summaryQuery.data?.unread ?? 0;
+    if (
+      lastCountRef.current !== null &&
+      count > lastCountRef.current
+    ) {
+      setRinging(true);
+      const timer = setTimeout(() => setRinging(false), BELL_ANIMATION_MS);
+      return () => clearTimeout(timer);
+    }
+    lastCountRef.current = count;
+  }, [summaryQuery.data?.unread]);
 
   useEffect(() => {
     if (!open) {
@@ -115,9 +133,17 @@ export default function NotificationBell() {
         className={cn(
           "relative inline-flex size-9 items-center justify-center rounded-input text-ink-700 transition-colors hover:bg-paper hover:text-ink",
           open && "bg-paper text-ink",
+          ringing && "ring-2 ring-breach animate-ping",
         )}
       >
-        <Bell aria-hidden="true" className="size-4" />
+        {ringing ? (
+          <BellRing
+            aria-hidden="true"
+            className={cn("size-4", ringing && "text-breach-strong animate-bell")}
+          />
+        ) : (
+          <Bell aria-hidden="true" className="size-4" />
+        )}
         {unread > 0 ? (
           <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-pill bg-breach px-1 py-0.5 text-12 font-semibold leading-none text-surface">
             {unread > 99 ? "99+" : unread}
@@ -184,13 +210,13 @@ export default function NotificationBell() {
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-0.5 line-clamp-2 text-12 leading-4 text-ink-700">
+                      <p className="mt-0.5 line-clamp-1 text-12 leading-4 text-ink-700">
                         {alert.message}
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-11 text-ink-500">
                         <span>{humanizeEnum(alert.severity)}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{formatDateTime(alert.created_at)}</span>
+                        <span>{formatRelativeTime(alert.created_at)}</span>
                         {alert.application_id ? (
                           <>
                             <span aria-hidden="true">·</span>

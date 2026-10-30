@@ -1149,7 +1149,11 @@ export interface AlertRecord {
   sent_at: string | null;
   acknowledged_at: string | null;
   acknowledged_by_id: string | null;
+  acknowledged_by_name: string | null;
+  /** Name of the user who acknowledged the alert, when acknowledged. */
   created_at: string;
+  apH_clause: string | null;
+  /** APH clause backing the rule that raised this alert, when one exists. */
 }
 
 export interface AlertQuery {

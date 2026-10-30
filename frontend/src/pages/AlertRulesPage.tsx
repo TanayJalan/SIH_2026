@@ -60,6 +60,28 @@ const TRIGGER_LABELS: Record<AlertTrigger, string> = {
   INSPECTION_SCHEDULED: "Inspection scheduled",
 };
 
+const SAMPLE_TEMPLATE_VALUES: Record<string, string> = {
+  institution: "Vidya Vikas College of Engineering",
+  application_id: "a1b2c3d4",
+  application_reference: "APP-2026-0001",
+  due_date: "31 Oct 2026",
+  days_remaining: "7",
+  status: "Submitted",
+  stage: "Scrutiny",
+  document: "DSC Certificate",
+  deficiency: "Missing faculty appointment letters",
+  inspection_date: "15 Nov 2026",
+};
+
+/** Render an alert template with sample values, mirroring the backend's
+ *  safe placeholder handling (unknown placeholders stay visible). */
+function renderAlertTemplate(template: string): string {
+  return template.replaceAll(/\{([^}]+)\}/g, (_match, key) => {
+    const value = SAMPLE_TEMPLATE_VALUES[key.trim()];
+    return value === undefined ? `{${key}}` : value;
+  });
+}
+
 const TRIGGER_OPTIONS = (Object.keys(TRIGGER_LABELS) as AlertTrigger[]).map(
   (value) => ({ value, label: TRIGGER_LABELS[value] }),
 );
@@ -175,6 +197,39 @@ function messageFor(error: unknown, fallback: string): string {
 
 function thresholdText(rule: Pick<AlertRule, "days_before">): string {
   return rule.days_before === 0 ? "Immediate" : `T-${rule.days_before} days`;
+}
+
+function TemplatePreview({ template }: { template: string }): JSX.Element {
+  const rendered = renderAlertTemplate(template);
+  const hasPlaceholders = /\{(institution|application_id|application_reference|due_date|days_remaining|status|stage|document|deficiency|inspection_date)\}/.test(
+    template,
+  );
+
+  return (
+    <section
+      className="rounded-input border border-line bg-surface p-3"
+      aria-label="Template preview"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-11 font-semibold uppercase tracking-wide text-ink-500">
+          Live preview
+        </span>
+        {hasPlaceholders ? (
+          <span className="text-11 text-ink-500">
+            · Sample values shown; unknown placeholders stay visible
+          </span>
+        ) : null}
+      </div>
+      <div className="rounded-input border border-line bg-paper p-3 text-13 leading-6 text-ink-700 font-sans">
+        {rendered}
+      </div>
+      {template.trim() === "" ? (
+        <p className="mt-1 text-11 text-ink-500">
+          Enter a template to see the preview.
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 function AlertRuleDialog({
@@ -350,6 +405,7 @@ function AlertRuleDialog({
             className="min-h-32 font-mono text-13"
             required
           />
+          <TemplatePreview template={form.template} />
 
           <label className="flex items-center gap-2 text-13 font-medium text-ink-700">
             <input
