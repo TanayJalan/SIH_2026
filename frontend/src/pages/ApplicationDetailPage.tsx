@@ -47,9 +47,10 @@ const TABS = [
   { value: "overview", label: "Overview" },
   { value: "documents", label: "Documents" },
   { value: "compliance", label: "Compliance" },
+  { value: "deficiencies", label: "Deficiencies and LoD" },
   { value: "committees", label: "Committees" },
-  { value: "decisions", label: "Decision & letters" },
   { value: "fees", label: "Fees" },
+  { value: "decision", label: "Decision" },
   { value: "timeline", label: "Timeline" },
 ];
 
@@ -249,6 +250,9 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
               events={stageEvents}
               label="Application workflow stages"
               className="rounded-panel border border-line bg-surface p-5 sm:p-6"
+              appeal={deadlinesQuery.data?.appeal ?? null}
+              deposit={deadlinesQuery.data?.security_deposit ?? null}
+              loaValidity={deadlinesQuery.data?.loa_validity ?? null}
             />
             <CaseDeadlinesStrip
               deadlines={deadlinesQuery.data}
@@ -286,17 +290,20 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
                     token={token ?? ""}
                     canRaiseDeficiency={officerRole}
                   />
-                  <CaseDeficiencies
-                    applicationId={application.id}
-                    token={token ?? ""}
-                    canRespond={institutionRole}
-                    canClose={officerRole}
-                  />
                   <DeficiencyReportPanel
                     applicationId={application.id}
                     token={token ?? ""}
                   />
                 </div>
+              </TabsContent>
+
+              <TabsContent value="deficiencies">
+                <CaseDeficiencies
+                  applicationId={application.id}
+                  token={token ?? ""}
+                  canRespond={institutionRole}
+                  canClose={officerRole}
+                />
               </TabsContent>
 
               <TabsContent value="committees">
@@ -318,7 +325,7 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
                 </div>
               </TabsContent>
 
-              <TabsContent value="decisions">
+              <TabsContent value="decision">
                 <CaseDecisionLetters
                   application={application}
                   token={token ?? ""}
@@ -335,7 +342,11 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
               </TabsContent>
 
               <TabsContent value="timeline">
-                <CaseTimeline applicationId={application.id} token={token ?? ""} />
+                <CaseTimeline
+                  applicationId={application.id}
+                  token={token ?? ""}
+                  definition={definitionQuery.data}
+                />
               </TabsContent>
             </Tabs>
           </div>
@@ -344,6 +355,7 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
             application={application}
             token={token ?? ""}
             definition={definitionQuery.data}
+            events={timelineQuery.data?.events ?? []}
           />
         </div>
       </div>

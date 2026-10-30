@@ -13,8 +13,9 @@ import {
   type CompliancePreview,
   type WorkflowAction,
   type WorkflowDefinition,
+  type WorkflowEventRecord,
 } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime, humanizeEnum } from "@/lib/format";
 
 const OWNER_FOR_ACTION: Partial<Record<WorkflowAction, string>> = {
   submit: "Institution admin",
@@ -422,14 +423,83 @@ function RelatedAlerts({
   );
 }
 
+function WhyThisDecisionPanel({
+  application,
+  events,
+  definition,
+}: {
+  application: ApplicationDetail;
+  events: WorkflowEventRecord[];
+  definition?: WorkflowDefinition;
+}) {
+  const latest = events
+    .slice()
+    .reverse()
+    .find(
+      (event) =>
+        Boolean(event.action) &&
+        Boolean(event.from_status) &&
+        event.from_status !== event.to_status,
+    );
+
+  const transition = latest && definition
+    ? definition.transitions.find(
+        (transition) =>
+          transition.from_state === latest.from_status &&
+          transition.action === latest.action &&
+          transition.to_state === latest.to_status,
+      )
+    : undefined;
+
+  const clause = transition?.apH_clause ?? null;
+  const actor = latest?.actor_name ?? "the system";
+  const at = latest ? formatDateTime(latest.created_at) : null;
+
+  return (
+    <Panel title="Why this decision">
+      {clause ? (
+        <div className="space-y-2 text-13 leading-5 text-ink-700">
+          <p>
+            The case reached <strong className="text-ink">
+              {humanizeEnum(application.status)}
+            </strong>{" "}
+            {at ? `on ${at}` : ""}{" "}
+            by {actor}, under <strong className="text-ink">{clause}</strong>.
+          </p>
+          {transition?.description ? (
+            <p className="text-12 text-ink-500">
+              {transition.description}
+            </p>
+          ) : null}
+        </div>
+      ) : latest ? (
+        <div className="text-13 leading-5 text-ink-700">
+          <p>
+            {humanizeEnum(application.status)} was reached by {actor}{" "}
+            {at ? `on ${at}` : ""}. No APH clause is recorded for the step that
+            moved the case here.
+          </p>
+        </div>
+      ) : (
+        <p className="text-13 leading-5 text-ink-700">
+          No workflow event has been recorded yet, so there is no clause to
+          explain the current state.
+        </p>
+      )}
+    </Panel>
+  );
+}
+
 export default function CaseSidebar({
   application,
   token,
   definition,
+  events = [],
 }: {
   application: ApplicationDetail;
   token: string;
   definition?: WorkflowDefinition;
+  events?: WorkflowEventRecord[];
 }) {
   const { actions } = useWorkflowActions();
   const complianceQuery = useQuery({
@@ -459,6 +529,11 @@ export default function CaseSidebar({
         explanation={explanation}
         pending={complianceQuery.isPending}
         errorText={errorText}
+      />
+      <WhyThisDecisionPanel
+        application={application}
+        events={events}
+        definition={definition}
       />
       <RelatedAlerts applicationId={application.id} token={token} />
     </aside>

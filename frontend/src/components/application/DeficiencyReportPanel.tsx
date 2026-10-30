@@ -312,7 +312,7 @@ export default function DeficiencyReportPanel({
                     <div className="mt-2 rounded-input border border-line bg-surface p-2.5">
                       <p className="flex items-center gap-1.5 text-12 font-medium text-ink">
                         <Scale aria-hidden="true" className="size-3.5 text-ink-500" />
-                        Suggested action under APH 7.3
+                        Suggestion · penal action under APH 7.3
                       </p>
                       <ul className="mt-1 space-y-1 text-12 leading-5 text-ink-700">
                         {item.penal_action_suggestions.map((suggestion) => (

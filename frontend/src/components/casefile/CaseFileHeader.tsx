@@ -88,6 +88,7 @@ export default function CaseFileHeader({
           <p className="text-12 font-medium text-ink-500">
             {application.reference ?? "Application"} ·{" "}
             {humanizeEnum(application.application_type)} ·{" "}
+            {humanizeEnum(application.category)} ·{" "}
             {application.academic_year}
           </p>
           <h1 className="mt-1 font-serif text-24 font-semibold leading-tight text-ink">

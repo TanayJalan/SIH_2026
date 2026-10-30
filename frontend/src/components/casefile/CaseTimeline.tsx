@@ -5,6 +5,7 @@ import {
   ApiError,
   getWorkflowTimeline,
   type WorkflowEventRecord,
+  type WorkflowTransitionDefinition,
 } from "@/lib/api";
 import { formatDateTime, humanizeEnum } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,24 @@ function eventHeading(event: WorkflowEventRecord): string {
     return `${humanizeEnum(event.from_status)} → ${humanizeEnum(event.to_status)}`;
   }
   return humanizeEnum(event.to_status);
+}
+
+/** Match a state-changing workflow event to its configured transition so the
+ *  timeline can render the APH clause that authorised the step. */
+function clauseForEvent(
+  event: WorkflowEventRecord,
+  transitions: WorkflowTransitionDefinition[],
+): string | null {
+  if (!event.action || !event.from_status || event.from_status === event.to_status) {
+    return null;
+  }
+  const match = transitions.find(
+    (transition) =>
+      transition.from_state === event.from_status &&
+      transition.action === event.action &&
+      transition.to_state === event.to_status,
+  );
+  return match?.apH_clause ?? null;
 }
 
 function eventDetail(event: WorkflowEventRecord): string | null {
@@ -55,9 +74,11 @@ function eventDetail(event: WorkflowEventRecord): string | null {
 
 function TimelineEntry({
   event,
+  clause,
   last,
 }: {
   event: WorkflowEventRecord;
+  clause?: string | null;
   last: boolean;
 }) {
   const detail = eventDetail(event);
@@ -95,6 +116,11 @@ function TimelineEntry({
             ? ` · ${humanizeEnum(event.from_status)} → ${humanizeEnum(event.to_status)}`
             : null}
         </p>
+        {clause ? (
+          <span className="mt-1 inline-flex items-center gap-1.5 rounded-pill bg-neutral-soft px-2 py-0.5 text-11 font-medium text-ink-700">
+            {clause}
+          </span>
+        ) : null}
         {event.comment ? (
           <p className="mt-1.5 text-13 leading-5 text-ink-700">{event.comment}</p>
         ) : null}
@@ -129,9 +155,11 @@ function TimelineEntry({
 export default function CaseTimeline({
   applicationId,
   token,
+  definition,
 }: {
   applicationId: string;
   token: string;
+  definition?: { transitions: WorkflowTransitionDefinition[] };
 }) {
   const timelineQuery = useQuery({
     queryKey: ["workflow-timeline", applicationId],
@@ -141,6 +169,7 @@ export default function CaseTimeline({
   });
 
   const events = timelineQuery.data?.events ?? [];
+  const transitions = definition?.transitions ?? [];
 
   return (
     <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
@@ -148,7 +177,8 @@ export default function CaseTimeline({
         <div>
           <h2 className="font-serif text-20 font-semibold text-ink">Timeline</h2>
           <p className="mt-1 text-13 text-ink-500">
-            Every state change, actor and decision recorded against this case.
+            Every state change, actor and decision recorded against this case,
+            with the APH clause that authorised each step.
           </p>
         </div>
         {timelineQuery.data ? (
@@ -181,6 +211,7 @@ export default function CaseTimeline({
             <TimelineEntry
               key={event.id}
               event={event}
+              clause={clauseForEvent(event, transitions)}
               last={index === events.length - 1}
             />
           ))}
