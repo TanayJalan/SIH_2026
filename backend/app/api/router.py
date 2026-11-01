@@ -15,6 +15,7 @@ from app.api.routes import (
     health,
     letters,
     public,
+    reports,
     search,
     workflow,
     workflow_definition,
@@ -34,5 +35,6 @@ api_router.include_router(compliance_admin.router)
 api_router.include_router(alert_rules.router)
 api_router.include_router(alerts.router)
 api_router.include_router(audit_logs.router)
+api_router.include_router(reports.router)
 api_router.include_router(search.router)
 api_router.include_router(committees.router)

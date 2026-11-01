@@ -52,10 +52,10 @@ def ensure_reference_config() -> None:
         _ensure_sla_configs(db, audit)
         _ensure_alert_rules(db, audit)
         _ensure_compliance_rules(db, audit)
-        _ensure_compliance_config(db, audit)
-        _ensure_aph_reference_data(db, audit)
+        _ensure_compliance_config(db)
+        _ensure_aph_reference_data(db)
         _ensure_baseline_snapshots(db)
-        _ensure_expert_pool(db, audit)
+        _ensure_expert_pool(db)
         db.commit()
 
 

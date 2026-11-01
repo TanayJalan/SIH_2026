@@ -33,7 +33,7 @@ from app.models import (
     Document,
     Alert,
     AlertTrigger,
-    Severity as Sev,
+    Severity,
     Decision,
     DecisionBody,
     DecisionOutcome,
@@ -178,7 +178,7 @@ def _seed_cases(db: Session, inst_map: dict[str, uuid.UUID]) -> list[Application
     """Create 5 pre-staged application cases exercising the full workflow."""
     from app.models.deficiency import Deficiency
     from app.models.document import Document
-    from app.models.alert import Alert, AlertTrigger, Severity as Sev
+    from app.models.alert import Alert, Severity as Sev
     from app.models.decision import Decision, DecisionBody, DecisionOutcome
     from app.models.decision_letter import DecisionLetter
     from app.models.security_deposit import SecurityDeposit, SecurityDepositSchedule
@@ -458,7 +458,7 @@ def _seed_cases(db: Session, inst_map: dict[str, uuid.UUID]) -> list[Application
 def _today(): return datetime.now(UTC).date()
 def _seed_default_rules(db: Session) -> None:
     """Seed default alert rules and compliance config (idempotent, uupsert by code)."""
-    from app.models.alert import AlertRule, AlertTrigger
+    from app.models.alert import AlertRule
     from app.models.compliance import ComplianceConfig, ComplianceRule
 
     # Ensure at least one compliance config row exists
@@ -526,7 +526,7 @@ def _ensure_sla_configs(db: Session, audit) -> None:
 
 def _ensure_alert_rules(db: Session, audit) -> None:
     """Seed baseline AlertRule rows if missing (idempotent by code)."""
-    from app.models.alert import AlertRule, AlertTrigger
+    from app.models.alert import AlertRule
     from app.models.compliance import ComplianceConfig, ComplianceRule
     # Minimal set: just ensure at least one rule exists
     existing = db.scalar(select(AlertRule).where(AlertRule.code == "DEADLINE-7"))
@@ -558,11 +558,9 @@ def _ensure_baseline_snapshots(db: Session) -> None:
 def _ensure_compliance_config(db: Session) -> None:
     """Ensure default ComplianceConfig row exists."""
     from app.models import ComplianceConfig
-    existing = db.scalar(select(ComplianceConfig).where(ComplianceConfig.stage == "DECISION"))
+    existing = db.scalar(select(ComplianceConfig).where(ComplianceConfig.key == "severity_weights"))
     if not existing:
-        db.add(ComplianceConfig(stage="DECISION", min_compliance_score=70,
-                                max_deviation_percent=20, apH_clause="APH 7.13",
-                                needs_verification=True))
+        db.add(ComplianceConfig(key="severity_weights", value={"CRITICAL": 25, "HIGH": 15, "MEDIUM": 8, "LOW": 4}))
         logger.info(" ensured default ComplianceConfig")
 
 def _ensure_compliance_rules(db: Session, audit) -> None:
@@ -573,7 +571,8 @@ def _ensure_compliance_rules(db: Session, audit) -> None:
         db.add(ComplianceRule(code="FSR-FOR-UG", name="Faculty:student ratio UG",
                               category="Faculty", description="UG faculty ratio must not exceed 1:20",
                               metric_key="faculty.fsr_for", operator="<=", threshold=20,
-                              severity="CRITICAL", applies_to_family="ENGINEERING_TECHNOLOGY",
+                              severity="CRITICAL", applies_to="INSTITUTION",
+                              applies_to_family="ENGINEERING_TECHNOLOGY",
                               applies_to_level="UG",
                               apH_clause="APH 6.14, Annexure-5",
                               metric_params={"family": "ENGINEERING_TECHNOLOGY", "level": "UG"},

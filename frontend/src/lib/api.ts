@@ -487,6 +487,15 @@ export interface FeeQuote {
 
 export type FeeKind = "TER" | "PENALTY" | "REFUND" | "DEDUCTION";
 
+export type SecurityDepositStatus =
+  | "PENDING"
+  | "PAID"
+  | "PENALTY_10"
+  | "PENALTY_20"
+  | "WITHDRAWN"
+  | "RELEASED"
+  | "FORFEITED";
+
 export interface FeeTransaction {
   id: string;
   application_id: string;
@@ -2600,6 +2609,321 @@ export async function downloadLetterPdf(
   const link = window.document.createElement("a");
   link.href = objectUrl;
   link.download = `${letter.letter_number.replace("/", "_")}.pdf`;
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}
+
+// ---------------------------------------------------------------------------
+// Report and dashboard aggregates (M10 backend: GET /reports/*)
+// ---------------------------------------------------------------------------
+
+/** Global filters shared by every dashboard endpoint. */
+export interface ReportFilters {
+  academic_year?: string;
+  region?: string;
+  state?: string;
+  application_type?: string;
+  track?: string;
+}
+
+// ---------- Regulation Bureau / Scrutiny dashboard ----------
+
+export interface QueueEntry {
+  application_id: string;
+  portal_application_no: string | null;
+  institution_name: string;
+  status: ApplicationStatus;
+  current_stage: string;
+  sla_due_at: string | null;
+  days_overdue: number | null;
+  assigned_officer: string | null;
+  apH_clause: string;
+}
+
+export interface RegulationBureauDashboard {
+  total_in_queue: number;
+  by_stage: { stage: string; count: number }[];
+  by_sla: { sla_state: string; count: number }[];
+  overdue_count: number;
+  overdue: QueueEntry[];
+  awaiting_institution_compliance: number;
+  upcoming_evc_dates: {
+    inspection_id: string;
+    application_id: string;
+    portal_application_no: string | null;
+    institution_name: string;
+    scheduled_on: string | null;
+    status: string;
+  }[];
+  average_handling_days: number | null;
+  apH_clause: string;
+}
+
+export function getRegulationBureauDashboard(
+  token: string,
+  filters: ReportFilters = {},
+): Promise<RegulationBureauDashboard> {
+  return request<RegulationBureauDashboard>(
+    withQuery("/reports/regulation-bureau", {
+      academic_year: filters.academic_year,
+      region: filters.region,
+      state: filters.state,
+      application_type: filters.application_type,
+      track: filters.track,
+    }),
+    { token },
+  );
+}
+
+// ---------- Regional Officer / SUPER_ADMIN dashboard ----------
+
+export interface ApplicationByTrackState {
+  track: string;
+  state: string;
+  count: number;
+}
+
+export interface FunnelEntry {
+  stage: string;
+  count: number;
+}
+
+export interface ApprovalVsRejection {
+  approvals: number;
+  rejections: number;
+  pending: number;
+}
+
+export interface AppealOutcome {
+  filed: number;
+  within_deadline: number;
+  sac_recommend: number;
+  sac_not_recommend: number;
+  sac_send_back: number;
+  council_allowed: number;
+  council_dismissed: number;
+}
+
+export interface SecurityDepositPending {
+  application_id: string;
+  portal_application_no: string | null;
+  institution_name: string;
+  status: SecurityDepositStatus;
+  penalty_percent: number | null;
+  due_on: string | null;
+  apH_clause: string;
+}
+
+export interface LoaExpiring {
+  application_id: string;
+  portal_application_no: string | null;
+  institution_name: string;
+  valid_until: string;
+  days_left: number;
+  apH_clause: string;
+}
+
+export interface InstitutionCompliance {
+  institution_id: string;
+  name: string;
+  state: string;
+  region: string;
+  score: number;
+  status: ComplianceHealth;
+  apH_clause: string;
+}
+
+export interface ViolationCode {
+  code: string;
+  count: number;
+}
+
+export interface FacultyRatioDeficit {
+  institution_id: string;
+  name: string;
+  student_faculty_ratio: number | null;
+  required_ratio: number | null;
+  deficit: number | null;
+  apH_clause: string;
+}
+
+export interface DeficiencyCategory {
+  category: string;
+  count: number;
+}
+
+export interface SlaBreach {
+  total_with_sla: number;
+  breached: number;
+  breach_rate: number;
+}
+
+export interface Escalation {
+  application_id: string;
+  portal_application_no: string | null;
+  institution_name: string;
+  level: number;
+  apH_clause: string;
+}
+
+export interface ComplaintStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface PenalActionByType {
+  action_type: string;
+  count: number;
+}
+
+export interface AverageDaysPerStage {
+  stage: string;
+  average_days: number;
+}
+
+export interface RegionalDashboard {
+  total_applications: number;
+  by_track_state: ApplicationByTrackState[];
+  funnel: FunnelEntry[];
+  approval_vs_rejection: ApprovalVsRejection;
+  appeals: AppealOutcome;
+  appeal_windows_closing_3_days: number;
+  security_deposits_pending: SecurityDepositPending[];
+  loa_expiring_6_months: LoaExpiring[];
+  institutions_by_compliance: InstitutionCompliance[];
+  top_violation_codes: ViolationCode[];
+  faculty_ratio_deficit: FacultyRatioDeficit[];
+  deficiency_categories: DeficiencyCategory[];
+  sla_breach: SlaBreach;
+  escalations: Escalation[];
+  complaints_by_status: ComplaintStatusCount[];
+  penal_actions_by_type: PenalActionByType[];
+  average_days_per_stage: AverageDaysPerStage[];
+  apH_clause: string;
+}
+
+export function getRegionalDashboard(
+  token: string,
+  filters: ReportFilters = {},
+): Promise<RegionalDashboard> {
+  return request<RegionalDashboard>(
+    withQuery("/reports/regional", {
+      academic_year: filters.academic_year,
+      region: filters.region,
+      state: filters.state,
+      application_type: filters.application_type,
+      track: filters.track,
+    }),
+    { token },
+  );
+}
+
+// ---------- Institution Admin dashboard ----------
+
+export interface OpenDeficiency {
+  deficiency_id: string;
+  category: string;
+  description: string;
+  due_date: string;
+  days_left: number;
+  apH_clause: string;
+}
+
+export interface FeePosition {
+  total_paise: number;
+  paid_paise: number;
+  refunded_paise: number;
+  due_paise: number;
+}
+
+export interface ExpiringDocument {
+  document_id: string;
+  doc_type: string;
+  filename: string;
+  expiry_date: string | null;
+  valid_until: string | null;
+  days_left: number | null;
+  apH_clause: string;
+}
+
+export interface MandatoryDisclosure {
+  present: boolean;
+  url: string | null;
+}
+
+export interface FailingRule {
+  code: string;
+  name: string;
+  message: string | null;
+  fix_text: string | null;
+  apH_clause: string;
+}
+
+export interface UpcomingDeadline {
+  key: string;
+  label: string;
+  due_on: string | null;
+  days_left: number | null;
+  apH_clause: string;
+}
+
+export interface InstitutionDashboard {
+  portal_application_no: string | null;
+  application_id: string | null;
+  institution_name: string;
+  status: ApplicationStatus;
+  open_deficiencies: OpenDeficiency[];
+  fees: FeePosition;
+  expiring_documents: ExpiringDocument[];
+  mandatory_disclosure: MandatoryDisclosure;
+  compliance_score: number | null;
+  top_failing_rules: FailingRule[];
+  upcoming_deadlines: UpcomingDeadline[];
+  apH_clause: string;
+}
+
+export function getInstitutionDashboard(
+  token: string,
+  filters: ReportFilters = {},
+): Promise<InstitutionDashboard> {
+  return request<InstitutionDashboard>(
+    withQuery("/reports/institution", {
+      academic_year: filters.academic_year,
+      region: filters.region,
+      state: filters.state,
+      application_type: filters.application_type,
+      track: filters.track,
+    }),
+    { token },
+  );
+}
+
+/** Download the per-application summary report PDF. */
+export async function downloadApplicationReportPdf(
+  token: string,
+  applicationId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/reports/application/${encodeURIComponent(applicationId)}.pdf`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    throw buildApiError(response.status, payload);
+  }
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+  link.href = objectUrl;
+  link.download = `application-report-${applicationId}.pdf`;
   window.document.body.appendChild(link);
   link.click();
   link.remove();

@@ -11,6 +11,7 @@ import ApplicationWizardPage from "./pages/ApplicationWizardPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import ComplianceAdminPage from "./pages/ComplianceAdminPage";
+import DashboardPage from "./pages/DashboardPage";
 import DesignSystemPage from "./pages/DesignSystemPage";
 import LoginPage from "./pages/LoginPage";
 import NewApplicationPage from "./pages/NewApplicationPage";
@@ -27,6 +28,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<OverviewPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
           <Route
             path="applications/new"
