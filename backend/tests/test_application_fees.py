@@ -151,9 +151,7 @@ def test_regulation_bureau_can_reopen_only_once(
     created = _complete_draft(api_client, admin_headers, workspace_applications)
     application_id = created["id"]
     pay_application_fee(api_client, admin_headers, application_id)
-    submitted = api_client.post(
-        f"/applications/{application_id}/submit", headers=admin_headers
-    )
+    submitted = api_client.post(f"/applications/{application_id}/submit", headers=admin_headers)
     assert submitted.status_code == 200, submitted.text
 
     blocked = api_client.post(
@@ -240,9 +238,7 @@ def test_deficiency_report_lists_items_with_clauses(
     created = _complete_draft(api_client, headers, workspace_applications)
     application_id = created["id"]
 
-    before = api_client.get(
-        f"/applications/{application_id}/deficiency-report", headers=headers
-    )
+    before = api_client.get(f"/applications/{application_id}/deficiency-report", headers=headers)
     assert before.status_code == 200, before.text
     before_body = before.json()
     assert before_body["apH_clause"] == "APH 2.3.3b"
@@ -273,9 +269,7 @@ def test_generated_document_shells_are_downloadable(
     created = _complete_draft(api_client, headers, workspace_applications)
     application_id = created["id"]
 
-    listing = api_client.get(
-        f"/applications/{application_id}/document-shells", headers=headers
-    )
+    listing = api_client.get(f"/applications/{application_id}/document-shells", headers=headers)
     assert listing.status_code == 200, listing.text
     assert "AFFIDAVIT_2" in listing.json()
 
@@ -294,3 +288,43 @@ def test_generated_document_shells_are_downloadable(
         headers=headers,
     )
     assert unknown.status_code == 404
+
+
+def test_government_institution_owes_no_security_deposit() -> None:
+    """APH Table 1.4 exempts Government/aided institutions from the deposit."""
+
+    from types import SimpleNamespace
+
+    from app.core.clock import SimulatedClock
+    from app.db.session import SessionLocal
+    from app.models.enums import InstitutionClass, LandOwnership
+    from app.services.audit import AuditService
+    from app.services.fees import SECURITY_DEPOSIT_EXEMPTION_NOTE, FeeService
+
+    programme = SimpleNamespace(program_name="B.Tech Computer Science", level="UG")
+
+    def application(institution_class: InstitutionClass) -> SimpleNamespace:
+        return SimpleNamespace(
+            id=uuid.uuid4(),
+            institution=SimpleNamespace(
+                institution_class=institution_class,
+                land_ownership=LandOwnership.OWNED,
+                building_leased=False,
+            ),
+            programs=[programme],
+            security_deposit_due_on=None,
+        )
+
+    with SessionLocal() as db:
+        service = FeeService(db, AuditService(db), SimulatedClock())
+
+        exempt = service.security_deposit_quote(application(InstitutionClass.GOVT_TYPE))
+        assert exempt.lines == []
+        assert exempt.total_due_paise == 0
+        assert SECURITY_DEPOSIT_EXEMPTION_NOTE in exempt.notes
+
+        payable = service.security_deposit_quote(application(InstitutionClass.OTHER))
+        assert len(payable.lines) == 1
+        assert payable.lines[0].programme_family == "ENGINEERING_TECHNOLOGY"
+        assert payable.lines[0].deposit_paise == 350000000
+        assert payable.lines[0].apH_clause == "APH Table 1.4"

@@ -11,7 +11,9 @@ from app.api.routes import (
     auth,
     casefile,
     committees,
+    complaints,
     compliance_admin,
+    deposits,
     health,
     letters,
     public,
@@ -36,3 +38,5 @@ api_router.include_router(alerts.router)
 api_router.include_router(audit_logs.router)
 api_router.include_router(search.router)
 api_router.include_router(committees.router)
+api_router.include_router(complaints.router)
+api_router.include_router(deposits.router)

@@ -59,18 +59,22 @@ const BODY_LABELS: Record<string, string> = {
   SHC: "Standing Hearing Committee",
 };
 
-function daysLeftLabel(
+function appealClock(
   now: Date,
   deadline: string | null | undefined,
-): string | null {
+): { closed: boolean; label: string } | null {
   if (!deadline) {
     return null;
   }
-  const days = Math.ceil((new Date(deadline).getTime() - now.getTime()) / 86_400_000);
-  if (days < 0) {
-    return `Closed ${-days} day${days === -1 ? "" : "s"} ago`;
+  const remaining = new Date(deadline).getTime() - now.getTime();
+  if (remaining <= 0) {
+    return { closed: true, label: `Closed on ${formatDate(deadline)}` };
   }
-  return `${days} day${days === 1 ? "" : "s"} left to appeal`;
+  const days = Math.ceil(remaining / 86_400_000);
+  return {
+    closed: false,
+    label: `${days} day${days === 1 ? "" : "s"} left to appeal`,
+  };
 }
 
 function Clause({ text }: { text: string | null }) {
@@ -203,7 +207,7 @@ function AppealPanel({
   const { findAction, openAction } = useWorkflowActions();
   const appealAction = findAction("file_appeal");
   const now = useSimulatedNow();
-  const countdown = daysLeftLabel(
+  const clock = appealClock(
     now,
     application.status === "APPEAL_WINDOW" && appeals.length === 0
       ? application.appeal_deadline
@@ -248,12 +252,13 @@ function AppealPanel({
     );
   }
 
-  const inWindow = application.status === "APPEAL_WINDOW";
+  const inWindow = application.status === "APPEAL_WINDOW" && !clock?.closed;
   if (!inWindow) {
     return (
       <p className="rounded-input border border-line bg-paper p-4 text-13 leading-5 text-ink-700">
-        No appeal has been filed. The single appeal window opens when a final decision letter is
-        issued and closes after seven days (APH 1.11a).
+        {clock?.closed
+          ? `The seven-day appeal window ${clock.label}; the decision is final and no further appeal can be filed (APH 1.11a).`
+          : "No appeal has been filed. The single appeal window opens when a final decision letter is issued and closes after seven days (APH 1.11a)."}
       </p>
     );
   }
@@ -262,7 +267,7 @@ function AppealPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-13 font-semibold text-watch-strong">
-            Appeal window open{countdown ? ` · ${countdown}` : ""}
+            Appeal window open{clock ? ` · ${clock.label}` : ""}
           </h3>
           <p className="mt-1 text-12 leading-5 text-watch-strong">
             One appeal may be filed against the Letter of Deficiency or Letter of Rejection; a late
@@ -342,7 +347,7 @@ function LettersTable({
         </thead>
         <tbody className="divide-y divide-line bg-surface">
           {letters.map((letter) => {
-            const countdown = daysLeftLabel(now, letter.appeal_deadline);
+            const clock = appealClock(now, letter.appeal_deadline);
             return (
               <tr key={letter.id}>
                 <td className="px-4 py-3 align-top">
@@ -356,7 +361,7 @@ function LettersTable({
                 </td>
                 <td className="px-4 py-3 align-top">
                   {letter.appeal_deadline ? (
-                    <span className="text-12 text-ink-700">{countdown}</span>
+                    <span className="text-12 text-ink-700">{clock?.label}</span>
                   ) : (
                     <span className="text-12 text-ink-500">—</span>
                   )}

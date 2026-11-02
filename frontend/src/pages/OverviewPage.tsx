@@ -8,6 +8,7 @@ import ApplicationStatusTracker from "../components/application/ApplicationStatu
 import EscalationBadge from "../components/EscalationBadge";
 import PageHeader from "../components/PageHeader";
 import UpcomingDeadlinesCard from "../components/dashboard/UpcomingDeadlinesCard";
+import SecurityDepositCard from "../components/dashboard/SecurityDepositCard";
 import { Button, EmptyState, Skeleton, Stat } from "../components/ui";
 import { getApplications, type UserProfile } from "../lib/api";
 import { formatDate, humanizeEnum, shortId } from "../lib/format";
@@ -227,6 +228,9 @@ export default function OverviewPage() {
         <aside className="min-w-0 space-y-6">
           {user.role === "INSTITUTION_ADMIN" ? (
             <UpcomingDeadlinesCard token={token ?? ""} />
+          ) : null}
+          {user.role === "INSTITUTION_ADMIN" ? (
+            <SecurityDepositCard token={token ?? ""} />
           ) : null}
           <section className="rounded-panel border border-line bg-surface p-5">
             <p className="text-12 font-semibold uppercase tracking-[0.12em] text-ink-500">

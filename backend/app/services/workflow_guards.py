@@ -97,9 +97,7 @@ def _route_flag(
 def _deadline_rule(ctx: TransitionContext, code: str) -> DeadlineRule:
     rule = ctx.db.scalar(select(DeadlineRule).where(DeadlineRule.code == code))
     if rule is None:
-        raise WorkflowConfigurationError(
-            f"Deadline rule {code!r} is not configured."
-        )
+        raise WorkflowConfigurationError(f"Deadline rule {code!r} is not configured.")
     return rule
 
 
@@ -141,9 +139,7 @@ def _appeal_deadline(ctx: TransitionContext) -> datetime | None:
         .where(
             Timer.application_id == ctx.application.id,
             DeadlineRule.code == "APPEAL_WINDOW",
-            Timer.status.in_(
-                (TimerStatus.PENDING, TimerStatus.DUE, TimerStatus.BREACHED)
-            ),
+            Timer.status.in_((TimerStatus.PENDING, TimerStatus.DUE, TimerStatus.BREACHED)),
         )
         .order_by(Timer.due_at.desc())
         .limit(1)
@@ -269,7 +265,6 @@ def documents_reuploaded(ctx: TransitionContext) -> str | None:
         f"Re-upload the rejected document(s) before submitting compliance: {labels} "
         "(APH 1.8f, 2.4)."
     )
-
 
 
 # ---------------------------------------------------------------------------
@@ -470,10 +465,7 @@ def appeal_window_closed(ctx: TransitionContext) -> str | None:
     letter = _latest_letter(ctx)
     if letter is not None and letter.acknowledged_at is not None:
         return None
-    return (
-        "The appeal window is still open until "
-        f"{deadline.date().isoformat()} (APH 1.11a)."
-    )
+    return f"The appeal window is still open until {deadline.date().isoformat()} (APH 1.11a)."
 
 
 def appeal_loop_available(ctx: TransitionContext) -> str | None:
@@ -527,9 +519,7 @@ def reopen_available(ctx: TransitionContext) -> str | None:
 def _deposits(ctx: TransitionContext) -> list[SecurityDeposit]:
     return list(
         ctx.db.scalars(
-            select(SecurityDeposit).where(
-                SecurityDeposit.application_id == ctx.application.id
-            )
+            select(SecurityDeposit).where(SecurityDeposit.application_id == ctx.application.id)
         ).all()
     )
 
@@ -543,6 +533,11 @@ def _deposit_intimation(ctx: TransitionContext) -> date | None:
 
 def deposit_proof_present(ctx: TransitionContext) -> str | None:
     """Pass when the deposit receipt and Affidavit 3 are recorded."""
+    from app.services.fees import is_security_deposit_exempt
+
+    if is_security_deposit_exempt(ctx.application.institution):
+        # Nothing to deposit: Table 1.4 exempts Government/aided institutions.
+        return None
     if ctx.payload.deposit_receipt_no and ctx.payload.affidavit3_filed:
         return None
     return (
@@ -554,10 +549,14 @@ def deposit_proof_present(ctx: TransitionContext) -> str | None:
 def deposit_payable(ctx: TransitionContext) -> str | None:
     """Pass when the deposit is still payable."""
     deposits = _deposits(ctx)
-    if any(deposit.status in {
-        SecurityDepositStatus.WITHDRAWN,
-        SecurityDepositStatus.FORFEITED,
-    } for deposit in deposits):
+    if any(
+        deposit.status
+        in {
+            SecurityDepositStatus.WITHDRAWN,
+            SecurityDepositStatus.FORFEITED,
+        }
+        for deposit in deposits
+    ):
         return "The approval has been withdrawn; the deposit can no longer be paid."
     return deposit_proof_present(ctx)
 
@@ -573,9 +572,7 @@ def deposit_penalty_due(ctx: TransitionContext) -> str | None:
         ctx.now.date(),
         windows=SecurityDepositPenaltyWindows(grace_days=rule.duration_days),
     )
-    applied = int(
-        (ctx.application.data or {}).get("deposit_penalty_percent") or 0
-    )
+    applied = int((ctx.application.data or {}).get("deposit_penalty_percent") or 0)
     if penalty > applied:
         return None
     return "No higher Security Deposit penalty window has been reached yet (APH 2.25f)."
@@ -586,9 +583,7 @@ def deposit_forfeited(ctx: TransitionContext) -> str | None:
     final_date = _calendar_date(ctx, CalendarEventKey.SD_PENALTY20_31JUL)
     if ctx.now.date() > final_date:
         return None
-    return (
-        f"The approval can only be withdrawn after {final_date.isoformat()} (APH 2.25f)."
-    )
+    return f"The approval can only be withdrawn after {final_date.isoformat()} (APH 2.25f)."
 
 
 def loa_expired(ctx: TransitionContext) -> str | None:
@@ -597,10 +592,7 @@ def loa_expired(ctx: TransitionContext) -> str | None:
         return "This application has no LoA validity date."
     if ctx.now.date() > ctx.application.loa_valid_until:
         return None
-    return (
-        "The LoA remains valid until "
-        f"{ctx.application.loa_valid_until.isoformat()} (APH 1.10b)."
-    )
+    return f"The LoA remains valid until {ctx.application.loa_valid_until.isoformat()} (APH 1.10b)."
 
 
 # ---------------------------------------------------------------------------
@@ -613,10 +605,7 @@ def eoa_before_last_date(ctx: TransitionContext) -> str | None:
     last_date = _calendar_date(ctx, CalendarEventKey.LAST_DATE_EOA)
     if ctx.now.date() <= last_date:
         return None
-    return (
-        "No Extension of Approval can be processed after "
-        f"{last_date.isoformat()} (APH 2.25j)."
-    )
+    return f"No Extension of Approval can be processed after {last_date.isoformat()} (APH 2.25j)."
 
 
 def no_pending_investigation(ctx: TransitionContext) -> str | None:
@@ -647,8 +636,7 @@ def core_branches_ok(ctx: TransitionContext) -> str | None:
         count = len({str(item).strip() for item in branches if str(item).strip()})
     else:
         keywords = {
-            str(item).lower()
-            for item in ctx.definition.config.get("core_branch_keywords", [])
+            str(item).lower() for item in ctx.definition.config.get("core_branch_keywords", [])
         }
         names = {
             programme.program_name.strip().lower()
@@ -758,7 +746,5 @@ def evaluate_guard(name: str, ctx: TransitionContext) -> str | None:
     """Run one guard, failing loudly when seed data names an unknown guard."""
     guard = GUARDS.get(name)
     if guard is None:
-        raise WorkflowConfigurationError(
-            f"Workflow transition references unknown guard {name!r}."
-        )
+        raise WorkflowConfigurationError(f"Workflow transition references unknown guard {name!r}.")
     return guard(ctx)

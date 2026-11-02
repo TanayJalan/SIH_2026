@@ -278,12 +278,10 @@ def _next_steps(letter_type: DecisionLetterType, deposit_days: int) -> list[str]
     if letter_type == DecisionLetterType.LOD:
         return [
             "Respond to every deficiency through the portal before the communicated date.",
-            "The Re-Scrutiny Committee verifies only the deficiencies that were listed "
-            "(APH 1.8).",
+            "The Re-Scrutiny Committee verifies only the deficiencies that were listed (APH 1.8).",
         ]
     return [
-        "The rejection may be appealed once to the Standing Appellate Committee "
-        "(APH 1.11a).",
+        "The rejection may be appealed once to the Standing Appellate Committee (APH 1.11a).",
         "If no appeal is filed, the decision becomes final after the appeal window.",
     ]
 
@@ -442,8 +440,7 @@ def issue_letter(
         appeal_clock_start=start if appeal_deadline is not None else None,
         appeal_deadline=appeal_deadline,
         body_text=(
-            f"Subject: {context.subject}\n\n{context.decision_text}\n\n"
-            f"{context.reasons_text}"
+            f"Subject: {context.subject}\n\n{context.decision_text}\n\n{context.reasons_text}"
         ),
         pdf_path=str(relative),
     )
@@ -518,20 +515,19 @@ def intimate_security_deposit(
     the intimation event in the APH cycle. The function is idempotent so a
     retried workflow step or a later LoA letter does not duplicate the clock.
     """
-    rule = db.scalar(
-        select(DeadlineRule).where(DeadlineRule.code == "SECURITY_DEPOSIT")
-    )
+    from app.services.fees import is_security_deposit_exempt
+
+    if is_security_deposit_exempt(application.institution):
+        # APH Table 1.4 exempts Government and government-aided institutions:
+        # no deposit, no 15-day clock and no penalty ladder.
+        application.security_deposit_due_on = None
+        return
+    rule = db.scalar(select(DeadlineRule).where(DeadlineRule.code == "SECURITY_DEPOSIT"))
     if rule is None:
-        raise WorkflowConfigurationError(
-            "SECURITY_DEPOSIT deadline rule must be configured."
-        )
-    application.security_deposit_due_on = intimated_on + timedelta(
-        days=rule.duration_days
-    )
+        raise WorkflowConfigurationError("SECURITY_DEPOSIT deadline rule must be configured.")
+    application.security_deposit_due_on = intimated_on + timedelta(days=rule.duration_days)
     if not db.scalar(
-        select(SecurityDeposit.id)
-        .where(SecurityDeposit.application_id == application.id)
-        .limit(1)
+        select(SecurityDeposit.id).where(SecurityDeposit.application_id == application.id).limit(1)
     ):
         _create_security_deposits(db, application, issued_on=intimated_on)
     start_event_timers(

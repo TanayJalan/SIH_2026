@@ -170,8 +170,21 @@ walkthrough.
     missing DSC) — Case 1.
   2. **New-institution** at Scrutiny with a deficiency (missing DSC) — Case 2.
   3. **LoR issued**, 7-day appeal window running — Case 3.
-  4. **LoA recommended**, Security Deposit pending (day 5 of 15) — Case 4.
-  5. **Clean institution**, Nil Deficiency — Case 5.
+  4. **LoA recommended**, Security Deposit pending (day 3 of 15), owned by the
+    Institution Administrator demo account — Case 4.
+  5. **Clean institution**, Nil Deficiency, LoA active and the Security Deposit already
+    paid so the release flow can be walked — Case 5.
+  6. **Verified excess-admission complaint** at the show-cause stage, linked to Case 1 —
+    Case 6.
+- Security Deposit amounts are copied from the configured `security_deposit_schedules.json`
+  (APH Table 1.4), so nothing in the seed carries a deposit figure of its own.
+- Case 6 is the complaint demo: sign in as the Institution Administrator who owns Case 1
+  (`institution_admin@demo.edu` on a fresh seed; on a database seeded before Case 1 moved to
+  Apex, use `institution.south@example.edu`) for the show-cause reply,
+  `complaint_scrutiny_member@demo.edu` for verification/SCSC, `shc_member@demo.edu`
+  for the hearing and `executive_committee_member@demo.edu` for the EC decision, the penal
+  action and its issue. The case-file **Complaints and penal action** tab shows each step
+  with its clause (APH 7.10, 7.3, 7.4, 7.11, 6.50h).
 - To reset the demo clock without re-seeding: `POST /dev/simulate-time {"reset": true}`
   (available when `DEBUG=true`). This resets the simulated clock to real time and
   clears countdowns/bell state, but previously created alerts may dedupe on re-crossing.

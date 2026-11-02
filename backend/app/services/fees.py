@@ -97,6 +97,23 @@ _HMCT_MARKERS = ("hmct", "hotel", "catering", "hospitality")
 _PLANNING_MARKERS = ("planning",)
 _APPLIED_ARTS_MARKERS = ("applied art", "applied arts", "craft")
 
+#: APH Table 1.4 exempts Government and government-aided institutions from the
+#: Security Deposit. Only the Government class is encoded on the institution
+#: record; the other exemption routes (long-standing institutions under 1.3.3,
+#: private universities older than ten years with UGC, Central/State/Govt deemed
+#: universities) are tracked in docs/OPEN_QUESTIONS.md.
+SECURITY_DEPOSIT_EXEMPTION_NOTE = (
+    "Government and government-aided institutions are exempt from the Security "
+    "Deposit (APH Table 1.4)."
+)
+
+
+def is_security_deposit_exempt(institution: Any) -> bool:
+    """Return True when the institution owes no Security Deposit (APH Table 1.4)."""
+    return bool(
+        institution is not None and institution.institution_class == InstitutionClass.GOVT_TYPE
+    )
+
 
 @dataclass(frozen=True, slots=True)
 class _Schedule:
@@ -214,9 +231,7 @@ class FeeService:
             else:
                 lines.append(self._price_ter(application, schedule))
 
-        late = force_late or application.late_submission or self.is_after_cutoff(
-            application, now
-        )
+        late = force_late or application.late_submission or self.is_after_cutoff(application, now)
         if late and not (route is not None and route.no_ter):
             penalty = self._schedule("LATE_SUBMISSION_PENALTY", institution_class)
             if penalty is not None:
@@ -271,9 +286,7 @@ class FeeService:
         refunded_paise = self._refunded_paise(application)
         due_paise = max(0, total_paise - paid_paise)
         no_ter = route is not None and route.no_ter
-        is_paid = total_paise == 0 or (
-            application.ter_paid_at is not None and due_paise == 0
-        )
+        is_paid = total_paise == 0 or (application.ter_paid_at is not None and due_paise == 0)
         payment_required = (not no_ter) and total_paise > 0 and not is_paid
         if late:
             notes.append(
@@ -313,10 +326,7 @@ class FeeService:
         institution = application.institution
         leased = bool(
             institution
-            and (
-                institution.land_ownership == LandOwnership.LEASED
-                or institution.building_leased
-            )
+            and (institution.land_ownership == LandOwnership.LEASED or institution.building_leased)
         )
         intimation = application.security_deposit_due_on
         penalty_percent = (
@@ -324,7 +334,10 @@ class FeeService:
         )
         lines: list[SecurityDepositLineRead] = []
         notes: list[str] = []
-        for programme in application.programs:
+        exempt = is_security_deposit_exempt(institution)
+        if exempt:
+            notes.append(SECURITY_DEPOSIT_EXEMPTION_NOTE)
+        for programme in [] if exempt else application.programs:
             family = _programme_family(programme.program_name, programme.level)
             level = _programme_level(programme.program_name, programme.level)
             schedule = self._security_schedule(family, level)
@@ -394,8 +407,7 @@ class FeeService:
             raise FeeError(409, "TER has already been paid for this application.")
 
         receipt_base = (
-            f"TER-{application.academic_year.replace('-', '')}-"
-            f"{uuid.uuid4().hex[:10].upper()}"
+            f"TER-{application.academic_year.replace('-', '')}-{uuid.uuid4().hex[:10].upper()}"
         )
         transactions: list[FeeTransaction] = []
         for index, line in enumerate(quote.lines, start=1):
@@ -451,8 +463,7 @@ class FeeService:
         refundable = compute_refund(paid, payload.reason)
         retained = paid - refundable
         receipt_no = (
-            f"REF-{application.academic_year.replace('-', '')}-"
-            f"{uuid.uuid4().hex[:10].upper()}"
+            f"REF-{application.academic_year.replace('-', '')}-{uuid.uuid4().hex[:10].upper()}"
         )
         clause = {
             "SCRUTINY_REJECTED_NO_APPEAL": "APH 1.4.2h",
@@ -527,8 +538,7 @@ class FeeService:
             raise FeeError(422, "A new TER could not be computed for this application.")
 
         receipt_base = (
-            f"REOPEN-{application.academic_year.replace('-', '')}-"
-            f"{uuid.uuid4().hex[:10].upper()}"
+            f"REOPEN-{application.academic_year.replace('-', '')}-{uuid.uuid4().hex[:10].upper()}"
         )
         transactions: list[FeeTransaction] = []
         for index, line in enumerate(quote.lines, start=1):
@@ -684,8 +694,7 @@ class FeeService:
                 f"No TER item is configured for application type {application.application_type}.",
             )
         if item_code == "EOA_SELF_DISCLOSURE" and any(
-            _is_pgdm_or_mba(programme.program_name)
-            for programme in application.programs
+            _is_pgdm_or_mba(programme.program_name) for programme in application.programs
         ):
             return "EOA_SELF_DISCLOSURE_PGDM_MBA"
         return item_code

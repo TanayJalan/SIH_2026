@@ -2605,3 +2605,347 @@ export async function downloadLetterPdf(
   link.remove();
   window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
 }
+
+// ---------------------------------------------------------------------------
+// Complaints, penal actions and Security Deposit release (APH Chapter VII, 6.46)
+// ---------------------------------------------------------------------------
+
+export type ComplaintStatus =
+  | "RECEIVED"
+  | "PGRC"
+  | "SCSC"
+  | "SHOW_CAUSE"
+  | "HEARING"
+  | "DECIDED"
+  | "CLOSED";
+
+export interface ComplaintRecord {
+  id: string;
+  institution_id: string;
+  application_id: string | null;
+  source: string;
+  status: ComplaintStatus;
+  category: string;
+  description: string;
+  received_on: string | null;
+  complainant_name: string | null;
+  complainant_contact: string | null;
+  complainant_verified: boolean;
+  rejection_reason: string | null;
+  rejection_clause: string | null;
+  is_anonymous: boolean;
+  scsc_decision: string | null;
+  scsc_decided_on: string | null;
+  scsc_notes: string | null;
+  show_cause_issued_on: string | null;
+  show_cause_due_on: string | null;
+  show_cause_reply: string | null;
+  show_cause_replied_on: string | null;
+  shc_hearing_on: string | null;
+  shc_findings: string | null;
+  ec_decision: string | null;
+  speaking_order: string | null;
+  decided_on: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+  created_at: string;
+}
+
+export interface ComplaintPage {
+  items: ComplaintRecord[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface ComplaintCatalogue {
+  steps: Array<{ key: string; label: string; apH_clause: string }>;
+  anonymity_clause: string;
+  anonymity_reason: string;
+  scsc_decisions: Record<string, string>;
+  ec_decisions: Record<string, string>;
+}
+
+export function getComplaintCatalogue(token: string): Promise<ComplaintCatalogue> {
+  return request<ComplaintCatalogue>("/complaints/catalogue", { token });
+}
+
+export function listComplaints(
+  token: string,
+  query: { page?: number; pageSize?: number; status?: string } = {},
+): Promise<ComplaintPage> {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page ?? 1));
+  params.set("page_size", String(query.pageSize ?? 50));
+  if (query.status) {
+    params.set("status", query.status);
+  }
+  return request<ComplaintPage>(`/complaints?${params.toString()}`, { token });
+}
+
+export function createComplaint(
+  token: string,
+  body: {
+    institution_id?: string;
+    application_id?: string | null;
+    source?: string;
+    category: string;
+    description: string;
+    complainant_name?: string | null;
+    complainant_contact?: string | null;
+    is_anonymous?: boolean;
+  },
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>("/complaints", { method: "POST", token, body });
+}
+
+export function verifyComplaint(
+  token: string,
+  complaintId: string,
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>(`/complaints/${complaintId}/verify`, {
+    method: "POST",
+    token,
+    body: {},
+  });
+}
+
+export function recordScscDecision(
+  token: string,
+  complaintId: string,
+  body: { decision: string; notes?: string; decided_on?: string },
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>(`/complaints/${complaintId}/scsc-decision`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function recordShowCauseReply(
+  token: string,
+  complaintId: string,
+  body: { reply: string; replied_on?: string },
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>(`/complaints/${complaintId}/show-cause-reply`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function recordShcHearing(
+  token: string,
+  complaintId: string,
+  body: { hearing_on: string; findings: string },
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>(`/complaints/${complaintId}/shc-hearing`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function recordEcDecision(
+  token: string,
+  complaintId: string,
+  body: { decision: string; speaking_order: string; decided_on?: string },
+): Promise<ComplaintRecord> {
+  return request<ComplaintRecord>(`/complaints/${complaintId}/ec-decision`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export interface PenalActionRecord {
+  id: string;
+  institution_id: string;
+  complaint_id: string | null;
+  application_id: string | null;
+  action_type: string;
+  violation_code: string;
+  order_number: string | null;
+  issued_on: string | null;
+  hearing_on: string | null;
+  hearing_notes: string | null;
+  hearing_done: boolean;
+  speaking_order: string | null;
+  fine_paise: number | null;
+  fine_basis: string | null;
+  consequences: Record<string, unknown> | null;
+  restoration_requested_on: string | null;
+  restoration_eligible_from: string | null;
+  restoration_status: string | null;
+  effective_academic_year: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+  created_at: string;
+}
+
+export function listComplaintPenalActions(
+  token: string,
+  complaintId: string,
+): Promise<PenalActionRecord[]> {
+  return request<PenalActionRecord[]>(`/complaints/${complaintId}/penal-actions`, {
+    token,
+  });
+}
+
+export function recordPenalAction(
+  token: string,
+  complaintId: string,
+  body: {
+    action_type: string;
+    violation_code: string;
+    effective_academic_year?: string | null;
+  },
+): Promise<PenalActionRecord> {
+  return request<PenalActionRecord>(`/complaints/${complaintId}/penal-actions`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function schedulePenalActionHearing(
+  token: string,
+  penalActionId: string,
+  body: { hearing_on: string; notes?: string },
+): Promise<PenalActionRecord> {
+  return request<PenalActionRecord>(`/penal-actions/${penalActionId}/hearing`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function issuePenalAction(
+  token: string,
+  penalActionId: string,
+  body: { order_number: string; issued_on?: string; speaking_order: string },
+): Promise<PenalActionRecord> {
+  return request<PenalActionRecord>(`/penal-actions/${penalActionId}/issue`, {
+    method: "POST",
+    token,
+    body,
+  });
+}
+
+export function requestRestoration(
+  token: string,
+  penalActionId: string,
+): Promise<PenalActionRecord> {
+  return request<PenalActionRecord>(
+    `/penal-actions/${penalActionId}/restoration-request`,
+    { method: "POST", token, body: {} },
+  );
+}
+
+export interface PenalCatalogueEntry {
+  code: string;
+  violation: string;
+  actions: Array<{ action: string; label: string }>;
+  hearing_required: boolean;
+}
+
+export function getPenalCatalogue(token: string): Promise<PenalCatalogueEntry[]> {
+  return request<PenalCatalogueEntry[]>("/penal-actions/catalogue", { token });
+}
+
+export interface ExcessAdmissionFine {
+  academic_year: string;
+  excess_admissions: number;
+  annual_fee_paise: number;
+  total_course_fee_paise: number;
+  fine_paise: number;
+  lines: Array<Record<string, unknown>>;
+  apH_clause: string;
+}
+
+export function getExcessAdmissionFine(
+  token: string,
+  applicationId: string,
+): Promise<ExcessAdmissionFine> {
+  return request<ExcessAdmissionFine>(
+    `/applications/${applicationId}/excess-admission-fine`,
+    { token },
+  );
+}
+
+export interface SecurityDepositRecord {
+  id: string;
+  institution_id: string;
+  application_id: string | null;
+  programme_family: string;
+  level: string;
+  required_paise: number;
+  doubled_for_leased: boolean;
+  created_on: string;
+  maturity_on: string;
+  status: string;
+  penalty_percent: number | null;
+  release_requested_on: string | null;
+  release_clearances: Array<Record<string, unknown>> | null;
+  released_on: string | null;
+  noc_number: string | null;
+  apH_clause: string;
+  needs_verification: boolean;
+}
+
+export function listSecurityDeposits(
+  token: string,
+  applicationId: string,
+): Promise<SecurityDepositRecord[]> {
+  return request<SecurityDepositRecord[]>(
+    `/applications/${applicationId}/security-deposits`,
+    { token },
+  );
+}
+
+export function requestDepositRelease(
+  token: string,
+  applicationId: string,
+  depositId: string,
+): Promise<SecurityDepositRecord> {
+  return request<SecurityDepositRecord>(
+    `/applications/${applicationId}/security-deposits/${depositId}/release-request`,
+    { method: "POST", token, body: {} },
+  );
+}
+
+export function recordDepositClearance(
+  token: string,
+  applicationId: string,
+  depositId: string,
+  body: { code: string; cleared: boolean; remarks?: string },
+): Promise<SecurityDepositRecord> {
+  return request<SecurityDepositRecord>(
+    `/applications/${applicationId}/security-deposits/${depositId}/clearance`,
+    { method: "POST", token, body },
+  );
+}
+
+export function approveDepositRelease(
+  token: string,
+  applicationId: string,
+  depositId: string,
+  body: { noc_number: string; released_on?: string },
+): Promise<SecurityDepositRecord> {
+  return request<SecurityDepositRecord>(
+    `/applications/${applicationId}/security-deposits/${depositId}/release`,
+    { method: "POST", token, body },
+  );
+}
+
+export function withdrawSecurityDeposit(
+  token: string,
+  applicationId: string,
+  depositId: string,
+): Promise<SecurityDepositRecord> {
+  return request<SecurityDepositRecord>(
+    `/applications/${applicationId}/security-deposits/${depositId}/withdraw`,
+    { method: "POST", token, body: {} },
+  );
+}

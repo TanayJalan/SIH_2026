@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     Text,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,14 +30,22 @@ if TYPE_CHECKING:
     from app.models.application import Application
     from app.models.committee import Committee
     from app.models.institution import Institution
+    from app.models.user import User
 
 
 class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """A complaint processed through PGRC, SCSC and SHC (APH 7.10)."""
+    """A complaint processed through PGRC, SCSC and SHC (APH 7.10).
+
+    The lifecycle is ``RECEIVED -> PGRC -> SCSC -> SHOW_CAUSE/EVC -> HEARING ->
+    DECIDED``. Anonymous or pseudonymous complaints stop at ``RECEIVED`` with
+    ``rejection_reason`` set, because APH 7.10h adopts the CVC rule not to
+    process them.
+    """
 
     __tablename__ = "complaints"
     __table_args__ = (
         Index("ix_complaints_institution_status", "institution_id", "status"),
+        Index("ix_complaints_application_id", "application_id"),
     )
 
     institution_id: Mapped[uuid.UUID] = mapped_column(
@@ -43,6 +53,11 @@ class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("institutions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+    application_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("applications.id", ondelete="SET NULL"),
+        nullable=True,
     )
     source: Mapped[str] = mapped_column(String(64), nullable=False)
     """Where the complaint came from, for example PORTAL, EMAIL or PGRC."""
@@ -56,17 +71,39 @@ class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     category: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     received_on: Mapped[date | None] = mapped_column(Date, nullable=True)
-    show_cause_due_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    complainant_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    complainant_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    complainant_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    """Set when PGRC verifies the complainant (APH 7.10b-c)."""
+    rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rejection_clause: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_anonymous: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
-    """Anonymous or pseudonymous complaints are not processed (APH 7.10, CVC guideline)."""
+    """Anonymous or pseudonymous complaints are not processed (APH 7.10h)."""
+    scsc_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """WARNING, SHOW_CAUSE or EVC (APH 7.10c)."""
+    scsc_decided_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    scsc_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    show_cause_issued_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    show_cause_due_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    show_cause_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
+    show_cause_replied_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    shc_hearing_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    shc_findings: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ec_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """WARNING, PENAL_ACTION or CLOSE (APH 7.10f-g)."""
+    speaking_order: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decided_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
     needs_verification: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
 
     institution: Mapped[Institution] = relationship(back_populates="complaints")
+    application: Mapped[Application | None] = relationship()
     committees: Mapped[list[Committee]] = relationship(
         back_populates="complaint", cascade="all, delete-orphan"
     )
@@ -110,11 +147,26 @@ class PenalAction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     violation_code: Mapped[str] = mapped_column(String(2), nullable=False)
     """APH 7.4 clause letter a-n."""
+    order_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    issued_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    hearing_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    hearing_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hearing_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     hearing_done: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
     """A hearing must precede a penal action (APH 6.50h proviso)."""
     speaking_order: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fine_paise: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    fine_basis: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consequences: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    restoration_requested_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    restoration_eligible_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    restoration_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     effective_academic_year: Mapped[str | None] = mapped_column(String(9), nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
     needs_verification: Mapped[bool] = mapped_column(
@@ -124,3 +176,4 @@ class PenalAction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     institution: Mapped[Institution] = relationship(back_populates="penal_actions")
     complaint: Mapped[Complaint | None] = relationship(back_populates="penal_actions")
     application: Mapped[Application | None] = relationship(back_populates="penal_actions")
+    hearing_by: Mapped[User | None] = relationship()

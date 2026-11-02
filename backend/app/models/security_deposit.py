@@ -17,6 +17,7 @@ from sqlalchemy import (
     String,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -82,6 +83,11 @@ class SecurityDeposit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
     penalty_percent: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    release_requested_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    release_clearances: Mapped[list[dict[str, str]] | None] = mapped_column(JSONB, nullable=True)
+    """Clearances from PGRC, Vigilance and the grants cell (APH 6.46b)."""
+    released_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    noc_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)
     needs_verification: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")

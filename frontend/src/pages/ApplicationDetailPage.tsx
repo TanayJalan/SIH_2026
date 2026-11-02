@@ -7,6 +7,7 @@ import PageHeader from "../components/PageHeader";
 import DeficiencyReportPanel from "../components/application/DeficiencyReportPanel";
 import ReopenApplicationPanel from "../components/application/ReopenApplicationPanel";
 import CaseCommittees from "../components/casefile/CaseCommittees";
+import CaseComplaints from "../components/casefile/CaseComplaints";
 import CaseCompliance from "../components/casefile/CaseCompliance";
 import CaseDeadlinesStrip from "../components/casefile/CaseDeadlinesStrip";
 import CaseDecisionLetters from "../components/casefile/CaseDecisionLetters";
@@ -51,6 +52,7 @@ const TABS = [
   { value: "committees", label: "Committees" },
   { value: "fees", label: "Fees" },
   { value: "decision", label: "Decision" },
+  { value: "complaints", label: "Complaints and penal action" },
   { value: "timeline", label: "Timeline" },
 ];
 
@@ -339,6 +341,10 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
                   token={token ?? ""}
                   institutionAdmin={institutionRole}
                 />
+              </TabsContent>
+
+              <TabsContent value="complaints">
+                <CaseComplaints application={application} token={token ?? ""} />
               </TabsContent>
 
               <TabsContent value="timeline">

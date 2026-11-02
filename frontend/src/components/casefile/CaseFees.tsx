@@ -7,6 +7,7 @@ import {
   type StatusPillTone,
 } from "@/components/ui";
 import { useWorkflowActions } from "@/components/workflow/WorkflowDialogHost";
+import CaseDepositRelease from "@/components/casefile/CaseDepositRelease";
 import { ApiError, type FeeKind } from "@/lib/api";
 import {
   getApplicationFee,
@@ -310,6 +311,8 @@ export default function CaseFees({
           </ul>
         </section>
       ) : null}
+
+      <CaseDepositRelease application={application} token={token} />
     </div>
   );
 }

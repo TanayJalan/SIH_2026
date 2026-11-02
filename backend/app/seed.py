@@ -41,6 +41,7 @@ from app.models import (
     ApplicationCategory,
     ApplicationStatus,
     ApplicationTrack,
+    Complaint,
     ComplianceConfig,
     ComplianceRule,
     Decision,
@@ -56,6 +57,7 @@ from app.models import (
     ExpertPool,
     FeeSchedule,
     Institution,
+    LandOwnership,
     PublicNotice,
     RequiredDocument,
     Role,
@@ -70,7 +72,7 @@ from app.models import (
     WorkflowState,
     WorkflowTransition,
 )
-from app.models.enums import DocumentRejectionReason
+from app.models.enums import ComplaintStatus, DocumentRejectionReason
 from app.services.audit import AuditService
 
 logger = logging.getLogger("app.seed")
@@ -394,6 +396,16 @@ def _ensure_institutions(db: Session) -> dict[str, Any]:
             db.add(inst)
             db.flush()
             logger.info(" seeded institution %s (%s)", inst.name, inst.aicte_id)
+        elif inst.institution_class != inst_data["institution_class"]:
+            # The fee class drives the TER table and the Security Deposit
+            # exemption (APH Table 1.4), so keep the demo row in step with the
+            # seed file instead of leaving a stale class behind.
+            inst.institution_class = inst_data["institution_class"]
+            logger.info(
+                " refreshed %s institution_class -> %s",
+                inst.name,
+                inst_data["institution_class"],
+            )
         mapping[inst_data["aicte_id"]] = inst.id
     return mapping
 
@@ -431,6 +443,96 @@ def _ensure_demo_users(db: Session, institutions: dict[str, Any]) -> dict[str, U
         users[role_name] = user
     db.flush()
     return users
+
+
+def _table_14_rate(
+    db: Session,
+    application: Application,
+    *,
+    programme_family: str,
+    level: str,
+) -> tuple[int, bool, str, bool]:
+    """Return ``(amount, doubled, clause, needs_verification)`` for Table 1.4.
+
+    The amount comes from ``security_deposit_schedules`` so the seed carries no
+    deposit figure of its own; the doubling for a privately leased building or
+    land comes from the institution's tenure (APH Table 1.4).
+    """
+    from app.services.fee_calculator import security_deposit_amount
+
+    schedule = db.scalar(
+        select(SecurityDepositSchedule).where(
+            SecurityDepositSchedule.programme_family == programme_family,
+            SecurityDepositSchedule.level == level,
+        )
+    )
+    if schedule is None:
+        raise RuntimeError(
+            "Security Deposit rates must be loaded before the demo cases "
+            f"(missing {programme_family} {level})."
+        )
+    institution = db.get(Institution, application.institution_id)
+    leased = bool(
+        institution
+        and (institution.land_ownership == LandOwnership.LEASED or institution.building_leased)
+    )
+    return (
+        security_deposit_amount(schedule.amount_paise, leased=leased),
+        leased,
+        schedule.apH_clause,
+        schedule.needs_verification,
+    )
+
+
+def _ensure_security_deposit(
+    db: Session,
+    application: Application,
+    *,
+    programme_family: str,
+    level: str,
+    status: SecurityDepositStatus,
+    created_on: date,
+) -> SecurityDeposit | None:
+    """Create the demo deposit row or refresh it from the configured rate."""
+    from app.services.fees import is_security_deposit_exempt
+
+    if is_security_deposit_exempt(db.get(Institution, application.institution_id)):
+        # APH Table 1.4: no deposit for a Government or government-aided body.
+        return None
+    amount, leased, clause, needs_verification = _table_14_rate(
+        db,
+        application,
+        programme_family=programme_family,
+        level=level,
+    )
+    existing = db.scalar(
+        select(SecurityDeposit).where(
+            SecurityDeposit.application_id == application.id,
+            SecurityDeposit.programme_family == programme_family,
+            SecurityDeposit.level == level,
+        )
+    )
+    if existing is not None:
+        existing.required_paise = amount
+        existing.doubled_for_leased = leased
+        existing.apH_clause = clause
+        existing.needs_verification = needs_verification
+        return existing
+    deposit = SecurityDeposit(
+        institution_id=application.institution_id,
+        application_id=application.id,
+        programme_family=programme_family,
+        level=level,
+        required_paise=amount,
+        doubled_for_leased=leased,
+        created_on=created_on,
+        maturity_on=date(created_on.year + 2, created_on.month, created_on.day),
+        status=status,
+        apH_clause=clause,
+        needs_verification=needs_verification,
+    )
+    db.add(deposit)
+    return deposit
 
 
 def _seed_cases(
@@ -680,9 +782,11 @@ def _seed_cases(
     cases.append(app3)
 
     # --- Case 4: LoA recommended, Security Deposit pending ---
+    # Owned by the Institution Administrator demo account so the deposit clock
+    # and the release flow are visible on the institution dashboard.
     app4, created = get_or_create(
         "AICTE/2026-27/0000004",
-        institution_id=app_slot(3),
+        institution_id=institution_admin.institution_id or app_slot(3),
         application_type="INCREASE_INTAKE",
         track=ApplicationTrack.EXISTING,
         status=ApplicationStatus.SECURITY_DEPOSIT_PENDING,
@@ -692,7 +796,7 @@ def _seed_cases(
         locked_at=now - timedelta(days=60),
         stage_entered_at=now - timedelta(days=3),
         sla_due_at=now + timedelta(days=12),
-        security_deposit_due_on=today + timedelta(days=15),
+        security_deposit_due_on=today + timedelta(days=12),
     )
     if created:
         decision = Decision(
@@ -707,20 +811,6 @@ def _seed_cases(
         db.add(decision)
         db.flush()
 
-        db.add(
-            SecurityDeposit(
-                institution_id=app4.institution_id,
-                application_id=app4.id,
-                programme_family="ENGINEERING_TECHNOLOGY",
-                level="UG",
-                required_paise=20000000,
-                doubled_for_leased=False,
-                created_on=today - timedelta(days=3),
-                maturity_on=today + timedelta(days=362),
-                status=SecurityDepositStatus.PENDING,
-                apH_clause="APH 1.12",
-            )
-        )
         add_alert(
             app4,
             recipient=institution_admin,
@@ -737,9 +827,11 @@ def _seed_cases(
     cases.append(app4)
 
     # --- Case 5: Clean institution, Nil Deficiency, LoA active ---
+    # The deposit on this file is already paid, so the release request, the
+    # clearances and the NOC can all be demonstrated (APH 6.46).
     app5, created = get_or_create(
         "AICTE/2026-27/0000005",
-        institution_id=app_slot(4),
+        institution_id=institution_admin.institution_id or app_slot(4),
         application_type="NEW_INSTITUTION",
         track=ApplicationTrack.NEW_INSTITUTION,
         status=ApplicationStatus.ACTIVE_LOA,
@@ -753,6 +845,102 @@ def _seed_cases(
     if created:
         logger.info(" seeded Case 5: clean institution with Nil Deficiency")
     cases.append(app5)
+
+    # --- Security Deposit clocks on the two seeded approvals (APH 2.25f) ----
+    # Both files are owned by the Institution Administrator demo account so the
+    # 15-day clock, the penalty ladder and the release flow are visible on the
+    # dashboard. Amounts come from the configured Table 1.4 rates.
+    if institution_admin.institution_id is not None:
+        for application in (app4, app5):
+            application.institution_id = institution_admin.institution_id
+        db.flush()
+    _ensure_security_deposit(
+        db,
+        app4,
+        programme_family="ENGINEERING_TECHNOLOGY",
+        level="UG",
+        status=SecurityDepositStatus.PENDING,
+        created_on=today - timedelta(days=3),
+    )
+    db.flush()
+    _ensure_security_deposit(
+        db,
+        app5,
+        programme_family="ENGINEERING_TECHNOLOGY",
+        level="UG",
+        status=SecurityDepositStatus.PAID,
+        created_on=today - timedelta(days=90),
+    )
+
+    # --- Case 6: verified complaint at the show-cause stage -----------------
+    # The full demo chain runs from here: show-cause reply (institution admin),
+    # SHC hearing (SHC member), EC decision with Speaking Order (EC member),
+    # record + hear + issue a penal action, then a restoration request.
+    # Alerts must reach the institution that owns Case 1, which is not
+    # necessarily the demo Institution Administrator: an older database can
+    # keep Case 1 on another institution.
+    case_owner_admin = (
+        db.scalar(
+            select(User).where(
+                User.institution_id == app1.institution_id,
+                User.role == Role.INSTITUTION_ADMIN,
+            )
+        )
+        or institution_admin
+    )
+    existing_complaint = db.scalar(
+        select(Complaint).where(
+            Complaint.application_id == app1.id,
+            Complaint.category == "EXCESS_ADMISSION",
+        )
+    )
+    if existing_complaint is None:
+        complaint = Complaint(
+            institution_id=app1.institution_id,
+            application_id=app1.id,
+            source="PORTAL",
+            status=ComplaintStatus.SHOW_CAUSE,
+            category="EXCESS_ADMISSION",
+            description=(
+                "Fictional verified complaint: the institution is alleged to have "
+                "admitted students beyond its approved intake (APH 7.4g)."
+            ),
+            received_on=today - timedelta(days=20),
+            complainant_name="Fictional Complainant",
+            complainant_contact="complainant@example.edu",
+            complainant_verified=True,
+            is_anonymous=False,
+            scsc_decision="SHOW_CAUSE",
+            scsc_decided_on=today - timedelta(days=8),
+            scsc_notes=(
+                "SCSC found the complaint verified and issued a show-cause notice (APH 7.10c)."
+            ),
+            show_cause_issued_on=today - timedelta(days=8),
+            show_cause_due_on=today + timedelta(days=7),
+            apH_clause="APH 7.10d",
+        )
+        db.add(complaint)
+        db.flush()
+        add_alert(
+            app1,
+            recipient=case_owner_admin,
+            alert_type=AlertTrigger.DEFICIENCY_DUE.value,
+            severity=Severity.HIGH,
+            title="Show-cause notice: complaint of excess admission",
+            message=(
+                "The Standing Complaint Scrutiny Committee issued a show-cause notice. "
+                f"Reply by {(today + timedelta(days=7)).isoformat()} (APH 7.10c-d)."
+            ),
+            dedupe_key=f"seed:complaint:{app1.id}",
+        )
+        logger.info(" seeded Case 6: verified complaint at the show-cause stage")
+    else:
+        # Keep an already-seeded notice pointing at the current case owner.
+        complaint_alert = db.scalar(
+            select(Alert).where(Alert.dedupe_key == f"seed:complaint:{app1.id}")
+        )
+        if complaint_alert is not None:
+            complaint_alert.recipient_user_id = case_owner_admin.id
 
     return cases
 
