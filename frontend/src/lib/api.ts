@@ -2874,6 +2874,15 @@ export function getExcessAdmissionFine(
   );
 }
 
+export type SecurityDepositStatus =
+  | "PENDING"
+  | "PAID"
+  | "PENALTY_10"
+  | "PENALTY_20"
+  | "WITHDRAWN"
+  | "RELEASED"
+  | "FORFEITED";
+
 export interface SecurityDepositRecord {
   id: string;
   institution_id: string;
@@ -2884,7 +2893,7 @@ export interface SecurityDepositRecord {
   doubled_for_leased: boolean;
   created_on: string;
   maturity_on: string;
-  status: string;
+  status: SecurityDepositStatus;
   penalty_percent: number | null;
   release_requested_on: string | null;
   release_clearances: Array<Record<string, unknown>> | null;
