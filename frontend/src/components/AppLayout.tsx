@@ -42,6 +42,7 @@ import { cn } from "../lib/utils";
 
 const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   overview: LayoutDashboard,
+  dashboard: LayoutDashboard,
   applications: FileText,
   compliance: ShieldCheck,
   alerts: Bell,

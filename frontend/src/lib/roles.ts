@@ -2,6 +2,7 @@ import type { Role } from "./api";
 
 export type NavIcon =
   | "overview"
+  | "dashboard"
   | "applications"
   | "compliance"
   | "alerts"
@@ -60,6 +61,13 @@ const OVERVIEW: NavItem = {
   shortcut: "g d",
 };
 
+const DASHBOARD: NavItem = {
+  label: "Dashboard",
+  to: "/dashboard",
+  icon: "dashboard",
+  shortcut: "g s",
+};
+
 const ALERTS: NavItem = {
   label: "Alerts",
   to: "/alerts",
@@ -91,40 +99,54 @@ const AUDIT_LOGS: NavItem = {
 };
 
 const ROLE_NAV: Record<Role, NavItem[]> = {
-  INSTITUTION_ADMIN: [OVERVIEW, applicationsItem("My applications"), ALERTS],
+  INSTITUTION_ADMIN: [OVERVIEW,
+    DASHBOARD,
+    applicationsItem("My applications"), ALERTS],
   REGULATION_BUREAU_OFFICER: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("Scrutiny queue"),
     ALERTS,
     AUDIT_LOGS,
   ],
   SCRUTINY_COMMITTEE_MEMBER: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("Scrutiny queue"),
     ALERTS,
   ],
-  EVC_MEMBER: [OVERVIEW, applicationsItem("Assigned inspections"), ALERTS],
+  EVC_MEMBER: [OVERVIEW,
+    DASHBOARD,
+    applicationsItem("Assigned inspections"), ALERTS],
   REGIONAL_OFFICER: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("Regional applications"),
     COMPLIANCE,
     ALERTS,
     AUDIT_LOGS,
   ],
-  SHC_MEMBER: [OVERVIEW, applicationsItem("Hearing cases"), ALERTS],
-  SAC_MEMBER: [OVERVIEW, applicationsItem("Appeal cases"), ALERTS],
+  SHC_MEMBER: [OVERVIEW,
+    DASHBOARD,
+    applicationsItem("Hearing cases"), ALERTS],
+  SAC_MEMBER: [OVERVIEW,
+    DASHBOARD,
+    applicationsItem("Appeal cases"), ALERTS],
   EXECUTIVE_COMMITTEE_MEMBER: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("Committee cases"),
     ALERTS,
   ],
   COMPLAINT_SCRUTINY_MEMBER: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("Complaint cases"),
     ALERTS,
   ],
   SUPER_ADMIN: [
     OVERVIEW,
+    DASHBOARD,
     applicationsItem("All applications"),
     COMPLIANCE,
     ALERTS,
