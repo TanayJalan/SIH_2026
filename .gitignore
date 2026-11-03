@@ -54,4 +54,10 @@ frontend/playwright/.cache/
 .idea/
 .vscode/
 
+# Merge / editor backup artifacts
+*.orig
+*.bak
+*.swp
+*~
+
 # Docker volumes are managed by compose; nothing to ignore here.
