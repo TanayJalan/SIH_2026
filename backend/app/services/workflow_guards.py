@@ -56,6 +56,10 @@ PAYLOAD_GUARDS: frozenset[str] = frozenset(
         "shc_outcome_present",
         "deposit_proof_present",
         "closure_outcome_present",
+        # These pass as soon as the dialog supplies a deficiency item or an
+        # institution response, so they must not hide the button up front.
+        "has_deficiencies",
+        "responded_deficiencies",
     }
 )
 

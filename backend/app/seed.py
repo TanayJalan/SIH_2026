@@ -25,10 +25,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models import (
     AcademicCalendarEvent,
@@ -41,6 +40,8 @@ from app.models import (
     ApplicationCategory,
     ApplicationStatus,
     ApplicationTrack,
+    ApplicationTypeRoute,
+    CompetentAuthority,
     Complaint,
     ComplianceConfig,
     ComplianceRule,
@@ -58,6 +59,7 @@ from app.models import (
     FeeSchedule,
     Institution,
     LandOwnership,
+    NomenclatureCourse,
     PublicNotice,
     RequiredDocument,
     Role,
@@ -72,38 +74,13 @@ from app.models import (
     WorkflowState,
     WorkflowTransition,
 )
-from app.models.enums import ComplaintStatus, DocumentRejectionReason
+from app.models.enums import ComplaintStatus, DocumentRejectionReason, InstitutionRegion
 from app.services.audit import AuditService
 
 logger = logging.getLogger("app.seed")
 
 SEED_DIR = Path(__file__).resolve().parent.parent / "seeds" / "aph"
 ACADEMIC_YEAR = "2026-27"
-DEMO_PASSWORD = "ChangeMe123!"
-
-# One demo account per APH role (APH_SPEC section 1 role mapping).
-ROLE_NAMES: tuple[str, ...] = (
-    "INSTITUTION_ADMIN",
-    "REGULATION_BUREAU_OFFICER",
-    "SCRUTINY_COMMITTEE_MEMBER",
-    "EVC_MEMBER",
-    "REGIONAL_OFFICER",
-    "SHC_MEMBER",
-    "SAC_MEMBER",
-    "EXECUTIVE_COMMITTEE_MEMBER",
-    "COMPLAINT_SCRUTINY_MEMBER",
-    "SUPER_ADMIN",
-)
-
-# Roles that act on one institution or one region. Apex committees are national
-# (see ``app/services/authorization.py``), so they are not bound to an
-# institution.
-_INSTITUTION_BOUND_ROLES = {
-    Role.INSTITUTION_ADMIN,
-    Role.SCRUTINY_COMMITTEE_MEMBER,
-    Role.EVC_MEMBER,
-    Role.REGIONAL_OFFICER,
-}
 
 # Illustrative processing limits. The handbook does not publish these; they are
 # admin-editable settings seeded with clearly labelled demo values.
@@ -352,6 +329,26 @@ def seed(database: bool = True) -> None:
         cases = _seed_cases(db, institutions, users)
 
         db.commit()
+
+        # Bulk demo data runs in its own transaction so a failure there cannot
+        # roll back the reference configuration above.
+        from app.core.config import get_settings
+        from app.demo_seed import seed_demo
+
+        try:
+            seed_demo(
+                db,
+                institutions=institutions,
+                users=_demo_accounts(db),
+                storage_dir=get_settings().storage_dir,
+            )
+            _advance_portal_sequence(db)
+            db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception(" bulk demo seeding failed, rolled back")
+            raise
+
         logger.info(
             " seed complete: %d institutions, %d users, %d cases",
             len(institutions),
@@ -369,6 +366,36 @@ def seed(database: bool = True) -> None:
 # ---------------------------------------------------------------------------
 # Institutions, users and demo cases
 # ---------------------------------------------------------------------------
+
+
+def _advance_portal_sequence(db: Session) -> None:
+    """Move the portal-number sequence past the hand-written demo numbers.
+
+    Seeded applications use explicit portal numbers (``AICTE/2026-27/0000109``)
+    without consuming ``portal_application_no_seq``. Without this the first
+    application created from the UI would collide with a seeded row.
+    """
+    db.execute(
+        text(
+            """
+            SELECT setval(
+                'portal_application_no_seq',
+                GREATEST(
+                    (
+                        SELECT COALESCE(
+                            MAX(right(portal_application_no, 7)::int), 1
+                        )
+                        FROM applications
+                        WHERE portal_application_no
+                            ~ '^AICTE/[0-9]{4}-[0-9]{2}/[0-9]{7}$'
+                    ),
+                    1
+                ),
+                true
+            )
+            """
+        )
+    )
 
 
 def _ensure_institutions(db: Session) -> dict[str, Any]:
@@ -411,38 +438,43 @@ def _ensure_institutions(db: Session) -> dict[str, Any]:
 
 
 def _ensure_demo_users(db: Session, institutions: dict[str, Any]) -> dict[str, User]:
-    """Create one demo account per APH role and return ``{role: User}``."""
-    aicte_ids = sorted(institutions)
-    users: dict[str, User] = {}
-    for index, role_name in enumerate(ROLE_NAMES):
-        role = Role(role_name)
-        email = f"{role_name.lower()}@demo.edu"
-        institution_id = None
-        region = None
-        if role in _INSTITUTION_BOUND_ROLES:
-            institution_id = institutions[aicte_ids[index % len(aicte_ids)]]
-            institution = db.get(Institution, institution_id)
-            region = institution.region if institution is not None else None
+    """Create the fixed demo accounts and return ``{role: User}``.
 
-        user = db.scalar(select(User).where(User.email == email))
-        if user is None:
-            user = User(
-                name=f"{role_name} Demo (Fictional)",
-                email=email,
-                password_hash=hash_password(DEMO_PASSWORD),
-                role=role,
-                institution_id=institution_id,
-                region=region,
-            )
-            db.add(user)
-            logger.info(" seeded user %s (role=%s)", email, role_name)
-        else:
-            user.role = role
-            user.institution_id = institution_id
-            user.region = region
-        users[role_name] = user
-    db.flush()
+    The full account directory (20 institution admins, five scrutiny officers,
+    three regional officers, committee pools) lives in :mod:`app.demo_seed`.
+    This wrapper keeps the older ``{role: User}`` contract used by
+    :func:`_seed_cases`, while the demo seeder receives every account.
+    """
+    from app.core.config import get_settings
+    from app.demo_seed import ensure_demo_users
+
+    settings = get_settings()
+    regions = {
+        institution.aicte_id: institution.aicte_region.value
+        for institution in db.scalars(select(Institution)).all()
+    }
+    accounts = ensure_demo_users(
+        db,
+        institutions,
+        regions,
+        admin_password=settings.seed_demo_password.get_secret_value(),
+        super_admin_email=settings.seed_admin_email,
+        super_admin_password=settings.seed_admin_password.get_secret_value(),
+        super_admin_name=settings.seed_admin_name,
+    )
+
+    users: dict[str, User] = {}
+    for user in accounts.values():
+        users.setdefault(user.role.value, user)
     return users
+
+
+def _demo_accounts(db: Session) -> dict[str, User]:
+    """Return every seeded demo account keyed by e-mail."""
+    accounts: dict[str, User] = {}
+    for user in db.scalars(select(User)).all():
+        accounts[user.email] = user
+    return accounts
 
 
 def _table_14_rate(
@@ -575,6 +607,8 @@ def _seed_cases(
             current_stage=stage,
             decision_type=decision_type,
             data={"reference": portal_no, "demo": True},
+            created_at=extra.get("submitted_at") or now,
+            updated_at=extra.get("submitted_at") or now,
             **extra,
         )
         db.add(application)
@@ -620,9 +654,9 @@ def _seed_cases(
         track=ApplicationTrack.EXISTING,
         status=ApplicationStatus.SUBMITTED,
         stage=WorkflowStage.APPLICATION,
-        submitted_at=now,
-        locked_at=now,
-        stage_entered_at=now,
+        submitted_at=now - timedelta(days=25),
+        locked_at=now - timedelta(days=25),
+        stage_entered_at=now - timedelta(days=12),
         sla_due_at=now + timedelta(days=3),
     )
     if created:
@@ -642,8 +676,8 @@ def _seed_cases(
                 application_id=app1.id,
                 doc_type="FIRE_SAFETY_CERTIFICATE",
                 doc_code="FIRE_SAFETY_CERTIFICATE",
-                filename="fire_cert_2025.pdf",
-                storage_path="demo/fire_cert_2025.pdf",
+                filename="fire_safety_certificate_expired.pdf",
+                storage_path="demo/fire_safety_certificate_expired.pdf",
                 uploaded_by=institution_admin.id,
                 verification_status=DocumentVerificationStatus.REJECTED,
                 rejection_reason_code=DocumentRejectionReason.EXPIRED,
@@ -701,8 +735,8 @@ def _seed_cases(
                 application_id=app2.id,
                 doc_type="DSC_CERTIFICATE",
                 doc_code="DSC_CERTIFICATE",
-                filename="dsc_certificate.pdf",
-                storage_path="demo/dsc_certificate.pdf",
+                filename="dsc_certificate_unsigned.pdf",
+                storage_path="demo/dsc_certificate_unsigned.pdf",
                 uploaded_by=institution_admin.id,
                 verification_status=DocumentVerificationStatus.PENDING,
                 related_deficiency_id=deficiency.id,
@@ -1063,10 +1097,11 @@ def _ensure_compliance_rules(db: Session, audit: AuditService | None = None) -> 
 def _ensure_aph_reference_data(db: Session, audit: AuditService | None = None) -> None:
     """Load the generated APH reference tables.
 
-    ``application_type_routes`` is intentionally not loaded here: the generated
-    JSON omits ``workflow_key`` and ``not_implemented``, which the workflow
-    service needs, so those rows are owned by the migrations and the admin API.
+    The route rows carry the prototype ``workflow_key`` binding added by the
+    generator, so ``make seed`` also restores them after ``make reset-demo``.
     """
+    _ensure_application_type_routes(db)
+
     for row in _load_json("public_notices.json"):
         existing = db.scalar(
             select(PublicNotice).where(
@@ -1223,7 +1258,106 @@ def _ensure_aph_reference_data(db: Session, audit: AuditService | None = None) -
             ],
         )
         db.add(definition)
+    _ensure_nomenclature_courses(db)
+    _ensure_competent_authorities(db)
     db.flush()
+
+
+def _ensure_application_type_routes(db: Session) -> None:
+    """Load the Table 2.3 application-type routes and their workflow binding."""
+    rows = _load_json("application_type_routes.json")
+    existing = {
+        route.type: route for route in db.scalars(select(ApplicationTypeRoute)).all()
+    }
+    added = 0
+    for row in rows:
+        route = existing.get(row["type"])
+        if route is not None:
+            if route.workflow_key is None and row.get("workflow_key"):
+                route.workflow_key = row["workflow_key"]
+            continue
+        db.add(
+            ApplicationTypeRoute(
+                type=row["type"],
+                label=row["label"],
+                category=ApplicationCategory(row["category"]),
+                requires_self_disclosure=row["requires_self_disclosure"],
+                requires_scrutiny=row["requires_scrutiny"],
+                requires_evc=row["requires_evc"],
+                requires_hearing_aa=row["requires_hearing_aa"],
+                nil_deficiency_required=row["nil_deficiency_required"],
+                no_ter=row["no_ter"],
+                year_round=row["year_round"],
+                workflow_key=row.get("workflow_key"),
+                apH_clause=row["apH_clause"],
+                needs_verification=row.get("needs_verification", False),
+            )
+        )
+        added += 1
+    if added:
+        logger.info(" seeded %d application-type routes", added)
+
+
+def _ensure_nomenclature_courses(db: Session) -> None:
+    """Load the Annexure-11 course names without rewriting existing rows."""
+    rows = _load_json("nomenclature_courses.json")
+    existing = {
+        (level, family, name)
+        for level, family, name in db.execute(
+            select(
+                NomenclatureCourse.level,
+                NomenclatureCourse.programme_family,
+                NomenclatureCourse.course_name,
+            )
+        ).all()
+    }
+    added = 0
+    for row in rows:
+        key = (row["level"], row["programme_family"], row["course_name"])
+        if key in existing:
+            continue
+        db.add(
+            NomenclatureCourse(
+                level=row["level"],
+                programme_family=row["programme_family"],
+                course_name=row["course_name"],
+                source_section=row["source_section"],
+                is_emerging=row.get("is_emerging", False),
+                apH_clause=row["apH_clause"],
+                needs_verification=row.get("needs_verification", False),
+            )
+        )
+        existing.add(key)
+        added += 1
+    if added:
+        logger.info(" seeded %d Annexure-11 course names", added)
+
+
+def _ensure_competent_authorities(db: Session) -> None:
+    """Load the Annexure-14 certificate authorities without rewriting rows."""
+    rows = _load_json("competent_authorities.json")
+    existing = set(db.scalars(select(CompetentAuthority.state)).all())
+    added = 0
+    for row in rows:
+        if row["state"] in existing:
+            continue
+        db.add(
+            CompetentAuthority(
+                state=row["state"],
+                aicte_region=InstitutionRegion(row["aicte_region"]),
+                land_use_authority=row.get("land_use_authority"),
+                site_plan_authority=row.get("site_plan_authority"),
+                building_plan_authority=row.get("building_plan_authority"),
+                occupation_authority=row.get("occupation_authority"),
+                source_text=row.get("source_text"),
+                apH_clause=row["apH_clause"],
+                needs_verification=row.get("needs_verification", True),
+            )
+        )
+        existing.add(row["state"])
+        added += 1
+    if added:
+        logger.info(" seeded %d Annexure-14 competent authorities", added)
 
 
 def _ensure_expert_pool(db: Session, audit: AuditService | None = None) -> None:

@@ -67,6 +67,7 @@ from app.models.fee import FeeSchedule, FeeTransaction
 from app.models.inspection import Inspection
 from app.models.institution import Institution
 from app.models.programme import ApprovedIntakeLedger, Programme
+from app.models.reference import CompetentAuthority, NomenclatureCourse
 from app.models.required_document import RequiredDocument
 from app.models.security_deposit import SecurityDeposit
 from app.models.security_deposit_schedule import SecurityDepositSchedule
@@ -106,6 +107,7 @@ __all__ = [
     "CommitteeType",
     "Complaint",
     "ComplaintStatus",
+    "CompetentAuthority",
     "ComplianceConfig",
     "ComplianceHealth",
     "ComplianceResult",
@@ -139,6 +141,7 @@ __all__ = [
     "InstitutionRegion",
     "InstitutionStatus",
     "LandOwnership",
+    "NomenclatureCourse",
     "PenalAction",
     "PenalActionType",
     "Programme",

@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
-      DEBUG: ${DEBUG:-false}
+      DEBUG: ${DEBUG:-true}
       DEMO_MODE: ${DEMO_MODE:-true}
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me-before-deploying}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}

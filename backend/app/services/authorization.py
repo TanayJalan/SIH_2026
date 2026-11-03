@@ -12,10 +12,12 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from app.models.application import Application
 from app.models.audit import AuditLog
-from app.models.enums import Role
+from app.models.enums import InstitutionRegion, Role
 from app.models.inspection import Inspection
 from app.models.institution import Institution
 from app.models.user import User
+
+_AICTE_REGION_VALUES = {region.value for region in InstitutionRegion}
 
 _COMMITTEE_WIDE_ROLES = frozenset(
     {
@@ -27,11 +29,30 @@ _COMMITTEE_WIDE_ROLES = frozenset(
 )
 
 
-def _region_condition(user: User, column: ColumnElement[str]) -> ColumnElement[bool]:
-    """Return a region condition, or ``false()`` when the user has no region."""
+def _region_condition(
+    user: User,
+    column: ColumnElement[str],
+    aicte_column: ColumnElement[str] | None = None,
+) -> ColumnElement[bool]:
+    """Return a region condition, or ``false()`` when the user has no region.
+
+    A regional officer may be scoped to a city (the legacy free-text
+    ``Institution.region``) or to an AICTE region. Both spellings are accepted
+    so a region-wide officer sees every institution in their region.
+    """
     if user.region is None:
         return false()
-    return column == user.region
+    conditions: list[ColumnElement[bool]] = [column == user.region]
+    if aicte_column is not None and user.region in _AICTE_REGION_VALUES:
+        conditions.append(aicte_column == user.region)
+    return or_(*conditions)
+
+
+def _in_region(user: User, institution: Institution | None) -> bool:
+    """Return whether ``institution`` is inside the user's region scope."""
+    if user.region is None or institution is None:
+        return False
+    return user.region in {institution.region, institution.aicte_region.value}
 
 
 def application_scope(user: User) -> list[ColumnElement[bool]]:
@@ -52,13 +73,17 @@ def application_scope(user: User) -> list[ColumnElement[bool]]:
     if user.role == Role.SCRUTINY_COMMITTEE_MEMBER:
         conditions: list[ColumnElement[bool]] = [Application.assigned_officer_id == user.id]
         if user.region is not None:
-            conditions.append(Application.institution.has(Institution.region == user.region))
+            conditions.append(
+                Application.institution.has(
+                    _region_condition(user, Institution.region, Institution.aicte_region)
+                )
+            )
         return [or_(*conditions)]
 
     if user.role == Role.REGIONAL_OFFICER:
         return [
             Application.institution.has(
-                _region_condition(user, Institution.region)
+                _region_condition(user, Institution.region, Institution.aicte_region)
             )
         ]
 
@@ -84,10 +109,10 @@ def institution_scope(user: User) -> list[ColumnElement[bool]]:
     if user.role == Role.REGULATION_BUREAU_OFFICER:
         if user.region is None:
             return []
-        return [Institution.region == user.region]
+        return [_region_condition(user, Institution.region, Institution.aicte_region)]
 
     if user.role in {Role.SCRUTINY_COMMITTEE_MEMBER, Role.REGIONAL_OFFICER}:
-        return [_region_condition(user, Institution.region)]
+        return [_region_condition(user, Institution.region, Institution.aicte_region)]
 
     if user.role == Role.EVC_MEMBER:
         return [
@@ -111,15 +136,14 @@ def can_access_application(db: Session, user: User, application: Application) ->
         return user.institution_id is not None and application.institution_id == user.institution_id
 
     if user.role == Role.REGULATION_BUREAU_OFFICER:
-        return user.region is None or application.institution.region == user.region
+        return user.region is None or _in_region(user, application.institution)
 
     if user.role == Role.SCRUTINY_COMMITTEE_MEMBER:
         assigned = application.assigned_officer_id == user.id
-        in_region = user.region is not None and application.institution.region == user.region
-        return assigned or in_region
+        return assigned or _in_region(user, application.institution)
 
     if user.role == Role.REGIONAL_OFFICER:
-        return user.region is not None and application.institution.region == user.region
+        return _in_region(user, application.institution)
 
     if user.role == Role.EVC_MEMBER:
         inspection_id = db.scalar(
@@ -158,11 +182,13 @@ def audit_log_scope(user: User) -> list[ColumnElement[bool]]:
     if user.region is None:
         return [false()]
 
-    institution_ids = select(Institution.id).where(Institution.region == user.region)
+    institution_ids = select(Institution.id).where(
+        _region_condition(user, Institution.region, Institution.aicte_region)
+    )
     application_ids = (
         select(Application.id)
         .join(Institution, Application.institution_id == Institution.id)
-        .where(Institution.region == user.region)
+        .where(_region_condition(user, Institution.region, Institution.aicte_region))
     )
     user_ids = select(User.id).where(User.region == user.region)
 

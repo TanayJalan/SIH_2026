@@ -6,20 +6,20 @@ PYTHON ?= python3
 
 help:
 	@echo "make dev      Build and start postgres, mailpit, backend and frontend"
-	@echo "make seed     Generate APH JSON, apply migrations and seed demo data"
-	@echo "make seed-aph Regenerate backend/seeds/aph/*.json from docs/reference/APH_SPEC.md"
+	@echo "make seed     Apply migrations and seed the full demo dataset"
+	@echo "make seed-aph Regenerate backend/seeds/aph/*.json from the APH reference PDF/spec"
 	@echo "make test     Run backend tests (migrations applied first)"
 	@echo "make migrate  Apply pending Alembic migrations to the running backend"
 	@echo "make logs     Follow logs from all services"
 	@echo "make shell    Open a shell in the backend container"
 	@echo "make down     Stop and remove containers (keeps the database volume)"
-	@echo "make reset-demo   Reset the demo simulated clock to real time"
+	@echo "make reset-demo   Wipe seeded rows and rebuild the demo dataset"
 
 dev:
 	$(COMPOSE) up --build
 
-seed: seed-aph
-	$(COMPOSE) run --rm backend sh -c "alembic upgrade head"
+seed:
+	$(COMPOSE) run --rm backend python -m app.seed
 
 seed-aph:
 	$(PYTHON) scripts/seed_aph.py
@@ -39,5 +39,8 @@ shell:
 down:
 	$(COMPOSE) down
 
+# Rebuilds the exact state of `make seed`: truncates every seeded table (the
+# Alembic version table is kept) and runs the seeder again. Simulated time is
+# process-local, so restart the backend container to clear it.
 reset-demo:
-	$(COMPOSE) exec backend sh -c "python -c \"from app.core.clock import SimulatedClock; c=SimulatedClock(); c.reset(); print('Demo clock reset to real time')\""
+	$(COMPOSE) run --rm backend python -m app.reset_demo
