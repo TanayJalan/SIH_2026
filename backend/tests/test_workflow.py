@@ -205,7 +205,7 @@ def future_calendar() -> Any:
     """Move the demo EoA cut-offs a year forward and restore them afterwards."""
     with SessionLocal() as db:
         rows = list(db.scalars(select(AcademicCalendarEvent)).all())
-        originals = {row.event_key: row.date for row in rows}
+        originals = {(row.academic_year, row.event_key): row.date for row in rows}
         for row in rows:
             row.date = date.today() + timedelta(days=365)
         db.commit()
@@ -214,8 +214,9 @@ def future_calendar() -> Any:
     finally:
         with SessionLocal() as db:
             for row in db.scalars(select(AcademicCalendarEvent)).all():
-                if row.event_key in originals:
-                    row.date = originals[row.event_key]
+                key = (row.academic_year, row.event_key)
+                if key in originals:
+                    row.date = originals[key]
             db.commit()
 
 
@@ -224,7 +225,7 @@ def past_eoa_cutoff() -> Any:
     """Set the EoA last date in the past to exercise APH 2.25j."""
     with SessionLocal() as db:
         rows = list(db.scalars(select(AcademicCalendarEvent)).all())
-        originals = {row.event_key: row.date for row in rows}
+        originals = {(row.academic_year, row.event_key): row.date for row in rows}
         for row in rows:
             if row.event_key.value == "LAST_DATE_EOA":
                 row.date = date.today() - timedelta(days=1)
@@ -234,8 +235,9 @@ def past_eoa_cutoff() -> Any:
     finally:
         with SessionLocal() as db:
             for row in db.scalars(select(AcademicCalendarEvent)).all():
-                if row.event_key in originals:
-                    row.date = originals[row.event_key]
+                key = (row.academic_year, row.event_key)
+                if key in originals:
+                    row.date = originals[key]
             db.commit()
 
 
@@ -244,7 +246,7 @@ def past_deposit_cutoff() -> Any:
     """Place the final Security Deposit date in the past (APH 2.25f)."""
     with SessionLocal() as db:
         rows = list(db.scalars(select(AcademicCalendarEvent)).all())
-        originals = {row.event_key: row.date for row in rows}
+        originals = {(row.academic_year, row.event_key): row.date for row in rows}
         for row in rows:
             if row.event_key.value == "SD_PENALTY20_31JUL":
                 row.date = date.today() - timedelta(days=1)
@@ -254,8 +256,9 @@ def past_deposit_cutoff() -> Any:
     finally:
         with SessionLocal() as db:
             for row in db.scalars(select(AcademicCalendarEvent)).all():
-                if row.event_key in originals:
-                    row.date = originals[row.event_key]
+                key = (row.academic_year, row.event_key)
+                if key in originals:
+                    row.date = originals[key]
             db.commit()
 
 
@@ -1212,7 +1215,7 @@ def test_super_admin_can_only_ratify_an_ec_decision(
             select(CouncilRatification).where(
                 CouncilRatification.decision_id.in_(
                     select(Decision.id).where(
-                        Decision.application_id == uuid.UUID(application_id)
+                        Decision.application_id == application_id
                     )
                 )
             )
@@ -1401,10 +1404,12 @@ def test_workflow_definition_and_diagram_come_from_the_database(
 
     diagram = api_client.get("/workflow/diagram", headers=admin)
     assert diagram.status_code == 200, diagram.text
-    mermaid = diagram.json()["mermaid"]
+    payload = diagram.json()
+    assert "TRACK_A" in payload["definitions"]
+    mermaid = payload["mermaid"]
     assert mermaid.startswith("flowchart TD")
     assert "EC_DECISION" in mermaid
-    assert "TRACK_A" in mermaid
+    assert "track_a" in mermaid
 
     missing = api_client.get(
         "/workflow/definition", params={"type": "NOT_A_TYPE"}, headers=admin

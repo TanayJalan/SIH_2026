@@ -119,7 +119,12 @@ def test_refund_is_recorded_without_reducing_paid_ter(
     workspace_applications: list[uuid.UUID],
 ) -> None:
     headers = _headers(api_client, test_data)
-    created = _complete_draft(api_client, headers, workspace_applications)
+    created = _complete_draft(
+        api_client,
+        headers,
+        workspace_applications,
+        application_type="NEW_INSTITUTION",
+    )
     application_id = created["id"]
     paid = pay_application_fee(api_client, headers, application_id)
     total_paid = paid["quote"]["total_paise"]

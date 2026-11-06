@@ -39,8 +39,8 @@ shell:
 down:
 	$(COMPOSE) down
 
-# Rebuilds the exact state of `make seed`: truncates every seeded table (the
-# Alembic version table is kept) and runs the seeder again. Simulated time is
-# process-local, so restart the backend container to clear it.
+# Rebuilds the exact state of `make seed`: drops and recreates the public
+# schema (data and migration-owned rows), re-runs Alembic, then seeds again.
+# The Demo time offset is process-local, so restart the backend to clear it.
 reset-demo:
 	$(COMPOSE) run --rm backend python -m app.reset_demo

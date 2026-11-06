@@ -132,7 +132,7 @@ export default function CaseCommittees({
               </span>
             </div>
             <p className="mt-1 text-13 text-ink-500">
-              Automated, deterministic committee member draws from the 30+ expert pool with state-conflict exclusion.
+              Automated, deterministic committee member draws from the expert pool with state-conflict exclusion.
             </p>
           </div>
           {canSelect && (

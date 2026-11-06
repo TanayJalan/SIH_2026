@@ -95,7 +95,24 @@ _SLA_CONFIGS: tuple[tuple[WorkflowStage, int, int, Role], ...] = (
 )
 
 # Baseline alert rules. Each row is configuration, not logic: the engine reads
-# the trigger through ``alert_trigger_catalogue``.
+# the trigger through ``alert_trigger_catalogue``. ``_ALERT_CLAUSES`` cites the
+# handbook where it fixes the underlying clock; the remaining rows are demo
+# thresholds and stay explicitly marked for verification.
+_ALERT_CLAUSES: dict[str, str] = {
+    "APPEAL-WINDOW-3": "APH 1.11a",
+    "APPEAL-WINDOW-1": "APH 1.11a",
+    "APPEAL-EXPIRED": "APH 1.11a",
+    "DEPOSIT-DUE-5": "APH 2.25f",
+    "DEPOSIT-DUE-1": "APH 2.25f",
+    "DEPOSIT-OVERDUE": "APH 2.25f",
+    "DEPOSIT-PENALTY": "APH 2.25f",
+    "LOA-EXPIRED": "APH 1.10b",
+    "DEFICIENCY-DUE-3": "APH 2.4",
+    "DEFICIENCY-OVERDUE": "APH 2.25c",
+    "DOCUMENT-EXPIRING-30": "APH 6.17h",
+    "COMPLIANCE-RED": "APH 7.13",
+}
+
 _ALERT_RULES: tuple[dict[str, Any], ...] = (
     {
         "code": "DEADLINE-7",
@@ -119,6 +136,18 @@ _ALERT_RULES: tuple[dict[str, Any], ...] = (
         "template": (
             "The {stage} stage for {institution} (application "
             "{application_reference}) closes on {due_date}."
+        ),
+    },
+    {
+        "code": "DEADLINE-1",
+        "trigger": AlertTrigger.DEADLINE_APPROACHING,
+        "days_before": 1,
+        "severity": Severity.HIGH,
+        "channels": [AlertChannel.IN_APP, AlertChannel.EMAIL],
+        "escalation_role": Role.REGIONAL_OFFICER,
+        "template": (
+            "The {stage} deadline for {institution} (application "
+            "{application_reference}) is {due_date}. Immediate attention is required."
         ),
     },
     {
@@ -202,15 +231,29 @@ _ALERT_RULES: tuple[dict[str, Any], ...] = (
         ),
     },
     {
-        "code": "APPEAL-WINDOW-7",
+        "code": "APPEAL-WINDOW-3",
         "trigger": AlertTrigger.APPEAL_WINDOW_CLOSING,
-        "days_before": 7,
-        "severity": Severity.MEDIUM,
+        "days_before": 3,
+        "severity": Severity.HIGH,
         "channels": [AlertChannel.IN_APP, AlertChannel.EMAIL],
         "escalation_role": Role.INSTITUTION_ADMIN,
         "template": (
             "The appeal window for {institution} (application "
-            "{application_reference}) closes on {due_date}."
+            "{application_reference}) closes on {due_date}. {days_remaining} "
+            "day(s) remain to file the single appeal (APH 1.11a)."
+        ),
+    },
+    {
+        "code": "APPEAL-WINDOW-1",
+        "trigger": AlertTrigger.APPEAL_WINDOW_CLOSING,
+        "days_before": 1,
+        "severity": Severity.HIGH,
+        "channels": [AlertChannel.IN_APP, AlertChannel.EMAIL],
+        "escalation_role": Role.INSTITUTION_ADMIN,
+        "template": (
+            "The appeal window for {institution} (application "
+            "{application_reference}) closes on {due_date}. One day remains to "
+            "file the single appeal (APH 1.11a)."
         ),
     },
     {
@@ -234,7 +277,21 @@ _ALERT_RULES: tuple[dict[str, Any], ...] = (
         "escalation_role": Role.INSTITUTION_ADMIN,
         "template": (
             "Security Deposit and Affidavit 3 for {institution} (application "
-            "{application_reference}) are due on {due_date}."
+            "{application_reference}) are due on {due_date}. {days_remaining} "
+            "day(s) remain (APH 2.25f)."
+        ),
+    },
+    {
+        "code": "DEPOSIT-DUE-1",
+        "trigger": AlertTrigger.DEPOSIT_DUE,
+        "days_before": 1,
+        "severity": Severity.HIGH,
+        "channels": [AlertChannel.IN_APP, AlertChannel.EMAIL],
+        "escalation_role": Role.INSTITUTION_ADMIN,
+        "template": (
+            "Security Deposit for {institution} (application "
+            "{application_reference}) is due on {due_date}. Missing it attracts "
+            "a penalty or withdrawal (APH 2.25f)."
         ),
     },
     {
@@ -1022,20 +1079,15 @@ def _ensure_alert_rules(db: Session, audit: AuditService | None = None) -> None:
     db.flush()
 
     for definition in _ALERT_RULES:
-        # One active rule per trigger keeps scan output deterministic: a second
-        # rule for the same trigger would raise duplicate alerts for one event.
+        # Codes are the natural key. Some triggers need more than one window
+        # (appeal T-3/T-1, deposit day 10/day 14, deadline T-7/T-3), so the
+        # guard only skips a rule that is already recorded under its own code.
         existing = db.scalar(
             select(AlertRule).where(
                 AlertRule.code == definition["code"],
             )
         )
-        already_configured = db.scalar(
-            select(AlertRule.id).where(
-                AlertRule.trigger_type == definition["trigger"].value,
-                AlertRule.is_active.is_(True),
-            )
-        )
-        if existing is not None or already_configured is not None:
+        if existing is not None:
             continue
         db.add(
             AlertRule(
@@ -1049,7 +1101,9 @@ def _ensure_alert_rules(db: Session, audit: AuditService | None = None) -> None:
                 template=definition["template"],
                 escalation_role=definition["escalation_role"],
                 is_active=True,
-                apH_clause="DEMO",
+                apH_clause=_ALERT_CLAUSES.get(definition["code"], "DEMO"),
+                # The reminder days are project values even where the clock
+                # itself is fixed by the handbook (docs/OPEN_QUESTIONS.md OQ-37).
                 needs_verification=True,
             )
         )
@@ -1066,7 +1120,14 @@ def _ensure_compliance_config(db: Session, audit: AuditService | None = None) ->
 
 
 def _ensure_compliance_rules(db: Session, audit: AuditService | None = None) -> None:
-    """Load the APH compliance rule library."""
+    """Load the APH compliance rule library.
+
+    The pre-APH prototype shipped placeholder rules whose codes start with
+    ``DEMO-`` (clause literally "DEMO"). They duplicate a subset of the
+    clause-cited library, so they are deactivated once the real rules exist;
+    keeping them active would make every live preview red with unassessed
+    mandatory rules.
+    """
     for row in _load_json("compliance_rules.json"):
         existing = db.scalar(select(ComplianceRule).where(ComplianceRule.code == row["code"]))
         if existing is not None:
@@ -1081,7 +1142,7 @@ def _ensure_compliance_rules(db: Session, audit: AuditService | None = None) -> 
                 operator=row["operator"],
                 threshold=Decimal(str(row["threshold"])),
                 severity=Severity(row["severity"]),
-                applies_to="INSTITUTION",
+                applies_to="ALL",
                 applies_to_family=row.get("applies_to_family"),
                 applies_to_level=row.get("applies_to_level"),
                 apH_clause=row["apH_clause"],
@@ -1091,6 +1152,11 @@ def _ensure_compliance_rules(db: Session, audit: AuditService | None = None) -> 
                 penalty_codes=row.get("penalty_codes", []),
             )
         )
+    db.flush()
+    for rule in db.scalars(
+        select(ComplianceRule).where(ComplianceRule.code.like("DEMO-%"))
+    ).all():
+        rule.is_active = False
     db.flush()
 
 

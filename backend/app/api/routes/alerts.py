@@ -10,6 +10,7 @@ from fastapi import status as http_status
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload
 
 from app.api.dependencies import (
     ClockDep,
@@ -200,7 +201,13 @@ def list_alerts(
             read.acknowledged_by_name = alert.acknowledged_by.name
         reads.append(read)
 
-    return AlertPage(items=reads, total=total, page=page, page_size=page_size, pages=(total + page_size - 1) // page_size)
+    return AlertPage(
+        items=reads,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
 
 
 @router.post(

@@ -45,14 +45,20 @@ def test_composition_chapter_1_scrutiny(test_data: TestData) -> None:
         # Set institution state to Maharashtra so experts from Maharashtra are excluded
         inst = db.get(Institution, app.institution_id)
         assert inst is not None
+        original_state = inst.state
         inst.state = "Maharashtra"
         db.flush()
 
-        result = svc.select_committee(
-            CommitteeType.SCRUTINY,
-            application=app,
-            selection_seed="seed-ch1-test-01",
-        )
+        try:
+            result = svc.select_committee(
+                CommitteeType.SCRUTINY,
+                application=app,
+                selection_seed="seed-ch1-test-01",
+            )
+        finally:
+            # Session-scoped fixtures are shared across test files: never leave
+            # the institution in a state another test does not expect.
+            inst.state = original_state
         db.commit()
 
         roles = [s.seat_role for s in result.seats]

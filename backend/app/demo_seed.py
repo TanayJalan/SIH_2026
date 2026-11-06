@@ -29,6 +29,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.clock import SimulatedClock
 from app.demo_documents import ensure_demo_documents
 from app.models import (
     Alert,
@@ -49,6 +50,7 @@ from app.models import (
     ComplianceResult,
     ComplianceRule,
     ComplianceSnapshot,
+    DeadlineRule,
     Decision,
     DecisionBody,
     DecisionLetter,
@@ -60,7 +62,6 @@ from app.models import (
     Document,
     DocumentVerificationStatus,
     FeeKind,
-    FeeSchedule,
     FeeTransaction,
     Inspection,
     InspectionStatus,
@@ -74,12 +75,18 @@ from app.models import (
     SecurityDepositSchedule,
     SecurityDepositStatus,
     Severity,
+    Timer,
+    TimerStatus,
     User,
     WorkflowEvent,
     WorkflowStage,
 )
 from app.models.enums import AlertChannel, AlertStatus, AlertTrigger, DocumentRejectionReason
+from app.schemas.application_sections import ApplicationData
+from app.services.application_sections import current_documents
 from app.services.audit import AuditService
+from app.services.compliance import evaluate_compliance
+from app.services.fees import FeeService
 
 logger = logging.getLogger("app.demo_seed")
 
@@ -541,6 +548,7 @@ def seed_demo(
         scrutiny=scrutiny,
         evc_users=evc_users,
     )
+    _seed_statutory_timers(db)
     _seed_bulk_complaints(db, institutions=institutions, scrutiny=scrutiny)
     _seed_snapshots(db, institutions=institutions)
     _seed_bulk_alerts(db, users=users)
@@ -603,19 +611,6 @@ def _ensure_programme(
     )
 
 
-def _fee_for(
-    db: Session, institution: Institution, application_type: str
-) -> FeeSchedule | None:
-    return db.scalar(
-        select(FeeSchedule)
-        .where(
-            FeeSchedule.item_code == application_type,
-            FeeSchedule.institution_class == institution.institution_class,
-        )
-        .limit(1)
-    )
-
-
 def _ensure_fee(
     db: Session,
     application: Application,
@@ -624,6 +619,16 @@ def _ensure_fee(
     paid: bool,
     days_ago: float,
 ) -> None:
+    """Record the TER the live fee service would quote for this application.
+
+    The quotation resolves the APH item code for the application type (for
+    example ``NEW_INSTITUTION`` prices as ``NEW_INSTITUTION_TER``), applies the
+    configured annual increase and the late-submission penalty. Writing the
+    quote lines means the seeded Fees tab shows the same figures an
+    institution would see on a fresh submission instead of a hard-coded
+    amount.
+    """
+    del institution  # kept for call-site compatibility; the quote resolves it
     exists = db.scalar(
         select(FeeTransaction.id).where(
             FeeTransaction.application_id == application.id,
@@ -632,26 +637,56 @@ def _ensure_fee(
     )
     if exists is not None:
         return
-    schedule = _fee_for(db, institution, application.application_type)
-    amount = schedule.amount_paise if schedule is not None else 0
-    application.ter_amount_paise = amount
+    service = FeeService(db, AuditService(db), SimulatedClock())
+    quote = service.quote(application)
+    application.ter_amount_paise = quote.total_paise
     if not paid:
         return
     paid_at = _ago(days_ago)
     application.ter_paid_at = paid_at
-    application.ter_receipt_no = f"TER/{ACADEMIC_YEAR}/{application.portal_application_no[-7:]}"
-    db.add(
-        FeeTransaction(
-            application_id=application.id,
-            item_code=schedule.item_code if schedule else application.application_type,
-            amount_paise=amount,
-            kind=FeeKind.TER,
-            receipt_no=application.ter_receipt_no,
-            paid_at=paid_at,
-            apH_clause=schedule.apH_clause if schedule else "APH 2.1",
-            needs_verification=schedule.needs_verification if schedule else True,
-        )
+    receipt_base = (
+        f"TER-{application.academic_year.replace('-', '')}-"
+        f"{str(application.id).replace('-', '')[:10].upper()}"
     )
+    receipt_no = f"{receipt_base}-01"
+    application.ter_receipt_no = receipt_no
+    for index, line in enumerate(quote.lines, start=1):
+        db.add(
+            FeeTransaction(
+                application_id=application.id,
+                item_code=line.item_code,
+                amount_paise=line.amount_paise,
+                kind=(
+                    FeeKind.PENALTY
+                    if line.item_code == "LATE_SUBMISSION_PENALTY"
+                    else FeeKind.TER
+                ),
+                receipt_no=f"{receipt_base}-{index:02d}",
+                paid_at=paid_at,
+                apH_clause=line.apH_clause,
+                needs_verification=line.needs_verification,
+            )
+        )
+        if index == 1:
+            application.ter_receipt_no = f"{receipt_base}-{index:02d}"
+
+
+def _sync_compliance_score(db: Session, application: Application) -> None:
+    """Store the score the case-file compliance preview computes.
+
+    The scenario rows carry a hand-written score so the seeder can stay fast,
+    but a hand-written figure drifts from the rule evaluation the moment the
+    seeded documents change. Recomputing without persisting keeps the
+    dashboard card and the case file's Compliance tab in agreement.
+    """
+    preview = evaluate_compliance(
+        db,
+        application,
+        ApplicationData.model_validate(application.data or {}),
+        evaluated_at=_now(),
+        documents=list(current_documents(db, application.id).values()),
+    )
+    application.compliance_score = Decimal(str(preview.score))
 
 
 def _add_document(
@@ -1244,6 +1279,7 @@ def _seed_scenarios(
             officer=officer,
             regional=regional,
         )
+        _sync_compliance_score(db, app)
         logger.debug(" seeded scenario %s", scenario["key"])
 
 
@@ -1938,6 +1974,55 @@ def _seed_bulk_applications(
                 app.id,
                 after={"portal_application_no": portal, "bulk": True},
             )
+
+
+def _seed_statutory_timers(db: Session) -> None:
+    """Start the appeal and Security Deposit clocks for the seeded cases.
+
+    Scenario rows are inserted straight into their final state, so the workflow
+    effects that normally start these timers never run. Without a timer the
+    case-file deadlines strip is empty and the scheduled scan has nothing to
+    warn about, so the demo could not show the APH 1.11a / 2.25f clocks.
+    """
+    rules = {rule.code: rule for rule in db.scalars(select(DeadlineRule)).all()}
+    existing = {
+        (timer.application_id, timer.deadline_rule_id)
+        for timer in db.scalars(select(Timer)).all()
+    }
+    created = 0
+    for application in db.scalars(select(Application)).all():
+        if application.status == ApplicationStatus.APPEAL_WINDOW:
+            code = "APPEAL_WINDOW"
+            due = application.appeal_deadline
+        elif application.status == ApplicationStatus.SECURITY_DEPOSIT_PENDING:
+            code = "SECURITY_DEPOSIT"
+            due = application.security_deposit_due_on
+        else:
+            continue
+        rule = rules.get(code)
+        if rule is None or due is None:
+            continue
+        if (application.id, rule.id) in existing:
+            continue
+        if isinstance(due, datetime):
+            due_at = due if due.tzinfo is not None else due.replace(tzinfo=UTC)
+        else:
+            due_at = datetime.combine(due, datetime.max.time(), UTC)
+        db.add(
+            Timer(
+                application_id=application.id,
+                deadline_rule_id=rule.id,
+                started_at=due_at - timedelta(days=rule.duration_days),
+                due_at=due_at,
+                status=TimerStatus.PENDING,
+                fired_levels=[],
+            )
+        )
+        existing.add((application.id, rule.id))
+        created += 1
+    db.flush()
+    if created:
+        logger.info("demo statutory timers started", extra={"count": created})
 
 
 def _seed_bulk_evc(

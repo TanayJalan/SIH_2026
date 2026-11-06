@@ -1,212 +1,271 @@
-# Demo Script — 6-Minute Click Path
+# Demo Script — Seven-Minute Walkthrough
 
-**Purpose**: End-to-end walkthrough of the AICTE approval workflow from institution
-registration through approval, appeal, and time-simulation. Runs from a fresh
-database with `make seed` (followed by `make reset-demo` to reset the demo clock).
+One story, five screens: an institution's case file, the committee draw, the
+Expert Visit video, the Deficiency Report issued from failed rules, the
+institution's response, and the time simulation that expires the statutory
+clocks and escalates.
+
+Everything in the database is **fictional**. Compliance thresholds, fees,
+cut-off dates and SLAs are editable configuration rows that still need checking
+against the current AICTE Approval Process Handbook. Say this out loud in the
+first ten seconds; a judge will ask.
 
 ---
 
-## Prerequisites
+## Before you start (once, ~40 seconds)
 
 ```bash
-make dev          # start the stack (DEBUG=true is required)
-make seed-aph     # generate APH config from APH_SPEC.md
-# Demo data seeding is handled by the backend on first run;
-# see Notes below.
+make dev            # stack up; DEBUG=true is the Compose default and powers Demo time
+make reset-demo     # drop the schema, migrate, seed: ~12 s, leaves a clean demo
+docker compose restart backend   # clears the in-process Demo time offset
 open http://localhost:5173
 ```
 
-- Backend must run with `DEBUG=true` (set via `DEBUG=true docker compose up -d`).
-- All sample institutions and data are **fictional**; thresholds and dates are
-  illustrative (must be verified against the current AICTE Approval Process Handbook).
-- The demo uses 15 institutions across 5 states/regions and 10 role accounts
-  (`ChangeMe123!` password).
+`make seed` is enough on a fresh clone; `make reset-demo` is the reliable reset
+between runs. The simulated clock lives in the **backend process**, not the
+database, so restart the backend (or click **Demo time → Reset to real time**)
+before a run that follows an earlier time advance.
+
+Accounts used below, all with password `ChangeMe123!` (the login screen lists
+them under **Demo accounts** and fills the form when you pick one):
+
+| Window | Account | Role |
+| ------ | ------- | ---- |
+| A | `institution@example.edu` | Institution admin, MAH-0001 |
+| B | `regulation@example.edu` | Regulation Bureau officer |
+| C | `scrutiny@example.edu` | Scrutiny Committee member |
+| D | `inspection@example.edu` | Expert Visit Committee member |
+| E | `admin@example.edu` | Super admin (national oversight) |
+
+Open A–E in separate browser profiles or windows and sign in **before** the
+clock starts. Seven sign-ins inside the run will eat the demo.
+
+The two portal numbers on screen all evening:
+
+- `AICTE/2026-27/0000109` — the live case (MAH-0001, at Scrutiny, assigned to
+  `scrutiny@example.edu`).
+- `AICTE/2026-27/0000102` — the increase-in-intake case with a scheduled EVC
+  visit (MAH-0002).
 
 ---
 
-## 1. Institution Wizard — Fee & Deficiency Report
+## 0:00–0:30 — Frame
 
-**User**: `institution@example.edu` (INSTITUTION_ADMIN, west state)
+> "AICTE's approval cycle is application, scrutiny, deficiency loop, expert
+> visit, decision, appeal. We digitise the whole loop: every rule cites its APH
+> clause, every transition runs through one state machine, and every write is
+> audited. Norms, fees, deadlines and alert templates are database rows an
+> administrator can edit — nothing is hard-coded."
 
-1. Log in → **My applications** → **New application** → Select **New institution** (Chapter I).
-2. Fill the wizard:
-   - Institution name, address, contact details.
-   - **Fee payment**: `INSTITUTION_ADMIN` → **Pay Application Fee** → submit payment
-     (generates a fee transaction record; amount configurable in `fee_schedules.json`).
-   - **Deficiency Report**: The system auto-raises two initial deficiencies:
-     - *Expired fire safety certificate* (APH 6.8) — marked `HIGH` severity.
-     - *Missing DSC* (APH 2.24) — marked `CRITICAL` severity.
-   - Both deficiencies appear in the **Deficiency Report** sidebar; the institution
-     must respond before proceeding.
-
-**Expected UI**: Institution dashboard shows two pending deficiencies, fee status
-`paid`, and **Allowed Actions** button **Raise Response to Deficiencies**.
+Point at the footer/disclaimer, then go to **Window A**.
 
 ---
 
-## 2. Committee Auto-Selection > Scrutiny Deficiency
+## 0:30–1:40 — Institution: what the portal tells you (Window A)
 
-**User**: `scrutiny@example.edu` (SCRUTINY_COMMITTEE_MEMBER, assigned officer)
+1. Sign in, land on **Welcome back**, open **Dashboard** in the sidebar
+   (shortcut `g s`).
+2. The stage track is on **Scrutiny** for `AICTE/2026-27/0000109` — Vidya Vikas
+   College of Engineering (Fictional).
+3. **What you need to do** shows, from live data:
+   - **Documents expiring**: `fire_safety_certificate_expired.pdf`, 90 days
+     past validity, `APH 6.17h`.
+   - **Fees**: Total TER ₹1,00,000, Paid ₹1,00,000, Due ₹0 (APH Table 1.1).
+   - **Compliance score** with the top failing rules and how to fix them.
+   - **Statutory deadlines** for appeal and Security Deposit when a case has
+     them.
+4. Click **Open case file**.
 
-1. Open the case file for the institution's application.
-2. The **EscalationBadge** shows `Escalated` if the deficiency count > 0.
-3. Click **Raise Response to Deficiencies** → the system auto-selects the
-   **Scrutiny Committee** as the reviewing body (APH 1.9a).
-4. For each deficiency:
-   - **Expired fire certificate**: upload a replacement certificate or mark `resolved`.
-   - **Missing DSC**: upload the DSC certificate file; verify status changes from
-     `EXPIRED`/`PENDING` to `VERIFIED`.
-5. Click **Submit Responses** → the system records a `WorkflowEvent` with action
-   `deficiency_response` and APH clause `APH 2.24`; the **EscalationBadge**
-   clears if all deficiencies are resolved.
+### Case file — the part judges remember
 
-**Expected UI**: Deficiency Report now shows `0` open deficiencies; the case
-progresses to the **Scrutiny** stage.
+5. **Documents** tab. Two flags are already there:
+   - `fire_safety_certificate_expired.pdf` — **REJECTED**, reason `EXPIRED`,
+     clause `APH 1.8f`.
+   - `dsc_certificate_unsigned.pdf` — **FLAGGED**, reason `NO_DSC`,
+     clause `APH 1.4.3`.
+6. **Compliance** tab. Every row shows requirement, observed value, severity,
+   status and **APH clause**. Five rules fail; two are CRITICAL. Open one row
+   and read the explanation: criterion, observed value, threshold, pass/fail.
+7. Scroll to **Deficiency Report** → **Generate report** → **Download PDF**.
+   This is the document the officer will issue — generated from the same rule
+   evaluation, with a *Nil Deficiency* banner only when every mandatory rule
+   passes or is assessed.
+8. **Fees** tab: receipt number, paid date, and the fee line's clause.
 
----
+> "Notice the numbers agree: the dashboard's score, the case file gauge and the
+> Deficiency Report all come from one rule evaluation."
 
-## 3. Institution Responds > EVC > EC Decision & Council Ratification
-
-**User**: `regulation@example.edu` (REGULATION_BUREAU_OFFICER)
-
-1. In the case file, the next **Allowed Action** is **Place Regulation Bureau observations**.
-2. Click it → enter observations text (e.g. `"Infrastructure and faculty verified;
-   recommend placing before the Executive Committee for the LoD decision."`) → submit.
-3. The case status becomes `REGULATION_BUREAU_OBSERVATIONS`; a new **Allowed Action**
-   appears: **List before the Executive Committee**.
-4. Click **List before the Executive Committee** → the case is placed on the EC agenda.
-   The **Allowed Actions** for `ec@example.edu` (EXECUTIVE_COMMITTEE_MEMBER) now
-   include **Decide to approve (LoA)** and **Decide to reject (LoR)**.
-
-**As `ec@example.edu`**: Click **Decide to approve (LoA)** → a dialog appears with:
-   - **Decision outcome**: select **Letter of Approval (LoA)**.
-   - **Decision notes** (optional): e.g. `"Fresh demo LoA decision via EC_DECISION; produced INSTITUTION_ADMIN LoA path."`
-   - **Quorum met**: confirm (APH 1.10a).
-   - Submit → the system records a `Decision` row (outcome `LOA`, `quorum_met=true`)
-     and a `DecisionLetter` of type `LOA`.
-
-5. The case status advances to `EC_DECISION`; the **Decision & Letters** tab now
-   lists the LoA record with **PDF download** and **Acknowledge** button.
-6. Click **Acknowledge** → records acknowledgement (APH 1.11a) and triggers a
-   success toast.
-
-**As `super_admin@example.edu`** (optional, for Council ratification):
-7. Open the **Council Ratification** flow → confirm the LoA → the case status
-   advances to `COUNCIL_RATIFICATION`; the **Decision & Letters** tab lists the
-   ratified LoA; a toast confirms **Council ratification complete**.
+*(Talking point, no clicks: the institution's own wizard is the eight-step
+New/Extension form — Profile, Infrastructure, Faculty, Finance, Accreditation,
+Programmes, Documents, Payment — with the same Deficiency Report preview on the
+Review step before submission. It is demoed live in Appendix A if time allows.)*
 
 ---
 
-## 4. Letter PDF with Speaking Order
+## 1:40–2:25 — Regulation Bureau: automatic committee draw (Window B)
 
-- In the **Decision & Letters** tab, click **PDF download** for the LoA record.
-- The generated PDF includes:
-  - Institution name, application reference, LoA number.
-  - Decision outcome, date, signing authority (EXECUTIVE_COMMITTEE_MEMBER).
-  - A Speaking Order section (present when the decision is a rejection/LoR);
-    for LoA the section notes "No speaking order required — approval issued."
-- The PDF is styled per APH_SPEC §1.10b and is downloadable as `loa_{app_id}.pdf`.
+1. Sign in, **Applications**, open `AICTE/2026-27/0000109`.
+2. **Committees** tab → **Constitute Committee**.
+3. Keep **Scrutiny Committee (APH 16.3/16.4)**, mode **Online**, leave the seed
+   blank, click **Run Automated Draw**.
+4. The draw shows the selected members with their seat, the selection seed, and
+   the exclusions applied — including the rule that an expert from the same
+   state as the institution is skipped. Same seed ⇒ same committee, so the draw
+   is reproducible for audit (`selection_seed`).
+5. Point at the **Timeline** tab: every transition is a row with actor, action,
+   from → to and clause.
 
----
-
-## 5. Appeal and 7-Day Clock
-
-After the LoA is issued, the ** seven-day appeal window** (APH 1.11a) opens.
-
-1. In the case file, the **Allowed Actions** now include **File appeal** (visible to
-   the institution admin).
-2. Click **File appeal** → a dialog appears with the appeal deadline:
-   **7 days from now** (the demo clock is initially set to real time, 29 Oct 2026).
-3. The **CaseDecisionLetters** section shows the appeal deadline label:
-   `"7 days left to appeal"` (countdown computed from the simulated clock).
-4. The **SlaRing** in the header shows the remaining SLA window days.
-5. **Time simulation**: Click the **Demo time controls** button → **Advance 7 days**.
-   - The simulated clock jumps forward 7 days (e.g., to 5 Nov 2026).
-   - The appeal countdown updates live: `"0 days left to appeal"` / `"appeal expired"`.
-   - A **CRITICAL** toast appears: `"SLA breached: the 7-day appeal window closed."`
-   - The **EscalationBadge** flips to `Escalated`; the **Bell count** increments
-     (new alert pushed via SSE `alert` frame).
-   - The **Dashboard** countdown cards refresh (invalidated via `[\"alerts\"]` and
-     `[\"time-simulation\"]`).
-
-**To verify the 2-second acceptance criterion**: after clicking **+7 days**, observe
-that the countdown flips, the CRITICAL toast appears, and the bell count changes —
-all within 2 seconds of the button click (confirmed by live browser run with 100 ms
-sampling).
+> "Committee selection is deterministic and auditable; it is not a human
+> shortlist. APH Annexure-16 defines the seats."
 
 ---
 
-## 6. Time Simulation (`+8 days`) with Live Alerts & Escalation
+## 2:25–3:10 — Expert Visit video (Window D)
 
-The demo includes a **Dev time control** that advanced the simulated clock
-incrementally. Beyond the +7 day appeal crossing, additional advances trigger
-further SLA-based alerts:
+1. Sign in as `inspection@example.edu`, open `AICTE/2026-27/0000102`
+   (MAH-0002, increase in intake, EVC constituted).
+2. The only action offered is **Upload the EVC video** — because the role and
+   the case state allow exactly that.
+3. Enter `https://video.example.edu/evc-demo`, minutes `30` (the form rejects
+   less than 30 — APH 1.9f-g), submit.
+4. **Committees** tab shows the EVC composition; the inspection card shows the
+   visit scheduled for 11 Nov 2026 and the pending structured report.
 
-| Advance | Trigger | Visual Effect |
-|---------|---------|--------------|
-| `+1 day` | Deadline approaching (T-1) | Info toast: `"Deadline approaching: … (T-1)"`; countdown drops 1 day; bell +1. |
-| `+3 days` | SLA warning | Medium toast; countdown drops 3 days. |
-| `+7 days` | SLA breached | **CRITICAL** toast persists (duration ~24 days); escalation badge `Escalated`; bell +3. |
-| `+15 days` | Security Deposit penalty ladder starts | Medium/high alerts for penalty steps (APH 2.25f). |
-| `+365 days` | LoA validity expires (APH 1.10b) | Critical toast: `"Letter of Approval expired; fresh EoA required."` |
-
-**Reset**: At any point, click **Reset to real time** (Dev time control) → the
-simulated clock snaps back to the current real date (e.g., 29 Oct 2026); all
-countdowns revert; bell and toast state clears; the demo is ready for a fresh
-walkthrough.
+> "Role-scoped actions: the institution cannot upload its own visit video, and
+> the EVC member cannot approve the case."
 
 ---
 
-## Notes on `make seed` and Demo Data
+## 3:10–4:15 — Scrutiny: LoD drafted from failed rules (Window C)
 
-- `make seed-aph` generates `backend/seeds/aph/*.json` from `docs/reference/APH_SPEC.md`.
-- `make seed` applies alembic migrations and seeds 15 institutions, 10 demo user
-  accounts (one per APH role, password `ChangeMe123!`), and 5 pre-staged application
-  cases (see below). **Note**: the full seed command has known enum-alignment issues
-  with `institution_class` and `aicte_region`; these can be resolved by editing the
-  generated JSON or by running limited manual seeding.
-- Pre-staged cases (visible immediately after seed):
-  1. **EoA self-disclosure** ready to submit, with two deficiencies (expired fire cert +
-    missing DSC) — Case 1.
-  2. **New-institution** at Scrutiny with a deficiency (missing DSC) — Case 2.
-  3. **LoR issued**, 7-day appeal window running — Case 3.
-  4. **LoA recommended**, Security Deposit pending (day 3 of 15), owned by the
-    Institution Administrator demo account — Case 4.
-  5. **Clean institution**, Nil Deficiency, LoA active and the Security Deposit already
-    paid so the release flow can be walked — Case 5.
-  6. **Verified excess-admission complaint** at the show-cause stage, linked to Case 1 —
-    Case 6.
-- Security Deposit amounts are copied from the configured `security_deposit_schedules.json`
-  (APH Table 1.4), so nothing in the seed carries a deposit figure of its own.
-- Case 6 is the complaint demo: sign in as the Institution Administrator who owns Case 1
-  (`institution_admin@demo.edu` on a fresh seed; on a database seeded before Case 1 moved to
-  Apex, use `institution.south@example.edu`) for the show-cause reply,
-  `complaint_scrutiny_member@demo.edu` for verification/SCSC, `shc_member@demo.edu`
-  for the hearing and `executive_committee_member@demo.edu` for the EC decision, the penal
-  action and its issue. The case-file **Complaints and penal action** tab shows each step
-  with its clause (APH 7.10, 7.3, 7.4, 7.11, 6.50h).
-- To reset the demo clock without re-seeding: `POST /dev/simulate-time {"reset": true}`
-  (available when `DEBUG=true`). This resets the simulated clock to real time and
-  clears countdowns/bell state, but previously created alerts may dedupe on re-crossing.
-- For a completely fresh state, run `make down` (stops containers, preserves DB volume)
-  then `make dev && make seed-aph` and manually seed a few cases via the API or TUI.
+1. Sign in as `scrutiny@example.edu`, open `AICTE/2026-27/0000109`.
+2. **Compliance** tab. Hover the CRITICAL fire-certificate rule and click
+   **Draft deficiency** — the dialog opens pre-filled with the rule's category
+   and message.
+3. Add a second deficiency with **Add another deficiency** (category
+   *Documents*, e.g. "Upload the digitally signed DSC certificate, APH 2.3.4a")
+   and set a due date 15 days out.
+4. Submit. The action is **Communicate deficiencies (LoD)**: status moves
+   `SCRUTINY → DEFICIENCY_COMMUNICATED` through the state machine, the
+   institution is notified, and the deficiency timers start.
+5. **Deficiencies and LoD** tab now lists the items with due dates and the
+   clause on each.
+
+> "The officer never types a rule; they draft from the evaluation. The clause
+> and severity travel with the deficiency."
 
 ---
 
-## Acceptance — From a Fresh Database
+## 4:15–4:50 — Institution responds (Window A)
 
-1. `make dev` (starts stack with `DEBUG=true`).
-2. `make seed-aph` (generates config).
-3. `make seed` (applies migrations + seeds demo data — may need manual enum fixes).
-4. Open `http://localhost:5173`, log in as `institution@example.edu` (west admin).
-5. Follow the 6-minute click path above — all live SSE updates, countdown flips,
-   toast persistency, and escalation badges should occur within the 2-second
-   sampling window verified by browser runs.
-6. As a final verification, click **Demo time controls** → **Advance 7 days** →
-   confirm the CRITICAL toast, bell count change, and countdown expiry all appear
-   within 2 seconds.
+1. Refresh. The dashboard's **Open deficiencies** block counts the new items.
+2. Open the case → **Deficiencies and LoD** → **Respond**.
+3. Type a short response ("Valid fire safety certificate and signed DSC
+   uploaded; see documents") and submit.
+4. Status moves `DEFICIENCY_COMMUNICATED → INSTITUTION_COMPLIANCE`; the
+   response is a workflow event and an audit row, and the scrutiny officer's
+   queue gets it back.
 
 ---
-*Generated for Smart India Hackathon 202.0 prototype. All AICTE data is fictional;*
-*compliance thresholds are illustrative and must be verified against the current*
-*AICTE Approval Process Handbook (APH 2024-27).*
+
+## 4:50–6:10 — Time: statutory clocks expire and escalate (Window B)
+
+1. Still as `regulation@example.edu`, click **Demo time** (top bar) → **Advance
+   7 days**. The control replays the scheduler day by day: deadline warnings,
+   then breaches, then escalations.
+2. Open **Alerts**. Filter **Type → Appeal expired**: the seven seeded appeal
+   windows (APH 1.11a, 7 days) have closed and the LoR stands. Each row shows
+   the case, severity and recipient.
+3. Filter **Type → Security Deposit overdue**: the deposit clock (APH 2.25f,
+   15 days) has run out and the penalty ladder has started.
+4. Clear the filters and look at **Escalation · level 1/2/3** rows: unacknowledged
+   alerts climb the ladder, and the level is on the row.
+5. Open one expired case, `AICTE/2026-27/0000003`, **Decision** and **Timeline**
+   tabs: the appeal window card reads **1 day past**, the status is final, and
+   the events show what the sweep did and when.
+
+> "No cron job was hand-triggered and no status was set by hand: the clock moved,
+> the scheduled scan ran, and the workflow sweep applied the transitions the
+> handbook requires."
+
+Reset for the next run with **Demo time → Reset to real time** (or restart the
+backend) and `make reset-demo`.
+
+---
+
+## 6:10–6:50 — National oversight map (Window E)
+
+1. Sign in as `admin@example.edu` → **Dashboard**.
+2. The tile cartogram covers 60 fictional institutions across 10 states and all
+   eight AICTE regions.
+3. Toggle the metric: **Compliance RAG → SLA breaches → Pending applications →
+   Penal actions**. Click a state to narrow the **Needs attention** list
+   (ordered by non-GREEN institutions, then lowest average score).
+4. The rest of the page is the same data cut differently: funnel, approvals vs
+   rejections, appeals, Security Deposits, compliance histogram, top violation
+   codes.
+
+> "Aggregates are SQL over the same rows the case files use — no separate
+> reporting store, no exported spreadsheets."
+
+---
+
+## 6:50–7:00 — Close
+
+> "One state machine, one deadline service, one audit log. Rules, fees,
+> thresholds and alert templates are configuration with a clause reference, so a
+> new handbook cycle is a data change, not a rewrite."
+
+---
+
+## If you have extra time
+
+| Beat | Where | Why it lands |
+| ---- | ----- | ------------ |
+| Live submission | Appendix A | The full wizard, payment and submission in one run |
+| Security Deposit penalty | Window B, `AICTE/2026-27/0000104` | 20% penalty after the deposit window, `APH 2.25f` |
+| Complaint → SHC | `AICTE/2026-27/0000107` (`institution7@example.edu`) | Anonymity rules, show-cause, hearing, penal action |
+| Deficiency → LoR → appeal | `AICTE/2026-27/0000103` (`institution3@example.edu`) | A closed loop with the Re-Scrutiny and SAC |
+| Hibernation / excess admission | `AICTE/2026-27/0000105`, `0000106` | Status and penal-action reporting |
+| Audit trail | **Audit logs** (`g u`) | Before/after JSON for every write, with IP |
+
+---
+
+## Appendix A — Live submission (about 6 extra minutes)
+
+Only run this when the audience asks to see the wizard. It needs 21 mandatory
+uploads for a new institution, so the seeded case files are the fast path.
+
+1. Window A → **Start application**.
+2. Type **New technical institution (Chapter I)**; **Create draft**.
+3. Walk the steps: Profile → Infrastructure → Faculty → Finance →
+   Accreditation → Programmes → Documents → Payment. The rail shows what is
+   missing; Save is automatic.
+4. **Review** shows completeness, the predicted compliance and the
+   **Deficiency Report** before anything is submitted.
+5. **Payment**: **Pay ₹1,00,000** records the TER receipt (APH Table 1.1).
+   Submission stays disabled until the receipt exists.
+6. **Submit application**: status `DRAFT → SUBMITTED`, SLA set by
+   `SLAConfig`, workflow event and audit row written.
+7. Switch to Window B (**Applications → Submitted**): the case is in the
+   Regulation Bureau queue; **Assign the Scrutiny Committee** moves it to
+   `SCRUTINY`.
+
+Date behaviour worth knowing: a submission after the seeded Public Notice
+cut-off is flagged late, charged the late penalty (APH 2.3.2) and moved to the
+next configured academic year instead of failing.
+
+---
+
+## Known gaps to state honestly
+
+- Committee, inspection, risk and compliance figures are **illustrative**;
+  thresholds must be verified against the current APH before real use.
+- The seeded scenario institutions carry summary-level wizard data, so their
+  compliance preview is dominated by unassessed document rules. The live case
+  `0000109` carries the full document set and therefore the intended 45.71
+  score.
+- The regional aggregate report is not yet narrowed to a Regional Officer's
+  own region; the national tile map is the Super Admin view.
+- Email/SMS delivery uses Mailpit and a mock SMS provider; nothing leaves the
+  machine.

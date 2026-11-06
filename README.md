@@ -201,27 +201,64 @@ automatically. The seed is only needed when a release adds or changes reference 
 ### Demo data
 
 ```bash
-make seed
+make dev && make seed     # from a fresh clone: stack + full demo dataset
+make reset-demo          # wipe the schema, re-run migrations and re-seed (~15 s)
 ```
 
-The seed is idempotent. It creates two fictional institutions with APH institution profiles,
-approved programmes, faculty rosters and admission history, one account per APH role, five
-applications (including decided cases for the public average) and one inspection with audit
-records. It also loads the APH application-type routing table, fee schedule, Security Deposit rate
-table (Table 1.4), required-document checklist, committee compositions, demo public notices and
-academic calendar events, plus the illustrative SLA configuration, the 90-row compliance rule
-library, the calculator norms, alert rules and default severity weights and RED/AMBER/GREEN
-breakpoints. Change both seed passwords before sharing any environment.
+`make seed` is idempotent and takes a few seconds once the containers are up. `make reset-demo`
+drops the `public` schema, runs `alembic upgrade head` and seeds again, which restores the
+migration-owned reference rows as well as the demo data. Both commands must finish in under 30
+seconds; `make reset-demo` currently takes about 15 seconds on a laptop.
 
-| Role | Email |
-| ---- | ----- |
+The seeded dataset is designed for a seven-minute walkthrough (see `docs/DEMO_SCRIPT.md`):
+
+- **60 fictional institutions** across 10 states and all 8 AICTE regions (Central, Eastern,
+  Northern, North-Western, Southern, South-Central, South-Western, Western).
+- **164 applications**: 9 hand-written scenarios, 150 bulk cases spread across every track and
+  stage, and 5 legacy seed cases. 12 months of compliance snapshots per institution feed the
+  trend charts and the regional tile map.
+- **38 fixed accounts**: 20 institution admins, 5 scrutiny officers, 3 regional officers,
+  4 EVC members, plus Regulation Bureau, SHC, SAC, EC, complaint-scrutiny and super-admin
+  accounts.
+- 47 uploaded demo documents, 6 complaints, 13 inspections, workflow history, decisions and
+  letters, Security Deposits, penal actions, alerts and audit rows.
+- **Annexure reference data** parsed from `docs/reference/APH_2024-27.pdf`: 1,928 course
+  nomenclature entries (Annexure-11) and 34 competent authorities (Annexure-14). Parsed rows
+  carry `needs_verification = true` until a human checks them.
+
+#### Scenario applications
+
+All portal numbers are `AICTE/2026-27/00001xx`; sign in as the listed institution admin (password
+`ChangeMe123!`) to open one.
+
+| Portal number | Institution | Flow |
+| ------------- | ----------- | ---- |
+| `0000101` | `GJ-0001` | Clean EoA by self-disclosure, Nil Deficiency, active |
+| `0000102` | `MAH-0002` | Increase in intake referred to an Expert Visit Committee |
+| `0000103` | `TN-0001` | Deficiency loop, LoR and an appeal before the SAC |
+| `0000104` | `TN-0002` | Security Deposit unpaid past the window, 20% penalty applied |
+| `0000105` | `KA-0001` | Hibernating institution with no admission this year |
+| `0000106` | `KA-0002` | Excess admission detected, penal fine and intake reduction |
+| `0000107` | `MP-0001` | Verified complaint, show-cause reply and SHC hearing |
+| `0000108` | `DL-0001` | Clean Extended EoA issued for two academic years |
+| `0000109` | `MAH-0001` | **Live scrutiny** — expired fire certificate and unsigned DSC, ready for the LoD |
+
+`0000109` is the focus case on the `institution@example.edu` dashboard. It is assigned to
+`scrutiny@example.edu`, who can draft the Deficiency Report from the failed compliance rules and
+communicate it live. The statutory appeal and Security Deposit clocks are seeded too, so
+**Demo time → Advance 7 days** fires the appeal-window, appeal-expiry and deposit alerts (with
+escalation) without any manual setup.
+
+#### Accounts
+
+| Role | Accounts |
+| ---- | -------- |
 | `SUPER_ADMIN` | `admin@example.edu` |
-| `INSTITUTION_ADMIN` | `institution@example.edu` |
-| `INSTITUTION_ADMIN` (South) | `institution.south@example.edu` |
+| `INSTITUTION_ADMIN` | `institution@example.edu`, `institution2@example.edu` … `institution20@example.edu` |
 | `REGULATION_BUREAU_OFFICER` | `regulation@example.edu` |
-| `SCRUTINY_COMMITTEE_MEMBER` | `scrutiny@example.edu` |
-| `EVC_MEMBER` | `inspection@example.edu` |
-| `REGIONAL_OFFICER` | `regional@example.edu` |
+| `SCRUTINY_COMMITTEE_MEMBER` | `scrutiny@example.edu`, `scrutiny2@example.edu` … `scrutiny5@example.edu` |
+| `REGIONAL_OFFICER` | `regional@example.edu`, `regional2@example.edu`, `regional3@example.edu` |
+| `EVC_MEMBER` | `inspection@example.edu`, `inspection2@example.edu` … `inspection4@example.edu` |
 | `SHC_MEMBER` | `shc@example.edu` |
 | `SAC_MEMBER` | `sac@example.edu` |
 | `EXECUTIVE_COMMITTEE_MEMBER` | `ec@example.edu` |
@@ -229,32 +266,29 @@ breakpoints. Change both seed passwords before sharing any environment.
 
 - `admin@example.edu` uses `SEED_ADMIN_PASSWORD` (default `ChangeMe123!`).
 - All other demo accounts use `SEED_DEMO_PASSWORD` (default `ChangeMe123!`).
+- Change both passwords before sharing any environment.
+- With `DEMO_MODE=true` (the Compose development default), the login screen lists the accounts
+  and fills the credentials when one is selected.
 
-With `DEMO_MODE=true` (the Compose development default), the login screen lists one account per role
-and fills the email and password when an entry is selected. No demo accounts are exposed when demo
-mode is off.
+#### Sample documents and dates
 
-The West demo application (`DEMO-WEST-2026-001`) is assigned to the Scrutiny Committee member and
-has an inspection assigned to the EVC member. The South application
-(`DEMO-SOUTH-2026-001`) is used to demonstrate cross-tenant denial. The approved
-`DEMO-WEST-2026-002` case supplies the public average-days-to-decision figure. The open applications
-receive illustrative SLA due dates so the overdue filter and demo clock can be exercised; these
-dates are demo scaffolding, not AICTE policy.
+The seeder writes ten fictional PDFs with `reportlab` and attaches them to the scenario cases,
+including deliberate flaws the verification screen can reject:
 
-The seeded document rules are illustrative: `NEW_INSTITUTION` and `EOA_SELF_DISCLOSURE` require
-an affiliation certificate, building-plan approval, faculty details, financial statement, land
-ownership document and mandatory disclosure document; the NAAC/NBA certificate is optional. APH
-document codes and clause references are stored on each requirement. The application-stage SLA is
-seeded as 30 days with escalation after 20 days. These are prototype values, not AICTE policy, and
-can be edited directly in the `required_documents` and `sla_configs` tables until an admin
-configuration screen is built. Every SLA row carries `apH_clause = 'DEMO'` and
-`needs_verification = true` until a real processing calendar is supplied.
+- `fire_safety_certificate_expired.pdf` (expired, APH 1.8f) and a valid replacement;
+- `dsc_certificate_unsigned.pdf` (no digital signature, APH 1.4.3);
+- `affidavit_3_name_mismatch.pdf` (portal name differs, APH 1.4.4);
+- `blank_scan.pdf` (unreadable) plus land, building-plan, faculty, audited-statement and
+  mandatory-disclosure papers.
 
-No alert rows are seeded. The alert-rule catalogue is seeded as editable configuration, including
-T-7/T-3/T-1 deadlines, SLA breach, deficiency due/overdue, document expiry at 30/15 days,
-compliance RED, status change and inspection scheduled. A dedicated pending case,
-`DEMO-WEST-2026-003`, is due in seven days so the **Demo time** control can replay the complete
-deadline → SLA breach → escalation sequence.
+Public-notice cut-offs, Academic Calendar dates and processing-time SLAs are **not** in the
+handbook. They live in the `public_notices`, `academic_calendar_events` and `sla_configs` tables,
+are marked `is_demo`, and are seeded so the whole 2026-27 walkthrough stays open. The following
+year is seeded as well, so an application submitted after the cut-off rolls into a configured
+cycle instead of failing. Replace these values with the real Public Notice before any use.
+
+`DEBUG=true` is the Compose development default because the Demo time control needs it. Production
+deployments must override `DEBUG=false`.
 
 ### Tests
 
@@ -775,12 +809,13 @@ deadline → SLA breach → escalation sequence in a few clicks. The clock is pr
 as `dev.time.advance` / `dev.time.reset` / `dev.time.simulate`, and resets when the backend reloads.
 It changes overdue calculations without mutating stored SLA due dates.
 
-To run the acceptance demo, open **Demo time → Advance 7 days**, then **Advance 1 day**, on the
-seeded `DEMO-WEST-2026-003` case. The same result is available from the API:
+To run the acceptance demo, open **Demo time → Advance 7 days** and watch the seeded appeal
+windows, Security Deposit clocks and SLA timers cross their thresholds. The same result is
+available from the API:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8000/dev/simulate-time?days=8"
+  "http://localhost:8000/dev/simulate-time?days=7"
 ```
 
 The response reports `alerts_created`, `escalations` and `notifications_sent`. Use `POST

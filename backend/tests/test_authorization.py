@@ -100,9 +100,20 @@ def test_super_admin_sees_all_applications(api_client: TestClient, test_data: Te
 
     assert listing.status_code == 200
     body = listing.json()
-    visible_ids = {item["id"] for item in body["items"]}
+    items = list(body["items"])
+    # The demo seed creates more applications than one page holds, so walk the
+    # pages before comparing the total with what was listed.
+    for page in range(2, body["pages"] + 1):
+        extra = api_client.get(
+            "/applications",
+            params={"page_size": 100, "page": page},
+            headers=headers,
+        )
+        assert extra.status_code == 200
+        items.extend(extra.json()["items"])
+    visible_ids = {item["id"] for item in items}
     assert {str(app_id) for app_id in test_data.applications.values()} <= visible_ids
-    assert body["total"] == len(body["items"])
+    assert body["total"] == len(items)
     assert other.status_code == 200
 
 

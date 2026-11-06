@@ -129,7 +129,7 @@ def get_diagram(
     if type_ is not None:
         definitions = [_resolve_definition(db, type_)]
     else:
-        definitions = _load_definitions()
+        definitions = _load_definitions(db)
     if not definitions:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No workflow is configured")
 

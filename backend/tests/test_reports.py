@@ -218,7 +218,11 @@ def test_regulation_bureau_dashboard(
     _seed_report_data(api_client, test_data)
     headers = _headers(api_client, test_data, "regulation")
 
-    response = api_client.get("/reports/regulation-bureau", headers=headers)
+    response = api_client.get(
+        "/reports/regulation-bureau",
+        params={"state": "Test State West"},
+        headers=headers,
+    )
     assert response.status_code == 200, response.text
     body = response.json()
 
@@ -286,9 +290,10 @@ def test_regional_dashboard(
     assert "breached" in body["sla_breach"]
     assert "breach_rate" in body["sla_breach"]
 
-    # Check violation codes
+    # Check violation codes. The demo seed also writes penal actions, so assert
+    # the seeded code is reported rather than relying on being the global top.
     assert len(body["top_violation_codes"]) >= 1
-    assert body["top_violation_codes"][0]["code"] == "c"
+    assert "c" in {entry["code"] for entry in body["top_violation_codes"]}
 
     # Check penal actions
     assert len(body["penal_actions_by_type"]) >= 1
