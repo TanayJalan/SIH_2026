@@ -47,8 +47,6 @@ from app.models import (
     Complaint,
     ComplaintStatus,
     ComplianceHealth,
-    ComplianceResult,
-    ComplianceRule,
     ComplianceSnapshot,
     DeadlineRule,
     Decision,
@@ -82,10 +80,8 @@ from app.models import (
     WorkflowStage,
 )
 from app.models.enums import AlertChannel, AlertStatus, AlertTrigger, DocumentRejectionReason
-from app.schemas.application_sections import ApplicationData
-from app.services.application_sections import current_documents
 from app.services.audit import AuditService
-from app.services.compliance import evaluate_compliance
+from app.services.compliance import evaluate_application
 from app.services.fees import FeeService
 
 logger = logging.getLogger("app.demo_seed")
@@ -342,7 +338,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 170,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Clean EoA by self-disclosure with Nil Deficiency.",
-            "compliance_score": 94,
             "risk_score": 12,
             "nil_deficiency": True,
         },
@@ -359,7 +354,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 55,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Increase in intake referred to an Expert Visit Committee.",
-            "compliance_score": 81,
             "risk_score": 38,
             "nil_deficiency": False,
         },
@@ -376,7 +370,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 210,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Deficiency loop, LoR and an appeal before the SAC.",
-            "compliance_score": 62,
             "risk_score": 74,
             "nil_deficiency": False,
         },
@@ -393,7 +386,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 95,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Security Deposit unpaid past 31 May, penalty applied.",
-            "compliance_score": 70,
             "risk_score": 66,
             "nil_deficiency": False,
         },
@@ -410,7 +402,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 300,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Hibernating institution with no admission this year.",
-            "compliance_score": 48,
             "risk_score": 82,
             "nil_deficiency": False,
         },
@@ -427,7 +418,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 260,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Excess admission detected; penal fine and intake reduction.",
-            "compliance_score": 55,
             "risk_score": 88,
             "nil_deficiency": False,
         },
@@ -444,7 +434,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 120,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Verified complaint, show-cause reply and SHC hearing.",
-            "compliance_score": 58,
             "risk_score": 80,
             "nil_deficiency": False,
         },
@@ -461,7 +450,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "submitted_days": 90,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Clean Extended EoA issued for two academic years.",
-            "compliance_score": 91,
             "risk_score": 15,
             "nil_deficiency": True,
         },
@@ -482,7 +470,6 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
                 "expired and the DSC upload is unsigned, so the officer issues "
                 "the Deficiency Report from the failed rules."
             ),
-            "compliance_score": 64,
             "risk_score": 57,
             "nil_deficiency": False,
         },
@@ -671,22 +658,21 @@ def _ensure_fee(
             application.ter_receipt_no = f"{receipt_base}-{index:02d}"
 
 
-def _sync_compliance_score(db: Session, application: Application) -> None:
-    """Store the score the case-file compliance preview computes.
+def _evaluate_scenario_compliance(db: Session, application: Application) -> None:
+    """Persist the rule evaluation the case file and dashboard both display.
 
-    The scenario rows carry a hand-written score so the seeder can stay fast,
-    but a hand-written figure drifts from the rule evaluation the moment the
-    seeded documents change. Recomputing without persisting keeps the
-    dashboard card and the case file's Compliance tab in agreement.
+    The scenario rows carry summary-level wizard data, so the evaluation is
+    dominated by unassessed document rules. Persisting the same preview that
+    ``/applications/{id}/compliance/preview`` computes keeps the stored
+    per-rule results, the stored score and the dashboard card in agreement.
     """
-    preview = evaluate_compliance(
+    evaluate_application(
         db,
         application,
-        ApplicationData.model_validate(application.data or {}),
         evaluated_at=_now(),
-        documents=list(current_documents(db, application.id).values()),
+        trigger="scenario",
+        commit=False,
     )
-    application.compliance_score = Decimal(str(preview.score))
 
 
 def _add_document(
@@ -708,6 +694,7 @@ def _add_document(
     superseded_by: uuid.UUID | None = None,
     signer_name: str | None = None,
     signed_with_dsc: bool = True,
+    uploaded_at: datetime | None = None,
 ) -> Document | None:
     storage_path = paths.get(path_key)
     if storage_path is None:
@@ -721,6 +708,7 @@ def _add_document(
     )
     if exists is not None:
         return None
+    uploaded = uploaded_at or application.submitted_at or _ago(20)
     document = Document(
         application_id=application.id,
         doc_type=doc_type,
@@ -732,7 +720,7 @@ def _add_document(
         rejection_reason_code=rejection,
         rejection_comment=comment,
         rejected_by=uploader.id if rejection is not None else None,
-        rejected_at=_ago(4) if rejection is not None else None,
+        rejected_at=uploaded + timedelta(days=2) if rejection is not None else None,
         valid_until=valid_until,
         expiry_date=valid_until,
         version=version,
@@ -744,6 +732,8 @@ def _add_document(
         size_bytes=42_000,
         content_type="application/pdf",
         verification_notes={"demo": True},
+        created_at=uploaded,
+        updated_at=uploaded,
     )
     db.add(document)
     db.flush()
@@ -839,13 +829,12 @@ def _add_scenario_documents(
             },
         ),
     }
-    for position, spec in enumerate(flaws.get(scenario_key, ())):
+    for spec in flaws.get(scenario_key, ()):
         _add_document(
             db,
             application,
             uploader=uploader,
             paths=paths,
-            version=position + 1,
             **spec,  # type: ignore[arg-type]
         )
 
@@ -1151,7 +1140,6 @@ def _seed_scenarios(
             sla_due_at=_ago(final_stage_at - 20) if final_stage_at > 20 else _ago(-3),
             assigned_officer_id=officer.id if officer else None,
             risk_score=Decimal(str(scenario["risk_score"])),
-            compliance_score=Decimal(str(scenario["compliance_score"])),
             data={
                 "reference": scenario["portal"],
                 "demo": True,
@@ -1264,12 +1252,6 @@ def _seed_scenarios(
                 created_days=max(1.0, submitted - 65),
             )
 
-        _seed_compliance_results(
-            db,
-            app,
-            passing=scenario["nil_deficiency"],
-            seed=index,
-        )
         _add_scenario_alerts(
             db,
             scenario,
@@ -1279,7 +1261,7 @@ def _seed_scenarios(
             officer=officer,
             regional=regional,
         )
-        _sync_compliance_score(db, app)
+        _evaluate_scenario_compliance(db, app)
         logger.debug(" seeded scenario %s", scenario["key"])
 
 
@@ -1338,6 +1320,7 @@ def _seed_evc_scenario(
             paths=paths,
             status=DocumentVerificationStatus.PENDING,
             clause="APH 1.9f",
+            uploaded_at=_ago(1),
         )
         _add_alert(
             db,
@@ -1403,6 +1386,7 @@ def _seed_lor_appeal_scenario(
             valid_until=_date_ago(90),
             deficiency_id=closed_row.id,
             clause="APH 1.8f",
+            uploaded_at=_ago(140),
         )
         _add_document(
             db,
@@ -1414,6 +1398,7 @@ def _seed_lor_appeal_scenario(
             paths=paths,
             version=2,
             valid_until=_date_ago(-300),
+            uploaded_at=_ago(118),
         )
 
     if db.scalar(select(Decision.id).where(Decision.application_id == app.id)) is None:
@@ -2123,62 +2108,6 @@ def _seed_bulk_complaints(
             apH_clause="APH 7.10",
         )
         db.add(complaint)
-
-
-def _seed_compliance_results(
-    db: Session, app: Application, *, passing: bool, seed: int
-) -> None:
-    """Attach a small set of rule results to one scenario application."""
-    exists = db.scalar(
-        select(ComplianceResult.id).where(
-            ComplianceResult.application_id == app.id
-        )
-    )
-    if exists is not None:
-        return
-    rules = db.scalars(
-        select(ComplianceRule)
-        .where(ComplianceRule.is_active.is_(True))
-        .order_by(ComplianceRule.code)
-        .limit(14)
-    ).all()
-    for index, rule in enumerate(rules):
-        failed = (not passing) and index in {0, 3, 7}
-        observed = rule.threshold
-        status = "PASS" if not failed or passing else "FAIL"
-        db.add(
-            ComplianceResult(
-                application_id=app.id,
-                institution_id=app.institution_id,
-                rule_id=rule.id,
-                observed_value=observed,
-                status=status,
-                passed=status == "PASS",
-                message=(
-                    f"{rule.name}: observed {observed} against threshold "
-                    f"{rule.threshold} ({rule.apH_clause})."
-                ),
-                evidence={
-                    "observed": float(observed),
-                    "threshold": float(rule.threshold),
-                    "demo": True,
-                },
-                explanation={
-                    "rule_code": rule.code,
-                    "rule_name": rule.name,
-                    "apH_clause": rule.apH_clause,
-                    "observed": float(observed),
-                    "threshold": float(rule.threshold),
-                    "result": status,
-                    "fix_text": (
-                        "Upload evidence that meets the configured norm."
-                        if status == "FAIL"
-                        else None
-                    ),
-                },
-                evaluated_at=_ago(5 + (seed % 20)),
-            )
-        )
 
 
 def _seed_snapshots(db: Session, *, institutions: dict[str, Any]) -> None:

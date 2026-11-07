@@ -46,6 +46,15 @@ const STAGE_KEYS: string[] = [
   "COMPLETED",
 ];
 
+function expiryLabel(daysLeft: number | null | undefined): string {
+  if (daysLeft == null) return "No expiry";
+  if (daysLeft < 0) {
+    const days = Math.abs(daysLeft);
+    return `Expired ${days} day${days === 1 ? "" : "s"} ago`;
+  }
+  return `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`;
+}
+
 function stageForStatus(status: string): string {
   switch (status) {
     case "DRAFT":
@@ -207,7 +216,7 @@ export default function InstitutionDashboard() {
                 </div>
               ) : dashboard?.open_deficiencies.length === 0 ? (
                 <p className="text-12 text-ink-500">
-                  No open deficiencies. <span className="text-ok-strong font-medium">Nil Deficiency position.</span>
+                  No open deficiencies on this application.
                 </p>
               ) : (
                 <ul className="space-y-2">
@@ -279,9 +288,7 @@ export default function InstitutionDashboard() {
                               : "bg-info-soft text-info-strong",
                           )}
                         >
-                          {d.days_left != null
-                            ? `${d.days_left} day${d.days_left === 1 ? "" : "s"} left`
-                            : "No expiry"}
+                          {expiryLabel(d.days_left)}
                         </span>
                       </div>
                       <p className="text-12 text-ink-700 truncate">{d.filename}</p>

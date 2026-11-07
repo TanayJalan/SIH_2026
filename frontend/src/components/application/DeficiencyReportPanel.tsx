@@ -316,7 +316,7 @@ export default function DeficiencyReportPanel({
                       </p>
                       <ul className="mt-1 space-y-1 text-12 leading-5 text-ink-700">
                         {item.penal_action_suggestions.map((suggestion) => (
-                          <li key={`${item.code}-${suggestion.violation_code}`}>
+                          <li key={`${item.code}-${suggestion.action_label}-${suggestion.violation_code}`}>
                             {suggestion.action_label} · {suggestion.violation_code} (
                             {suggestion.apH_clause})
                           </li>
