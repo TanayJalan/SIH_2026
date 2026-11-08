@@ -16,7 +16,7 @@ first ten seconds; a judge will ask.
 
 ```bash
 make dev            # stack up; DEBUG=true is the Compose default and powers Demo time
-make reset-demo     # drop the schema, migrate, seed: ~12 s, leaves a clean demo
+make reset-demo     # drop the schema, migrate, seed: ~20 s, leaves a clean demo
 docker compose restart backend   # clears the in-process Demo time offset
 open http://localhost:5173
 ```
@@ -104,7 +104,8 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
 
 ## 1:40–2:25 — Regulation Bureau: automatic committee draw (Window B)
 
-1. Sign in, **Applications**, open `AICTE/2026-27/0000109`.
+1. Sign in, press **⌘K** (global search), type `0000109` and open the case. The
+   scrutiny queue is sorted by SLA and does not show it on page 1.
 2. **Committees** tab → **Constitute Committee**.
 3. Keep **Scrutiny Committee (APH 16.3/16.4)**, mode **Online**, leave the seed
    blank, click **Run Automated Draw**.
@@ -138,7 +139,8 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
 
 ## 3:10–4:15 — Scrutiny: LoD drafted from failed rules (Window C)
 
-1. Sign in as `scrutiny@example.edu`, open `AICTE/2026-27/0000109`.
+1. Sign in as `scrutiny@example.edu`, press **⌘K**, type `0000109` and open the
+   case.
 2. **Compliance** tab. Hover the CRITICAL fire-certificate rule and click
    **Draft deficiency** — the dialog opens pre-filled with the rule's category
    and message.
@@ -148,8 +150,9 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
 4. Submit. The action is **Communicate deficiencies (LoD)**: status moves
    `SCRUTINY → DEFICIENCY_COMMUNICATED` through the state machine, the
    institution is notified, and the deficiency timers start.
-5. **Deficiencies and LoD** tab now lists the items with due dates and the
-   clause on each.
+5. **Deficiencies and LoD** tab now lists both items with their due dates and
+   the officer who raised them; each item carries the clause that triggered it
+   into the Deficiency Report.
 
 > "The officer never types a rule; they draft from the evaluation. The clause
 > and severity travel with the deficiency."
@@ -158,11 +161,20 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
 
 ## 4:15–4:50 — Institution responds (Window A)
 
-1. Refresh. The dashboard's **Open deficiencies** block counts the new items.
-2. Open the case → **Deficiencies and LoD** → **Respond**.
-3. Type a short response ("Valid fire safety certificate and signed DSC
-   uploaded; see documents") and submit.
-4. Status moves `DEFICIENCY_COMMUNICATED → INSTITUTION_COMPLIANCE`; the
+1. Refresh. The dashboard's **Open deficiencies** block counts the new items,
+   and the sidebar offers **Submit compliance** — but the action stays blocked
+   until the rejected document is replaced (`documents_reuploaded`, APH 1.8f).
+2. Open the case → **Documents** → **Fire Safety Certificate** → **Re-upload**.
+   Choose `backend/uploads/demo/fire_safety_certificate_valid.pdf` (the seed
+   writes the sample PDFs there for the host file picker), tick **digitally
+   signed (DSC)**, enter `Fictional Registrar`, set the certificate validity to
+   `2028-03-31`, and click **Re-upload as version 2**.
+3. The document becomes version 2, pending review, while version 1 stays in the
+   history.
+4. **Deficiencies and LoD** → **Submit compliance**. Answer both items (for
+   example "Renewed fire certificate uploaded as version 2" and "DSC attached
+   to every upload"), then submit.
+5. Status moves `DEFICIENCY_COMMUNICATED → INSTITUTION_COMPLIANCE`; the
    response is a workflow event and an audit row, and the scrutiny officer's
    queue gets it back.
 
@@ -199,8 +211,9 @@ backend) and `make reset-demo`.
 2. The tile cartogram covers 60 fictional institutions across 10 states and all
    eight AICTE regions.
 3. Toggle the metric: **Compliance RAG → SLA breaches → Pending applications →
-   Penal actions**. Click a state to narrow the **Needs attention** list
-   (ordered by non-GREEN institutions, then lowest average score).
+   Penal actions**. Click a state to highlight it on the cartogram; the
+   **Needs attention** list ranks individual RED/AMBER institutions, lowest
+   score first.
 4. The rest of the page is the same data cut differently: funnel, approvals vs
    rejections, appeals, Security Deposits, compliance histogram, top violation
    codes.

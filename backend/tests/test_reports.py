@@ -276,9 +276,22 @@ def test_regional_dashboard(
     assert "average_days_per_stage" in body
     assert body["apH_clause"] == "APH 1.10"
 
-    # Check funnel structure - at least one stage should be present
-    stages = {f["stage"] for f in body["funnel"]}
-    assert len(stages) >= 1
+    # Every funnel stage is returned, even when its count is zero. The seeder
+    # only moves cases to their current status, so dropping stages hides the
+    # shape of the pipeline (regression: the append used to sit outside the
+    # loop and only the last stage survived).
+    stages = [f["stage"] for f in body["funnel"]]
+    assert stages == [
+        "Submitted",
+        "Scrutiny",
+        "EVC Constituted",
+        "EC Decision",
+        "LoA Issued",
+        "EoA Issued",
+    ]
+
+    # "Within deadline" is a subset of filed appeals.
+    assert body["appeals"]["within_deadline"] <= body["appeals"]["filed"]
 
     # Check approval vs rejection
     assert "approvals" in body["approval_vs_rejection"]

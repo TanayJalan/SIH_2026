@@ -89,48 +89,14 @@ export default function RegionalDashboard() {
   const institutions = dashboard?.institutions_by_compliance ?? [];
   const institutionsInRed = redCount(institutions);
 
-  // Needs attention: institutions ordered by non-GREEN count then lowest score.
-  const byState = new Map<
-    string,
-    {
-      name: string;
-      state: string;
-      region: string;
-      score: number;
-      status: string;
-      count: number;
-      red: number;
-      amber: number;
-      green: number;
-    }
-  >();
-  for (const inst of institutions) {
-    const current = byState.get(inst.state) ?? {
-      name: inst.name,
-      state: inst.state,
-      region: inst.region,
-      score: 0,
-      status: inst.status,
-      count: 0,
-      red: 0,
-      amber: 0,
-      green: 0,
-    };
-    current.count += 1;
-    current.score += inst.score;
-    current.status = inst.status;
-    if (inst.status === "RED") current.red += 1;
-    else if (inst.status === "AMBER") current.amber += 1;
-    else if (inst.status === "GREEN") current.green += 1;
-    byState.set(inst.state, current);
-  }
-  const needsAttention = Array.from(byState.values())
-    .map((inst) => ({
-      ...inst,
-      avgScore: inst.count ? inst.score / inst.count : 0,
-      nonGreen: inst.red + inst.amber,
-    }))
-    .sort((a, b) => b.nonGreen - a.nonGreen || a.avgScore - b.avgScore)
+  // Needs attention: individual institutions, RED first then lowest score.
+  const needsAttention = [...institutions]
+    .filter((inst) => inst.status !== "GREEN")
+    .sort((a, b) => {
+      const rank = (status: string) =>
+        status === "RED" ? 0 : status === "AMBER" ? 1 : 2;
+      return rank(a.status) - rank(b.status) || a.score - b.score;
+    })
     .slice(0, 8);
 
   const escalationByInstitution = new Map(
@@ -183,7 +149,7 @@ export default function RegionalDashboard() {
       </section>
 
       {/* Main grid: tile map + needs attention */}
-      <section className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_340px]">
+      <section className="mb-6 grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1fr)_420px]">
         <section className="min-w-0 rounded-panel border border-line bg-surface">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
             <div>
@@ -249,7 +215,7 @@ export default function RegionalDashboard() {
                 <TableRow>
                   <TableHead>Institution</TableHead>
                   <TableHead className="text-right">Reason</TableHead>
-                  <TableHead className="text-right">Days overdue</TableHead>
+                  <TableHead className="text-right">Overdue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -258,7 +224,7 @@ export default function RegionalDashboard() {
                   const daysOverdue = level != null ? level * 7 : null;
                   const reason = reasonForStatus(inst.status);
                   return (
-                    <TableRow key={inst.state}>
+                    <TableRow key={inst.institution_id}>
                       <TableCell className="text-ink">
                         <div className="flex items-center gap-2">
                           <Building className="size-3.5 text-ink-500" />
@@ -385,6 +351,7 @@ export default function RegionalDashboard() {
                     type="category"
                     dataKey="code"
                     tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                    tickFormatter={(value: string) => `APH 7.4(${value})`}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -473,7 +440,7 @@ export default function RegionalDashboard() {
                 </BarChart>
               </ResponsiveContainer>
               <div className="mt-3 flex justify-end text-[10px] text-ink-500">
-                <span>RED</span>{" <80 · "}<span>AMBER 80–89 · </span><span>GREEN ≥ 90</span>
+                Latest compliance RAG band per institution
               </div>
             </div>
           )}
@@ -508,7 +475,7 @@ export default function RegionalDashboard() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-500 mb-2">
                 SAC recommendation
               </p>
-              <div className="flex gap-3 text-11 text-ink-700">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-11 text-ink-700">
                 <span>
                   Recommend{" "}
                   <span className="text-ink-500">{dashboard?.appeals.sac_recommend ?? 0}</span>
@@ -618,8 +585,8 @@ function histogramBins(
   const amber = institutions.filter((i) => i.status === "AMBER").length;
   const green = institutions.filter((i) => i.status === "GREEN").length;
   return [
-    { band: "RED (< 80)", count: red, order: 0 },
-    { band: "AMBER (80–89)", count: amber, order: 1 },
-    { band: "GREEN (≥ 90)", count: green, order: 2 },
+    { band: "RED", count: red, order: 0 },
+    { band: "AMBER", count: amber, order: 1 },
+    { band: "GREEN", count: green, order: 2 },
   ].sort((a, b) => a.order - b.order);
 }

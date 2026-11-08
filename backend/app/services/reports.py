@@ -453,7 +453,7 @@ def regional_dashboard(db: Session, filters: ReportFilters) -> RegionalDashboard
                 )
             )
         )
-    funnel.append(FunnelEntry(stage=label, count=count))
+        funnel.append(FunnelEntry(stage=label, count=count))
 
     # Approval vs rejection (final decision_type on the application).
     approvals = _zero(
@@ -586,17 +586,16 @@ def regional_dashboard(db: Session, filters: ReportFilters) -> RegionalDashboard
 
     appeals_filed = _zero(
         db.scalar(
-            select(func.count(Application.id)).where(
-                Application.id.in_(appeals_app_sub),
-                Application.appeal_loop_count > 0,
+            select(func.count(Appeal.id)).where(
+                Appeal.application_id.in_(select(appeals_app_sub.c.id)),
             )
         )
     )
     appeals_within = _zero(
         db.scalar(
-            select(func.count(Application.id)).where(
-                Application.id.in_(appeals_app_sub),
-                Application.appeal_deadline >= now,
+            select(func.count(Appeal.id)).where(
+                Appeal.application_id.in_(select(appeals_app_sub.c.id)),
+                Appeal.within_deadline.is_(True),
             )
         )
     )

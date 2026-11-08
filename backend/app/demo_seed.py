@@ -21,9 +21,11 @@ committee seed or timestamp) and skipped when it already exists.
 from __future__ import annotations
 
 import logging
+import shutil
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
@@ -352,6 +354,7 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
             "stage": WorkflowStage.INSPECTION,
             "decision": None,
             "submitted_days": 55,
+            "stage_entered_days": 8,
             "academic_year": ACADEMIC_YEAR,
             "summary": "Increase in intake referred to an Expert Visit Committee.",
             "risk_score": 38,
@@ -481,6 +484,24 @@ def _scenarios() -> tuple[dict[str, Any], ...]:
 # ---------------------------------------------------------------------------
 
 
+def _mirror_demo_documents(storage_dir: Path, paths: dict[str, str]) -> None:
+    """Copy the generated PDFs into the bind-mounted repository checkout.
+
+    ``STORAGE_DIR`` is a Docker volume, so the browser's file picker on the
+    host cannot see it. ``./backend`` is bind-mounted at ``/app``; a copy under
+    ``backend/uploads/demo`` gives the presenter a valid replacement file to
+    re-upload when the demo asks the institution to comply (APH 1.8f, 2.4).
+    """
+    target_root = Path(__file__).resolve().parent.parent / "uploads"
+    for relative in paths.values():
+        source = storage_dir / relative
+        if not source.is_file():
+            continue
+        target = target_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+
 def seed_demo(
     db: Session,
     *,
@@ -490,6 +511,7 @@ def seed_demo(
 ) -> None:
     """Create the bulk demo dataset. Safe to run more than once."""
     paths = ensure_demo_documents(storage_dir)
+    _mirror_demo_documents(Path(storage_dir), paths)
     admin_by_email = {
         email: user
         for email, user in users.items()
@@ -919,6 +941,14 @@ def _add_workflow_chain(
                 "APH 1.9a",
             )
         )
+    if final_status in {
+        ApplicationStatus.EVC_DONE,
+        ApplicationStatus.EC_DECISION,
+        ApplicationStatus.LOA_ISSUED,
+        ApplicationStatus.LOR_ISSUED,
+        ApplicationStatus.ACTIVE_LOA,
+        ApplicationStatus.ACTIVE_EOA,
+    }:
         chain.append(
             (
                 ApplicationStatus.EVC_CONSTITUTED,
@@ -1123,7 +1153,7 @@ def _seed_scenarios(
             else None
         )
         submitted = scenario["submitted_days"]
-        final_stage_at = max(1.0, submitted - 12)
+        final_stage_at = scenario.get("stage_entered_days") or max(1.0, submitted - 12)
         app = Application(
             institution_id=institution_id,
             track=scenario["track"],

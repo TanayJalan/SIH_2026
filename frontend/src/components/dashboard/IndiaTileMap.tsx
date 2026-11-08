@@ -63,10 +63,20 @@ interface StateAggregate {
   green: number;
 }
 
+/** Institution.state carries the full name; the cartogram is keyed by code. */
+const TILE_ID_BY_STATE_NAME = new Map(
+  INDIA_TILE_GRID.map((tile) => [tile.name, tile.id]),
+);
+
+function tileIdForState(state: string): string {
+  return TILE_ID_BY_STATE_NAME.get(state) ?? state;
+}
+
 function aggregateByState(data: InstitutionCompliance[]): Map<string, StateAggregate> {
   const byState = new Map<string, StateAggregate>();
   for (const item of data) {
-    const current = byState.get(item.state) ?? {
+    const stateId = tileIdForState(item.state);
+    const current = byState.get(stateId) ?? {
       name: item.state,
       count: 0,
       avgScore: 0,
@@ -79,7 +89,7 @@ function aggregateByState(data: InstitutionCompliance[]): Map<string, StateAggre
     if (item.status === "RED") current.red += 1;
     else if (item.status === "AMBER") current.amber += 1;
     else if (item.status === "GREEN") current.green += 1;
-    byState.set(item.state, current);
+    byState.set(stateId, current);
   }
   for (const agg of byState.values()) {
     agg.avgScore = agg.count ? agg.avgScore / agg.count : 0;
@@ -165,12 +175,13 @@ export function IndiaTileMap({
         )}
       </div>
 
-      <div
-        className="relative"
-        style={{
-          width: 7 * (TILE + GAP),
-          height: 7 * (TILE + GAP),
-        }}
+      <svg
+        className="relative mx-auto block h-auto w-full max-w-[320px]"
+        role="img"
+        aria-label="Tile grid of Indian states and union territories"
+        width={7 * (TILE + GAP)}
+        height={8 * (TILE + GAP)}
+        viewBox={`0 ${-(TILE + GAP)} ${7 * (TILE + GAP)} ${8 * (TILE + GAP)}`}
       >
         {INDIA_TILE_GRID.map((tile) => {
           const agg = byState.get(tile.id);
@@ -255,7 +266,7 @@ export function IndiaTileMap({
             </g>
           );
         })}
-      </div>
+      </svg>
 
       <div className="mt-3 max-h-40 overflow-y-auto rounded-input border border-line bg-paper p-3 text-12">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">
@@ -275,7 +286,7 @@ export function IndiaTileMap({
                 return (
                   <li
                     key={stateId}
-                    className="flex items-center justify-center gap-2"
+                    className="flex items-center justify-between gap-2"
                   >
                     <span className="truncate text-[11px] text-ink-700">
                       {tile?.name ?? stateId}

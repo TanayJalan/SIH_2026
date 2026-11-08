@@ -23,9 +23,38 @@ export function formatDate(value: string | null | undefined): string {
   return Number.isNaN(date.getTime()) ? "—" : dateFormatter.format(date);
 }
 
+/** Acronyms that must keep their APH spelling after sentence-casing. */
+const ENUM_ACRONYMS: Record<string, string> = {
+  aicte: "AICTE",
+  aph: "APH",
+  dsc: "DSC",
+  ec: "EC",
+  eoa: "EoA",
+  evc: "EVC",
+  fsr: "FSR",
+  loa: "LoA",
+  lod: "LoD",
+  lor: "LoR",
+  pgrc: "PGRC",
+  sac: "SAC",
+  scsc: "SCSC",
+  shc: "SHC",
+  ter: "TER",
+};
+
+/** Full labels that the token map cannot build cleanly. */
+const ENUM_LABELS: Record<string, string> = {
+  RE_SCRUTINY: "Re-scrutiny",
+};
+
 export function humanizeEnum(value: string): string {
+  const label = ENUM_LABELS[value.toUpperCase()];
+  if (label) {
+    return label;
+  }
   const words = value.toLowerCase().replaceAll("_", " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
+  const cased = words.replace(/\b[a-z]+\b/g, (word) => ENUM_ACRONYMS[word] ?? word);
+  return cased.charAt(0).toUpperCase() + cased.slice(1);
 }
 
 export function shortId(value: string): string {

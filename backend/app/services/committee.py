@@ -415,6 +415,8 @@ class CommitteeService:
                 else None,
                 "warnings": warnings,
                 "quorum_met": result.quorum_met,
+                "quorum_required": result.quorum_required,
+                "quorum_description": result.quorum_description,
             },
         )
 
@@ -628,8 +630,21 @@ def get_committee_selection_for_application(
                 "seats": after.get("seats", []),
                 "co_opted": after.get("co_opted"),
                 "warnings": after.get("warnings", []),
-                "quorum_met": after.get("quorum_met"),
-                "quorum_description": after.get("quorum_description"),
+                "quorum_required": (
+                    after.get("quorum_required")
+                    if after.get("quorum_required") is not None
+                    else _QUORUM.get(committee.type, (0, "Unknown"))[0]
+                ),
+                "quorum_description": (
+                    after.get("quorum_description")
+                    or _QUORUM.get(committee.type, (0, "Unknown"))[1]
+                ),
+                "quorum_met": (
+                    after["quorum_met"]
+                    if after.get("quorum_met") is not None
+                    else len(after.get("seats", []))
+                    >= _QUORUM.get(committee.type, (0, "Unknown"))[0]
+                ),
                 "selected_at": log.created_at.isoformat() if log.created_at else None,
                 "status": committee.status.value,
                 "mode": committee.mode.value,
