@@ -281,6 +281,11 @@ including deliberate flaws the verification screen can reject:
 - `blank_scan.pdf` (unreadable) plus land, building-plan, faculty, audited-statement and
   mandatory-disclosure papers.
 
+The same files are mirrored to `backend/uploads/demo/` (gitignored) because the backend's
+storage directory is a Docker volume: the host file picker cannot see it. During the demo the
+institution replaces the rejected certificate with
+`backend/uploads/demo/fire_safety_certificate_valid.pdf`.
+
 Public-notice cut-offs, Academic Calendar dates and processing-time SLAs are **not** in the
 handbook. They live in the `public_notices`, `academic_calendar_events` and `sla_configs` tables,
 are marked `is_demo`, and are seeded so the whole 2026-27 walkthrough stays open. The following
