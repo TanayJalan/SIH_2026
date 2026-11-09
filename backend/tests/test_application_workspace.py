@@ -1,7 +1,7 @@
 """Institution-side draft, programme, document and submission tests."""
 
 import uuid
-from datetime import timedelta
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -10,6 +10,7 @@ from app.db.session import SessionLocal
 from app.models import (
     Application,
     ApplicationStatus,
+    Document,
     SLAConfig,
     WorkflowEvent,
     WorkflowStage,
@@ -461,3 +462,46 @@ def test_academic_year_must_span_consecutive_years(
     )
 
     assert response.status_code == 422
+
+
+def test_upload_ignores_client_extension_and_syncs_expiry_date(
+    api_client: TestClient,
+    test_data: TestData,
+    workspace_applications: list[uuid.UUID],
+) -> None:
+    """Detected MIME wins over the filename, and validity drives expiry alerts."""
+    headers = _headers(api_client, test_data)
+    created = _create_draft(api_client, headers, workspace_applications)
+    valid_until = date(2027, 12, 31)
+
+    response = api_client.post(
+        f"/applications/{created['id']}/documents",
+        data={
+            "doc_type": "AFFILIATION_CERTIFICATE",
+            "signed_with_dsc": "true",
+            "valid_until": valid_until.isoformat(),
+        },
+        files={
+            "file": (
+                "../../evil.exe",
+                b"%PDF-1.4\nfictional affiliation certificate\n",
+                "application/pdf",
+            )
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["filename"] == "evil.pdf"
+    assert body["filename"].endswith(".pdf")
+    assert "/" not in body["filename"] and "\\" not in body["filename"]
+
+    with SessionLocal() as db:
+        document = db.get(Document, uuid.UUID(body["id"]))
+    assert document is not None
+    assert document.content_type == "application/pdf"
+    assert document.valid_until == valid_until
+    assert document.expiry_date == valid_until
+    assert document.storage_path.endswith(".pdf")
+    assert "evil" not in document.storage_path or document.storage_path.endswith(".pdf")

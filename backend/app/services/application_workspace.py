@@ -541,6 +541,7 @@ class ApplicationWorkspaceService:
                 signed_with_dsc=signed_with_dsc,
                 signer_name=signer_name,
                 valid_until=valid_until,
+                expiry_date=valid_until,
                 filename=original_filename,
                 content_type=media_type,
                 size_bytes=len(data),
@@ -835,12 +836,24 @@ class ApplicationWorkspaceService:
 
     @staticmethod
     def _safe_filename(raw_name: str | None, media_type: str) -> str:
-        fallback = f"document{_MEDIA_TYPES[media_type]}"
+        """Return a display name whose extension matches the detected content.
+
+        The browser-supplied extension is never trusted: a PDF detected from
+        magic bytes is always stored and displayed as ``.pdf``, even when the
+        original upload was named ``invoice.exe``. Storage paths additionally
+        use a random UUID, so the display name cannot be used to traverse or
+        overwrite files.
+        """
+        extension = _MEDIA_TYPES[media_type]
+        fallback = f"document{extension}"
         if not raw_name:
             return fallback
         name = Path(raw_name).name.strip()
-        printable = "".join(character for character in name if character.isprintable())
-        return printable[:255] or fallback
+        stem = Path(name).stem.strip(" .")
+        safe_stem = "".join(
+            character for character in stem if character.isalnum() or character in "-_ "
+        ).strip(" .-_")
+        return f"{safe_stem[:220] or 'document'}{extension}"
 
     @staticmethod
     def _detect_media_type(data: bytes) -> str | None:

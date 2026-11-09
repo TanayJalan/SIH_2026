@@ -37,6 +37,24 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
     log_level: str = "INFO"
 
+    security_headers_enabled: bool = True
+    """Attach browser hardening headers to every API response."""
+
+    security_hsts_seconds: int = Field(default=31_536_000, ge=0)
+    """HSTS max-age used only when production traffic arrives over HTTPS."""
+
+    login_rate_limit_enabled: bool = True
+    """Throttle repeated failed logins per client IP and account."""
+
+    login_rate_limit_attempts: int = Field(default=5, ge=1, le=100)
+    """Failed attempts allowed inside one window before the key is blocked."""
+
+    login_rate_limit_window_seconds: int = Field(default=300, ge=1, le=86_400)
+    """Sliding window in seconds for counting failed logins."""
+
+    login_rate_limit_block_seconds: int = Field(default=900, ge=1, le=86_400)
+    """How long a key stays blocked after crossing the threshold."""
+
     frontend_url: str = "http://localhost:5173"
     storage_dir: Path = Path("/storage")
 
@@ -82,6 +100,30 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must be changed in production")
         if self.environment == "production" and self.demo_mode:
             raise ValueError("DEMO_MODE must be false in production")
+        if self.environment == "production" and self.debug:
+            raise ValueError("DEBUG must be false in production")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_cors_origins(self) -> "Settings":
+        origins = self.cors_origin_list
+        if not origins:
+            raise ValueError("CORS_ORIGINS must contain at least one explicit origin")
+        if "*" in origins:
+            raise ValueError(
+                "CORS_ORIGINS must list explicit origins; '*' is unsafe with credentialed requests"
+            )
+        for origin in origins:
+            if not origin.startswith(("http://", "https://")):
+                raise ValueError(f"CORS origin {origin!r} must start with http:// or https://")
+            if origin.rstrip("/") != origin:
+                raise ValueError(f"CORS origin {origin!r} must not end with a slash")
+        if self.environment == "production":
+            local_hosts = ("localhost", "127.0.0.1", "0.0.0.0", "::1")
+            if any(host in origin for origin in origins for host in local_hosts):
+                raise ValueError(
+                    "CORS_ORIGINS must not contain local development hosts in production"
+                )
         return self
 
     @property

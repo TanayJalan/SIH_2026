@@ -13,7 +13,8 @@ from app.api.routes import dev
 from app.core.clock import SimulatedClock
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
-from app.core.middleware import RequestContextMiddleware
+from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
+from app.core.rate_limit import LoginRateLimiter
 from app.services.application_workspace import WorkspaceError
 from app.services.document_review import DocumentReviewError
 from app.services.fees import FeeError
@@ -57,6 +58,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.clock = clock
+    app.state.login_rate_limiter = LoginRateLimiter(
+        max_attempts=resolved_settings.login_rate_limit_attempts,
+        window_seconds=resolved_settings.login_rate_limit_window_seconds,
+        block_seconds=resolved_settings.login_rate_limit_block_seconds,
+    )
 
     @app.exception_handler(WorkspaceError)
     async def _workspace_error_handler(_: Request, exc: WorkspaceError) -> JSONResponse:
@@ -77,12 +83,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
     app.add_middleware(RequestContextMiddleware)
+    if resolved_settings.security_headers_enabled:
+        app.add_middleware(
+            SecurityHeadersMiddleware,
+            hsts_seconds=(
+                resolved_settings.security_hsts_seconds
+                if resolved_settings.environment == "production"
+                else 0
+            ),
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved_settings.cors_origin_list,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
         expose_headers=["X-Request-ID"],
     )
 
