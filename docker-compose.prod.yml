@@ -1,0 +1,123 @@
+# Production Compose profile.
+#
+#   cp .env.production.example .env.production
+#   docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+#
+# Differences from the development stack:
+#   * no source bind-mounts and no Vite dev server (nginx serves the built SPA);
+#   * DEBUG and DEMO_MODE are forced off, so /dev/simulate-time is not mounted;
+#   * SECRET_KEY, POSTGRES_PASSWORD, CORS_ORIGINS and VITE_API_URL are required;
+#   * database and SMTP ports are not published;
+#   * uvicorn runs multiple workers, so the login limiter is per worker (see
+#     docs/SECURITY.md; Redis-backed limiting is a ROADMAP item).
+#
+# Mailpit is kept behind the optional "demo-mail" profile for a self-contained
+# demonstration. For a real deployment point SMTP_HOST at the institutional
+# relay and do not start that profile.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aicte}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the production env file}
+      POSTGRES_DB: ${POSTGRES_DB:-aicte}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-aicte} -d ${POSTGRES_DB:-aicte}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    profiles: ["demo-mail"]
+    expose:
+      - "1025"
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    init: true
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      DEMO_MODE: "false"
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in the production env file}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS to the public frontend origin}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aicte}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-aicte}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@aicte.local}
+      NOTIFICATIONS_ENABLED: ${NOTIFICATIONS_ENABLED:-true}
+      ALERT_SCAN_ENABLED: ${ALERT_SCAN_ENABLED:-true}
+      ALERT_SCAN_INTERVAL_MINUTES: ${ALERT_SCAN_INTERVAL_MINUTES:-15}
+      COMPLIANCE_MONITOR_ENABLED: ${COMPLIANCE_MONITOR_ENABLED:-true}
+      COMPLIANCE_MONITOR_HOUR: ${COMPLIANCE_MONITOR_HOUR:-2}
+      MAX_REUPLOADS_PER_DOCUMENT: ${MAX_REUPLOADS_PER_DOCUMENT:-5}
+      STORAGE_DIR: /storage
+    command:
+      [
+        "sh",
+        "-c",
+        "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2} --no-access-log --proxy-headers --forwarded-allow-ips='*'",
+      ]
+    volumes:
+      - backend_storage:/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+        required: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:?set VITE_API_URL to the public API origin}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  postgres_data:
+  backend_storage:
