@@ -50,6 +50,7 @@ from app.services.deficiency_report import build_deficiency_report
 from app.services.fee_calculator import security_deposit_penalty
 from app.services.fees import FeeService
 from app.services.portal_number import next_portal_application_no
+from app.services.regions import institution_region_labels, matches_institution_region
 from app.services.workflow_context import TransitionContext
 from app.services.workflow_errors import (
     WorkflowNotFoundError,
@@ -143,7 +144,9 @@ def assign_scrutiny(ctx: TransitionContext) -> str | None:
             or candidate.role != Role.SCRUTINY_COMMITTEE_MEMBER
         ):
             raise WorkflowValidationError("Select an active scrutiny officer.")
-        if candidate.region != ctx.application.institution.region:
+        if not matches_institution_region(
+            candidate.region, ctx.application.institution
+        ):
             raise WorkflowValidationError(
                 "The scrutiny officer must belong to the institution's region."
             )
@@ -341,16 +344,29 @@ def verify_deficiencies(ctx: TransitionContext) -> str | None:
 
 
 def _pick_evc_user(ctx: TransitionContext) -> User | None:
-    return ctx.db.scalar(
-        select(User)
-        .where(
-            User.role == Role.EVC_MEMBER,
-            User.is_active.is_(True),
-            User.region == ctx.application.institution.region,
+    institution = ctx.application.institution
+    exact = institution.region
+
+    def _query(regions: tuple[str, ...]) -> User | None:
+        return ctx.db.scalar(
+            select(User)
+            .where(
+                User.role == Role.EVC_MEMBER,
+                User.is_active.is_(True),
+                User.region.in_(regions),
+            )
+            .order_by(User.name.asc())
+            .limit(1)
         )
-        .order_by(User.name.asc())
-        .limit(1)
-    )
+
+    # Prefer an exact display-region match, then any officer in the canonical
+    # AICTE region. Without the first pass a test/dev institution whose region
+    # is a city would be visited by an unrelated officer from the same state.
+    if exact:
+        user = _query((exact,))
+        if user is not None:
+            return user
+    return _query(institution_region_labels(institution))
 
 
 def constitute_evc(ctx: TransitionContext) -> str | None:

@@ -52,6 +52,7 @@ from app.services.alert_stream import publish_clock, publish_created_alerts
 from app.services.alert_triggers import first_rule_for_handler, rules_for_handler
 from app.services.audit import AuditService
 from app.services.deadlines import refresh_timer_status
+from app.services.regions import institution_region_labels
 
 _ESCALATION_CHAIN = (
     Role.REGULATION_BUREAU_OFFICER,
@@ -1299,9 +1300,9 @@ class AlertEngine:
     def _users_for_role(self, application: Application, role: Role) -> list[User]:
         query = select(User).where(User.role == role, User.is_active.is_(True))
         if role == Role.REGIONAL_OFFICER:
-            region = application.institution.region
-            if region is not None:
-                query = query.where(User.region == region)
+            regions = institution_region_labels(application.institution)
+            if regions:
+                query = query.where(User.region.in_(regions))
         elif role == Role.INSTITUTION_ADMIN:
             query = query.where(User.institution_id == application.institution_id)
         return list(
@@ -1361,16 +1362,18 @@ def _compliance_recipients(
 ) -> list[User]:
     """Regional officers for the institution plus every active super admin."""
     recipients: list[User] = []
-    if institution is not None and institution.region:
-        recipients.extend(
-            db.scalars(
-                select(User).where(
-                    User.role == Role.REGIONAL_OFFICER,
-                    User.region == institution.region,
-                    User.is_active.is_(True),
-                )
-            ).all()
-        )
+    if institution is not None:
+        regions = institution_region_labels(institution)
+        if regions:
+            recipients.extend(
+                db.scalars(
+                    select(User).where(
+                        User.role == Role.REGIONAL_OFFICER,
+                        User.region.in_(regions),
+                        User.is_active.is_(True),
+                    )
+                ).all()
+            )
     recipients.extend(
         db.scalars(
             select(User).where(

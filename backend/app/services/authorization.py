@@ -16,6 +16,7 @@ from app.models.enums import InstitutionRegion, Role
 from app.models.inspection import Inspection
 from app.models.institution import Institution
 from app.models.user import User
+from app.services.regions import institution_region_labels
 
 _AICTE_REGION_VALUES = {region.value for region in InstitutionRegion}
 
@@ -52,7 +53,7 @@ def _in_region(user: User, institution: Institution | None) -> bool:
     """Return whether ``institution`` is inside the user's region scope."""
     if user.region is None or institution is None:
         return False
-    return user.region in {institution.region, institution.aicte_region.value}
+    return user.region in institution_region_labels(institution)
 
 
 def application_scope(user: User) -> list[ColumnElement[bool]]:
@@ -68,7 +69,11 @@ def application_scope(user: User) -> list[ColumnElement[bool]]:
     if user.role == Role.REGULATION_BUREAU_OFFICER:
         if user.region is None:
             return []
-        return [Application.institution.has(Institution.region == user.region)]
+        return [
+            Application.institution.has(
+                _region_condition(user, Institution.region, Institution.aicte_region)
+            )
+        ]
 
     if user.role == Role.SCRUTINY_COMMITTEE_MEMBER:
         conditions: list[ColumnElement[bool]] = [Application.assigned_officer_id == user.id]

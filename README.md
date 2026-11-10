@@ -63,11 +63,21 @@ Implemented:
   time, draft ownership, programme CRUD, document versioning, completeness rules, blocked
   submission, workflow transitions, compliance operators/scoring/missing data, monitoring
   snapshots, rule impact and admin rule edits that change live outcomes
+- Security hardening: login throttling with audit rows, security headers and a strict CSP,
+  CORS allow-list, upload magic-byte validation and safe filenames, and startup validation that
+  rejects unsafe production settings
+- An 80% coverage gate on workflow, compliance, alerts, calculators and auth, plus Playwright
+  smoke tests for login, submission, officer action, document re-upload and live alerts
+- Composite indexes and response-time tests that keep seeded dashboards under 500 ms
+- A standalone production Compose profile with an nginx-served frontend, read-only backend
+  container and no published database/SMTP ports
+- Security, architecture, API and roadmap documents in `docs/`
 
 Remaining out of scope for this MVP increment: executive dashboards beyond the overview and
 ML risk scoring. The SMS channel is intentionally a logging mock behind the
 `NotificationProvider` interface; email uses a plain SMTP relay (Mailpit in development) without
-a durable retry queue.
+a durable retry queue. Shared rate-limit/SSE state for multi-replica deployments is on the
+[roadmap](docs/ROADMAP.md).
 
 ## Stack
 
@@ -76,33 +86,44 @@ a durable retry queue.
 - **Jobs:** APScheduler in-process nightly compliance monitoring (no Redis or Celery)
 - **ML:** scikit-learn + joblib (introduced with risk scoring)
 - **Notifications:** in-app (DB), SMTP through Mailpit for demos, mocked SMS provider
-- **Auth:** PyJWT access tokens (eight-hour expiry), bcrypt hashes and role-based access control
+- **Auth:** PyJWT access tokens (expiry configurable; 8 h development, 60 min production
+  example), bcrypt hashes, role-based access control and in-process login throttling
 
 ## Repository layout
 
 ```
 .
-├── backend/            FastAPI application, models, migrations, tests
-├── frontend/           React + Vite application
-├── docs/               Design documents, including the ER diagram
-├── docker-compose.yml  PostgreSQL, Mailpit, backend, frontend
-├── Makefile            Developer commands
-└── .env.example        Configuration template
+├── backend/                FastAPI application, models, migrations, tests
+├── frontend/               React + Vite application and Playwright specs
+├── docs/                   Architecture, security, API, workflow and domain documents
+├── docker-compose.yml      PostgreSQL, Mailpit, backend, frontend (development)
+├── docker-compose.prod.yml Production profile (nginx SPA, no source mounts)
+├── Makefile                Developer commands
+└── .env.example            Configuration template
 ```
 
 ## Quick start
 
-Prerequisites: Docker with the Compose plugin.
+Prerequisites: Docker with the Compose plugin, and Node.js 22+ only if you want to run the
+Playwright tests or build the frontend outside Docker.
 
 ```bash
 cp .env.example .env
-make dev
+make dev          # build and start postgres, mailpit, backend, frontend
+make seed         # apply migrations and load the demo dataset
 ```
 
 Or run Compose directly (defaults are built in, so `.env` is optional):
 
 ```bash
 docker compose up --build
+```
+
+On a clean machine, `make dev` plus `make seed` is the complete setup; the backend applies
+migrations when it starts and `make seed` is idempotent. Wait for the health check before seeding:
+
+```bash
+curl -s http://localhost:8000/health/ready
 ```
 
 | Service       | URL                              |
@@ -113,7 +134,39 @@ docker compose up --build
 | Readiness     | http://localhost:8000/health/ready |
 | Mailpit       | http://localhost:8025            |
 
-Migrations run automatically when the backend container starts.
+Migrations run automatically when the backend container starts. Demo accounts and the
+seven-minute walkthrough are described below.
+
+## Production profile (Docker Compose)
+
+`docker-compose.prod.yml` is a standalone profile for a TLS-terminated deployment. It builds the
+frontend with `vite build`, serves it from nginx, runs the API read-only with a storage volume,
+forces `ENVIRONMENT=production`, `DEBUG=false` and `DEMO_MODE=false`, and does not publish the
+database or SMTP ports.
+
+```bash
+cp .env.production.example .env.production
+# Fill SECRET_KEY, POSTGRES_PASSWORD, CORS_ORIGINS and VITE_API_URL.
+# Generate the secret with:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+
+docker compose --env-file .env.production -f docker-compose.prod.yml config   # validate
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+# Demo deployment only: load the fictional dataset and demo accounts.
+docker compose --env-file .env.production -f docker-compose.prod.yml exec backend python -m app.seed
+```
+
+The seed creates fictional institutions and public demo accounts. For a real deployment, load the
+reference configuration and provision real users through your identity process instead of running
+the demo seed.
+
+The SPA is published on `FRONTEND_PORT` (default `8080`), which is where the TLS proxy should point.
+The API is only reachable inside the Compose network; proxy the public API origin to `backend:8000`,
+or publish the backend deliberately if your topology requires it. `CORS_ORIGINS` must be the exact
+public frontend origin and `VITE_API_URL` the exact public API origin. Both are validated at startup.
+
+The production checklist, threat model and residual risks are in
+[docs/SECURITY.md](docs/SECURITY.md).
 
 ## Cloud Deployment (AWS EC2)
 
@@ -298,14 +351,24 @@ deployments must override `DEBUG=false`.
 ### Tests
 
 ```bash
-make test
+make test        # full backend suite in a one-off Compose container
+make coverage    # 80% gate on workflow, compliance, alerts, calculators and auth
+make e2e         # Playwright smoke tests against the running stack
 ```
 
-This applies migrations and runs the backend test suite in an isolated Compose one-off container.
-Tests create uniquely named fictional records and remove them afterwards.
+`make test` applies migrations and runs the full backend suite in an isolated Compose one-off
+container. Tests create uniquely named fictional records and remove them afterwards.
 
-The frontend has one Playwright acceptance flow for the document re-upload cycle. It creates its
-own case through the API, so the demo data does not need a case in Scrutiny:
+The coverage gate covers `app.services.workflow`, `workflow_catalogue`, `compliance`,
+`compliance_calculators`, `alert_engine`, `alert_triggers`, `fee_calculator`, `app.api.routes.auth`
+and `app.services.auth`. A build-failing configuration test also requires every `ComplianceRule`,
+`WorkflowTransition`, `FeeSchedule` and `AlertRule` row to carry an `apH_clause` (or
+`needs_verification=true`).
+
+The Playwright suite exercises login, invalid credentials, a completed draft submission, a
+scrutiny action, the document re-upload cycle and a live alert pushed over SSE. The stack must be
+running (`make dev`) and the browser test targets `http://localhost:5173` and
+`http://localhost:8000` by default; set `E2E_BASE_URL` / `E2E_API_URL` to point elsewhere.
 
 ```bash
 cd frontend
@@ -313,17 +376,34 @@ npx playwright install chromium   # first run only
 npm run test:e2e
 ```
 
-The stack must be running (`make dev`) and the browser test targets `http://localhost:5173` and
-`http://localhost:8000` by default; set `E2E_BASE_URL` / `E2E_API_URL` to point elsewhere.
+The e2e specs submit applications and advance a demo clock. Run `make reset-demo` afterwards to
+restore the seeded dataset, then restart the backend to clear the process-local simulated clock.
+
+The frontend typecheck and production build are:
+
+```bash
+cd frontend
+npm ci
+npm run typecheck
+npm run build
+```
 
 ### Useful commands
 
 ```bash
-make migrate   # apply pending migrations to the running backend
+make dev       # build and start the development stack
 make seed      # create or reuse demo records
+make test      # backend test suite
+make coverage  # core-module coverage gate
+make e2e       # Playwright smoke tests
+make openapi   # export docs/openapi.json from the running backend
+make migrate   # apply pending migrations to the running backend
+make reset-demo # wipe the schema and rebuild the demo dataset
 make logs      # follow service logs
 make shell     # shell inside the backend container
 make down      # stop containers, keep the database volume
+make prod      # start the production profile (requires .env.production)
+make prod-down # stop the production profile
 ```
 
 ## Roles and access scope
@@ -864,7 +944,9 @@ view. The route is public and does not require a login.
 - The showcase is light-theme only by design.
 
 The browser stores the access token in `localStorage`. That is acceptable for this local prototype
-but production deployments should use secure, HTTP-only cookies and refresh-token rotation.
+but production deployments should use secure, HTTP-only cookies and refresh-token rotation. The
+trade-off and the planned fix are recorded in [docs/SECURITY.md](docs/SECURITY.md) and
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Engineering conventions
 
@@ -877,7 +959,15 @@ but production deployments should use secure, HTTP-only cookies and refresh-toke
 
 ## Documentation
 
+- [Architecture](docs/ARCHITECTURE.md) — system context, containers, service map, data model,
+  workflow/compliance/alert flows
+- [Security](docs/SECURITY.md) — threat model, RBAC, audit trail, production checklist
+- [API guide](docs/API.md) and [OpenAPI schema](docs/openapi.json)
+- [Roadmap](docs/ROADMAP.md) — P0/P1/P2 work and release criteria
+- [Workflow](docs/WORKFLOW.md) — states, transitions and clause table
 - [Entity-relationship diagram](docs/er-diagram.md)
+- [Open questions](docs/OPEN_QUESTIONS.md) — every verification item and its status
+- [Role-based access control](docs/RBAC.md)
 - [UI copy guide](docs/UI_COPY_GUIDE.md)
 
 ## Known gaps
@@ -903,7 +993,14 @@ but production deployments should use secure, HTTP-only cookies and refresh-toke
   thresholds must come from editable configuration and be reviewed against the current AICTE
   Approval Process Handbook.
 - Authentication currently issues access tokens only; refresh tokens, password reset, account
-  lockout and MFA are out of scope for this increment.
+  lockout and MFA are out of scope for this increment. The login limiter is per API process, so a
+  multi-worker deployment multiplies the effective attempt budget; moving it to Redis is a P1
+  roadmap item.
+- The SSE broker is also in-process. With more than one API worker, a browser only receives pushes
+  from the worker it connected to. Durable fan-out is a P1 roadmap item; the alert inbox polling
+  remains the fallback.
+- The regional dashboard aggregate is national for a `REGIONAL_OFFICER`; only the application list
+  is region-scoped (OQ-75). Scenario institution scores reflect partial seed data (OQ-76).
 - Audit regional scoping covers institution, application and user entities directly; other
   polymorphic entity types rely on the actor's region or should add explicit region metadata when
   those modules are built.

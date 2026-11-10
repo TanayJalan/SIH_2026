@@ -115,6 +115,7 @@ def test_cors_configuration_rejects_wildcards_and_localhost_in_production() -> N
             secret_key="a-production-secret-that-is-long-enough",
             cors_origins="http://localhost:5173",
             demo_mode=False,
+            debug=False,
         )
 
     with pytest.raises(ValidationError, match="DEBUG must be false"):

@@ -55,6 +55,7 @@ from app.models.workflow_definition import (
 from app.schemas.workflow import WorkflowActionRequest
 from app.services import alerts
 from app.services.audit import AuditService
+from app.services.regions import institution_region_labels, matches_institution_region
 from app.services.workflow_context import (
     ActionRequirement,
     AssignmentStrategy,
@@ -158,9 +159,32 @@ class LowestLoadAssignmentStrategy:
         self._tie_breaker = _round_robin_tie_break
 
     def choose(self, db: Session, application: Application) -> User | None:
-        region = application.institution.region
+        institution = application.institution
+        labels = institution_region_labels(institution)
+        # Prefer an officer whose region matches the institution's display region
+        # exactly (the demo and the tests set this to a city), then fall back to
+        # the canonical AICTE region so a region-wide officer is still eligible.
+        preferred = (institution.region,) if institution.region else ()
+        for regions in (preferred, labels):
+            rows = self._candidates(db, application, regions)
+            if rows:
+                break
+        else:
+            return None
+
+        smallest = min(load_value for _, load_value in rows)
+        tied = [officer for officer, load_value in rows if load_value == smallest]
+        return self._tie_breaker(tied, db, application)
+
+    @staticmethod
+    def _candidates(
+        db: Session,
+        application: Application,
+        regions: tuple[str, ...],
+    ) -> list[tuple[User, int]]:
+        """Return active scrutiny officers in ``regions`` with their open load."""
         load = func.count(Application.id)
-        rows = db.execute(
+        return db.execute(
             select(User, load)
             .outerjoin(
                 Application,
@@ -173,17 +197,11 @@ class LowestLoadAssignmentStrategy:
             .where(
                 User.role == Role.SCRUTINY_COMMITTEE_MEMBER,
                 User.is_active.is_(True),
-                User.region == region,
+                User.region.in_(regions),
             )
             .group_by(User.id)
             .order_by(User.id)
         ).all()
-        if not rows:
-            return None
-
-        smallest = min(load_value for _, load_value in rows)
-        tied = [officer for officer, load_value in rows if load_value == smallest]
-        return self._tie_breaker(tied, db, application)
 
 
 @dataclass(frozen=True, slots=True)
@@ -605,16 +623,15 @@ class WorkflowService:
                 and application.institution_id == actor.institution_id
             )
 
-        region = application.institution.region
+        in_region = matches_institution_region(actor.region, application.institution)
         if role == Role.REGULATION_BUREAU_OFFICER:
-            return actor.region is None or actor.region == region
+            return actor.region is None or in_region
 
         if role == Role.REGIONAL_OFFICER:
-            return actor.region is not None and actor.region == region
+            return in_region
 
         if role == Role.SCRUTINY_COMMITTEE_MEMBER:
             assigned = application.assigned_officer_id == actor.id
-            in_region = actor.region is not None and actor.region == region
             if not assigned and not in_region:
                 return False
             if action in _ASSIGNED_SCRUTINY_ACTIONS and not assigned:
