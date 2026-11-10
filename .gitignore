@@ -37,6 +37,15 @@ frontend/playwright-report/
 frontend/blob-report/
 frontend/playwright/.cache/
 
+# Images and screenshots
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+!frontend/public/**
+
 # Local databases and dumps
 *.db
 *.sqlite
