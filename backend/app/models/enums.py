@@ -272,7 +272,7 @@ class DocumentVerificationStatus(StrEnum):
 
 
 class DocumentRejectionReason(StrEnum):
-    """Reason a reviewer rejected a document (APH 1.8f, 1.8g).
+    """Reason a reviewer rejected a document (APH 1.8).
 
     The vocabulary is stored on the document and copied into the linked
     deficiency so the institution knows exactly what to replace.

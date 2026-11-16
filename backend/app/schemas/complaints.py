@@ -35,7 +35,7 @@ class ComplaintCreate(BaseModel):
 
 
 class ScscDecisionRequest(BaseModel):
-    """SCSC recommendation (APH 7.10c)."""
+    """SCSC recommendation (APH 7.10)."""
 
     decision: str = Field(description="WARNING, SHOW_CAUSE or EVC")
     notes: str | None = None
@@ -43,21 +43,21 @@ class ScscDecisionRequest(BaseModel):
 
 
 class ShowCauseReplyRequest(BaseModel):
-    """Institution reply to a show-cause notice (APH 7.10d)."""
+    """Institution reply to a show-cause notice (APH 7.10)."""
 
     reply: str = Field(min_length=1)
     replied_on: date | None = None
 
 
 class ShcHearingRequest(BaseModel):
-    """SHC hearing record (APH 7.10d-e)."""
+    """SHC hearing record (APH 7.10)."""
 
     hearing_on: date
     findings: str = Field(min_length=1)
 
 
 class EcDecisionRequest(BaseModel):
-    """EC decision with its Speaking Order (APH 7.10f-g)."""
+    """EC decision with its Speaking Order (APH 7.10)."""
 
     decision: str = Field(description="WARNING, PENAL_ACTION or CLOSE")
     speaking_order: str = Field(min_length=1)
@@ -155,7 +155,7 @@ class PenalActionHearingRequest(BaseModel):
 
 
 class PenalActionIssueRequest(BaseModel):
-    """Issue the action after its hearing (APH 6.50h, 7.10g)."""
+    """Issue the action after its hearing (APH 6.50h, 7.10)."""
 
     order_number: str = Field(min_length=1, max_length=64)
     issued_on: date | None = None
@@ -223,13 +223,13 @@ class DepositClearanceRequest(BaseModel):
 
 
 class DepositReleaseRequest(BaseModel):
-    """Institution request to release the Security Deposit (APH 6.46a)."""
+    """Institution request to release the Security Deposit (APH 6.46)."""
 
     requested_on: date | None = None
 
 
 class DepositReleaseApproveRequest(BaseModel):
-    """Approve the release with the NOC number (APH 6.46c-d)."""
+    """Approve the release with the NOC number (APH 6.46)."""
 
     noc_number: str = Field(min_length=1, max_length=64)
     released_on: date | None = None

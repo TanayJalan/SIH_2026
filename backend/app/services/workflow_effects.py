@@ -250,7 +250,7 @@ def record_responses(ctx: TransitionContext) -> str | None:
     """Record the institution's response to every open deficiency.
 
     A document rejection can already have marked its deficiency ``RESPONDED``
-    when the institution re-uploaded the replacement (APH 1.8f, 2.4). Those items
+    when the institution re-uploaded the replacement (APH 1.8, 2.4). Those items
     are accepted as answered; the payload only supplies text for the still-open
     items.
     """
@@ -909,7 +909,7 @@ def record_random_evc(ctx: TransitionContext) -> str | None:
 
 
 def zero_intake_if_closure_failed(ctx: TransitionContext) -> str | None:
-    """Give an EoA with zero intake when a closure did not succeed (APH 2.3.3h)."""
+    """Give an EoA with zero intake when a closure did not succeed (APH 2.21)."""
     if not ctx.payload.closure_failed:
         return None
     programmes = list(

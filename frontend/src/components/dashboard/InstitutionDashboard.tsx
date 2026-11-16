@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import {
   Button,
+  ErrorState,
   Skeleton,
   Stat,
   StatusPill,
@@ -120,11 +121,28 @@ export default function InstitutionDashboard() {
   const dashboard = dashboardQuery.data;
   const loading = dashboardQuery.isPending;
 
+  if (dashboardQuery.isError) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Institution dashboard"
+          title={user.institution?.name ?? "Your institution"}
+          description="Progress tracker for your application: deficiencies, fees, documents and upcoming deadlines."
+        />
+        <ErrorState
+          error={dashboardQuery.error}
+          message="Your dashboard could not be loaded. Check the API connection and try again."
+          onRetry={() => void dashboardQuery.refetch()}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
         eyebrow="Institution dashboard"
-        title={dashboard?.institution_name ?? "Your institution"}
+        title={user.institution?.name ?? dashboard?.institution_name ?? "Your institution"}
         description="Progress tracker for your application: deficiencies, fees, documents and upcoming deadlines."
         actions={
           dashboard?.application_id ? (
@@ -141,6 +159,8 @@ export default function InstitutionDashboard() {
                 Open case file
               </a>
             </Button>
+          ) : loading ? (
+            <Skeleton className="h-8 w-32" />
           ) : null
         }
       />
@@ -167,7 +187,7 @@ export default function InstitutionDashboard() {
             </div>
           </div>
         </div>
-        <div className="px-5 py-5">
+        <div className="min-h-[470px] px-5 py-5 md:min-h-[120px]">
           {loading ? (
             <div className="space-y-4" role="status">
               <Skeleton className="h-6 w-3/4" />
@@ -189,9 +209,9 @@ export default function InstitutionDashboard() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <section className="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
         {/* What you need to do */}
-        <section className="col-span-1 lg:col-span-2 rounded-panel border border-line bg-surface">
+        <section className="col-span-1 xl:col-span-2 rounded-panel border border-line bg-surface">
           <div className="border-b border-line px-5 py-4 flex items-center justify-between">
             <h2 className="font-serif text-18 font-semibold text-ink">
               What you need to do
@@ -340,9 +360,9 @@ export default function InstitutionDashboard() {
         </section>
 
         {/* Compliance score + how to improve + deadlines */}
-        <section className="col-span-1 lg:col-span-1 rounded-panel border border-line bg-surface p-5">
-          <div className="border-b border-line px-0 py-0">
-            <div className="px-5 py-4 flex items-center justify-between">
+        <section className="col-span-1 rounded-panel border border-line bg-surface">
+          <div className="border-b border-line">
+            <div className="flex items-center justify-between px-5 py-4">
               <div>
                 <h2 className="font-serif text-18 font-semibold text-ink">
                   Compliance score
@@ -354,8 +374,8 @@ export default function InstitutionDashboard() {
             </div>
           </div>
           <div className="p-5 space-y-5">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-              <div className="flex-1 max-w-[260px]">
+            <div className="flex flex-col gap-6">
+              <div className="min-w-0 max-w-[260px]">
                 {loading ? (
                   <Skeleton className="h-40 w-full" />
                 ) : (
@@ -367,7 +387,7 @@ export default function InstitutionDashboard() {
                   />
                 )}
               </div>
-              <div className="flex-1">
+              <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-500 mb-3">
                   How to improve
                 </p>
@@ -392,7 +412,7 @@ export default function InstitutionDashboard() {
                             FAIL
                           </span>
                         </div>
-                        <p className="text-12 text-ink-700 truncate">
+                        <p className="break-words text-12 text-ink-700">
                           {rule.name}
                         </p>
                         <p className="mt-1 text-[10px] text-ink-500">
@@ -418,9 +438,6 @@ export default function InstitutionDashboard() {
             <div className="mt-5 border-t border-line pt-5">
               <h3 className="text-13 font-semibold text-ink mb-3">
                 Upcoming deadlines
-                <span className="text-[10px] font-normal text-ink-500 ml-2">
-                  (APH 5)
-                </span>
               </h3>
               {loading ? (
                 <div className="space-y-2">
@@ -436,7 +453,6 @@ export default function InstitutionDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Deadline</TableHead>
-                      <TableHead className="text-right">Due</TableHead>
                       <TableHead className="text-right">Days left</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -446,13 +462,10 @@ export default function InstitutionDashboard() {
                         <TableCell className="text-ink">
                           {d.label}
                           <p className="mt-0.5 text-[10px] text-ink-500">
-                            {d.apH_clause}
+                            Due {formatDate(d.due_on)} · {d.apH_clause}
                           </p>
                         </TableCell>
-                        <TableCell className="text-right text-13 text-ink-700">
-                          {formatDate(d.due_on)}
-                        </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="whitespace-nowrap text-right">
                           <span
                             className={cn(
                               "text-11 font-medium rounded-input px-1.5 py-0.5",

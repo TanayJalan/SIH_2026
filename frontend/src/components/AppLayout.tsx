@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import {
   Bell,
   BellRing,
   ChevronDown,
+  Compass,
   FileText,
   Keyboard,
   LayoutDashboard,
@@ -18,21 +19,21 @@ import {
 } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import CommandPalette from "./CommandPalette";
 import DemoTimeControl from "./DemoTimeControl";
-import KeyboardShortcutsDialog from "./KeyboardShortcutsDialog";
 import NotificationBell from "./NotificationBell";
+import PageLoader from "./PageLoader";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerTitle,
-  Tooltip,
-} from "./ui";
+} from "./ui/Drawer";
+import { Tooltip } from "./ui/Tooltip";
 import { useAuth } from "../auth/AuthContext";
 import type { Role } from "../lib/api";
 import { initials } from "../lib/format";
 import {
+  ROLE_BADGE_LABELS,
   ROLE_LABELS,
   navItemsFor,
   type NavIcon,
@@ -44,6 +45,7 @@ const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   overview: LayoutDashboard,
   dashboard: LayoutDashboard,
   applications: FileText,
+  advisor: Compass,
   compliance: ShieldCheck,
   alerts: Bell,
   "alert-rules": BellRing,
@@ -53,6 +55,10 @@ const NAV_ICONS: Record<NavIcon, LucideIcon> = {
 
 const COLLAPSE_KEY = "aicte.nav_collapsed";
 const SHORTCUT_WINDOW_MS = 1_200;
+
+/* Overlays are opened on demand, so they stay out of the shell chunk. */
+const CommandPalette = lazy(() => import("./CommandPalette"));
+const KeyboardShortcutsDialog = lazy(() => import("./KeyboardShortcutsDialog"));
 
 function SidebarNavigation({
   role,
@@ -111,7 +117,7 @@ function SidebarNavigation({
                     <>
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
                       {item.shortcut ? (
-                        <kbd className="shrink-0 rounded-input border border-line px-1.5 py-0.5 text-12 font-normal text-ink-300 transition-colors group-hover:text-ink-500">
+                        <kbd className="shrink-0 rounded-input border border-line px-1.5 py-0.5 text-12 font-normal text-ink-500 transition-colors group-hover:text-ink-700">
                           {item.shortcut}
                         </kbd>
                       ) : null}
@@ -147,14 +153,14 @@ function SidebarBrand({ collapsed }: { collapsed: boolean }) {
         "flex h-16 shrink-0 items-center border-b border-line",
         collapsed ? "justify-center px-3" : "gap-3 px-5 pr-12",
       )}
-      aria-label="AICTE Approval Workflow home"
+      aria-label="AI AICTE Approval Workflow portal home"
     >
       <span className="grid size-9 shrink-0 place-items-center rounded-input border border-ink bg-ink text-13 font-semibold tracking-wide text-surface">
         AI
-      </span>
+      </span>{" "}
       {!collapsed ? (
         <span className="min-w-0">
-          <span className="block truncate text-14 font-semibold text-ink">AICTE Approval</span>
+          <span className="block truncate text-14 font-semibold text-ink">AICTE Approval</span>{" "}
           <span className="block truncate text-12 text-ink-500">Workflow portal</span>
         </span>
       ) : null}
@@ -417,11 +423,11 @@ export default function AppLayout() {
               type="button"
               onClick={() => setPaletteOpen(true)}
               className="group flex h-9 w-9 min-w-0 shrink-0 items-center justify-center gap-2 rounded-input border border-line bg-paper text-left text-13 text-ink-500 transition-colors hover:border-ink-300 hover:bg-surface hover:text-ink-700 sm:w-auto sm:max-w-sm sm:flex-1 sm:justify-start sm:px-3"
-              aria-label="Search applications, institutions and pages"
             >
               <Search aria-hidden="true" className="size-4 shrink-0" />
+              <span className="sr-only">Search applications, institutions and pages</span>
               <span className="hidden min-w-0 flex-1 truncate md:inline">
-                Search applications…
+                Search applications
               </span>
               <kbd className="ml-auto hidden shrink-0 rounded-input border border-line bg-surface px-1.5 py-0.5 text-12 text-ink-500 md:inline-flex">
                 ⌘K
@@ -433,8 +439,8 @@ export default function AppLayout() {
 
               <NotificationBell />
 
-              <span className="hidden max-w-36 truncate rounded-pill border border-line bg-paper px-2.5 py-1 text-12 font-medium text-ink-700 lg:inline-flex">
-                {roleLabel}
+              <span className="hidden max-w-48 truncate rounded-pill border border-line bg-paper px-2.5 py-1 text-12 font-medium text-ink-700 lg:inline-flex">
+                {ROLE_BADGE_LABELS[user.role]}
               </span>
 
               <div ref={userMenuRef} className="relative">
@@ -443,7 +449,7 @@ export default function AppLayout() {
                   onClick={() => setUserMenuOpen((current) => !current)}
                   aria-haspopup="menu"
                   aria-expanded={userMenuOpen}
-                  aria-label="Open account menu"
+                  aria-label={`${initials(user.name)} account menu`}
                   className="flex h-9 items-center gap-1.5 rounded-input pl-0.5 pr-1 transition-colors hover:bg-paper"
                 >
                   <span className="grid size-8 place-items-center rounded-pill bg-ink text-12 font-semibold text-surface">
@@ -512,24 +518,34 @@ export default function AppLayout() {
 
         <main
           id="main-content"
-          className="mx-auto w-full min-w-0 max-w-[1280px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10"
+          className="relative mx-auto w-full min-w-0 max-w-[1280px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10 min-h-[calc(100vh-4rem)]"
         >
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <footer className="border-t border-line bg-surface px-4 py-5 text-center text-12 leading-5 text-ink-500 sm:px-6 lg:px-8">
-          Illustrative Smart India Hackathon prototype. All sample institutions are fictional.
-          Compliance thresholds and SLA values must be verified against the current AICTE Approval
-          Process Handbook.
+          Prototype: fictional data; norms from AICTE APH 2024-27; dates are demo values.
+          Thresholds and fees are illustrative configuration and must be verified against the
+          current handbook.
         </footer>
       </div>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <KeyboardShortcutsDialog
-        open={shortcutsOpen}
-        onOpenChange={setShortcutsOpen}
-        role={user.role}
-      />
+      {paletteOpen ? (
+        <Suspense fallback={null}>
+          <CommandPalette open onOpenChange={setPaletteOpen} />
+        </Suspense>
+      ) : null}
+      {shortcutsOpen ? (
+        <Suspense fallback={null}>
+          <KeyboardShortcutsDialog
+            open
+            onOpenChange={setShortcutsOpen}
+            role={user.role}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

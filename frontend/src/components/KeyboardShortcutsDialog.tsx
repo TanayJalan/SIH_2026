@@ -68,7 +68,7 @@ export default function KeyboardShortcutsDialog({
                     keys={
                       <>
                         <Kbd>{prefix}</Kbd>
-                        <span className="text-12 text-ink-300">then</span>
+                        <span className="text-12 text-ink-500">then</span>
                         <Kbd>{key}</Kbd>
                       </>
                     }
@@ -89,7 +89,7 @@ export default function KeyboardShortcutsDialog({
                 keys={
                   <>
                     <Kbd>⌘</Kbd>
-                    <span className="text-12 text-ink-300">/</span>
+                    <span className="text-12 text-ink-500">/</span>
                     <Kbd>Ctrl</Kbd>
                     <Kbd>K</Kbd>
                   </>

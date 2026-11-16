@@ -373,7 +373,7 @@ class ApplicationWorkspaceService:
         Only the owning institution administrator may replace a document. The
         replacement becomes version N+1, the old row is superseded but kept
         downloadable, verification resets to ``PENDING`` and the linked
-        deficiency is marked responded (APH 1.4.3, 1.8f, 2.4).
+        deficiency is marked responded (APH 1.4.3, 1.8, 2.4).
         """
         if (
             actor.role != Role.INSTITUTION_ADMIN
@@ -433,7 +433,14 @@ class ApplicationWorkspaceService:
                 RequiredDocument.doc_type == normalised_doc_type,
             )
         )
-        if rule is None:
+        if rule is not None:
+            doc_code = rule.doc_code
+        elif supersedes is not None:
+            # A document already uploaded stays replaceable even if the current
+            # checklist no longer lists its type (for example after a rule
+            # change). The replacement keeps the original code.
+            doc_code = supersedes.doc_code
+        else:
             raise DocumentUploadError(
                 422,
                 f"{normalised_doc_type} is not part of this application's document checklist",
@@ -453,7 +460,7 @@ class ApplicationWorkspaceService:
         if strict:
             errors = self._replacement_field_errors(
                 doc_type=normalised_doc_type,
-                doc_code=rule.doc_code,
+                doc_code=doc_code,
                 signed_with_dsc=signed_with_dsc,
                 signer_name=signer_name,
                 valid_until=valid_until,
@@ -489,7 +496,7 @@ class ApplicationWorkspaceService:
         if strict:
             verification_status = DocumentVerificationStatus.PENDING
             verification_reason_text = (
-                "Replacement received. Awaiting reviewer verification (APH 1.8g)."
+                "Replacement received. Awaiting reviewer verification (APH 1.8)."
             )
             verification_notes = {
                 "engine": "document-check-v1",
@@ -537,7 +544,7 @@ class ApplicationWorkspaceService:
             document = Document(
                 application_id=application.id,
                 doc_type=normalised_doc_type,
-                doc_code=rule.doc_code,
+                doc_code=doc_code,
                 signed_with_dsc=signed_with_dsc,
                 signer_name=signer_name,
                 valid_until=valid_until,
@@ -677,7 +684,7 @@ class ApplicationWorkspaceService:
         replacement: Document,
         deficiency: Deficiency | None,
     ) -> None:
-        """Record the replacement on the case timeline (APH 1.8f, 2.4)."""
+        """Record the replacement on the case timeline (APH 1.8, 2.4)."""
         self._db.add(
             WorkflowEvent(
                 application_id=application.id,

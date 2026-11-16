@@ -490,7 +490,7 @@ def _mirror_demo_documents(storage_dir: Path, paths: dict[str, str]) -> None:
     ``STORAGE_DIR`` is a Docker volume, so the browser's file picker on the
     host cannot see it. ``./backend`` is bind-mounted at ``/app``; a copy under
     ``backend/uploads/demo`` gives the presenter a valid replacement file to
-    re-upload when the demo asks the institution to comply (APH 1.8f, 2.4).
+    re-upload when the demo asks the institution to comply (APH 1.8, 2.4).
     """
     target_root = Path(__file__).resolve().parent.parent / "uploads"
     for relative in paths.values():
@@ -801,9 +801,9 @@ def _add_scenario_documents(
                 "path_key": "fire_safety_expired",
                 "status": DocumentVerificationStatus.REJECTED,
                 "rejection": DocumentRejectionReason.EXPIRED,
-                "comment": "Certificate expired on 2025-12-31 (APH 1.8f).",
+                "comment": "Certificate expired on 2025-12-31 (APH 1.8).",
                 "valid_until": _date_ago(90),
-                "clause": "APH 1.8f",
+                "clause": "APH 1.8",
             },
             {
                 "doc_type": "DSC_CERTIFICATE",
@@ -820,7 +820,7 @@ def _add_scenario_documents(
                 "path_key": "blank_scan",
                 "status": DocumentVerificationStatus.REJECTED,
                 "rejection": DocumentRejectionReason.UNREADABLE,
-                "comment": "Blank scan; resubmit a legible copy (APH 1.8f).",
+                "comment": "Blank scan; resubmit a legible copy (APH 1.8).",
             },
             {
                 "doc_type": "DSC_CERTIFICATE",
@@ -847,7 +847,7 @@ def _add_scenario_documents(
                 "doc_type": "AUDITED_STATEMENT",
                 "path_key": "audit_report",
                 "status": DocumentVerificationStatus.VERIFIED,
-                "clause": "APH 1.8d",
+                "clause": "APH 1.8",
             },
         ),
     }
@@ -1412,10 +1412,10 @@ def _seed_lor_appeal_scenario(
             paths=paths,
             status=DocumentVerificationStatus.REJECTED,
             rejection=DocumentRejectionReason.EXPIRED,
-            comment="Expired on 2025-12-31 (APH 1.8f).",
+            comment="Expired on 2025-12-31 (APH 1.8).",
             valid_until=_date_ago(90),
             deficiency_id=closed_row.id,
-            clause="APH 1.8f",
+            clause="APH 1.8",
             uploaded_at=_ago(140),
         )
         _add_document(
@@ -1495,7 +1495,7 @@ def _seed_deposit_penalty_scenario(
                 kind=FeeKind.PENALTY,
                 receipt_no=f"SD-PEN/{ACADEMIC_YEAR}/{str(app.id)[:8]}",
                 paid_at=None,
-                apH_clause="APH 6.46a",
+                apH_clause="APH 6.46",
                 needs_verification=True,
             )
         )
@@ -1503,7 +1503,7 @@ def _seed_deposit_penalty_scenario(
     app.data = {
         **(app.data or {}),
         "security_deposit_note": (
-            "Deposit proof not received by 31 May; a 20% penalty applies (APH 6.46a)."
+            "Deposit proof not received by 31 May; a 20% penalty applies (APH 6.46)."
         ),
     }
 
@@ -1537,7 +1537,7 @@ def _seed_excess_admission_scenario(
             is_anonymous=False,
             scsc_decision="SHOW_CAUSE",
             scsc_decided_on=_date_ago(140),
-            scsc_notes="SCSC found the complaint verified (APH 7.10c).",
+            scsc_notes="SCSC found the complaint verified (APH 7.10).",
             show_cause_issued_on=_date_ago(140),
             show_cause_due_on=_date_ago(125),
             show_cause_reply="The institution accepted that 18 extra students were admitted.",
@@ -1550,7 +1550,7 @@ def _seed_excess_admission_scenario(
                 "(APH 7.4g, 7.3b)."
             ),
             decided_on=_date_ago(90),
-            apH_clause="APH 7.10f",
+            apH_clause="APH 7.10",
         )
         db.add(complaint)
         db.flush()
@@ -1652,7 +1652,7 @@ def _seed_show_cause_scenario(
             scsc_notes="SCSC verified the complaint and issued a show-cause notice.",
             show_cause_issued_on=_date_ago(12),
             show_cause_due_on=_date_ago(-3),
-            apH_clause="APH 7.10d",
+            apH_clause="APH 7.10",
         )
         db.add(complaint)
         db.flush()
@@ -1671,7 +1671,7 @@ def _seed_show_cause_scenario(
                 scheduled_at=_ago(-7, hour=12),
                 selection_seed=f"demo-shc-{complaint.id}",
                 status=CommitteeStatus.SCHEDULED,
-                apH_clause="APH 7.10e",
+                apH_clause="APH 7.10",
             )
             db.add(committee)
             db.flush()
@@ -1702,7 +1702,7 @@ def _seed_show_cause_scenario(
             title="SHC hearing scheduled for a verified complaint",
             message=(
                 "A verified faculty-shortage complaint is listed for the SHC in seven "
-                "days. A show-cause reply is due from the institution (APH 7.10d-e)."
+                "days. A show-cause reply is due from the institution (APH 7.10)."
             ),
             dedupe_key=f"demo:shc:{complaint.id}",
             days_ago=1,
@@ -1716,7 +1716,7 @@ def _seed_show_cause_scenario(
         title="Show-cause notice: faculty shortage complaint",
         message=(
             "The Standing Complaint Scrutiny Committee issued a show-cause notice. "
-            f"Reply by {_date_ago(-3).isoformat()} (APH 7.10d)."
+            f"Reply by {_date_ago(-3).isoformat()} (APH 7.10)."
         ),
         dedupe_key=f"demo:showcause:{complaint.id}",
         escalation_level=1,
@@ -2130,11 +2130,11 @@ def _seed_bulk_complaints(
             complainant_verified=not anonymous,
             is_anonymous=anonymous,
             rejection_reason=(
-                "Anonymous complaint not processed (CVC guidance adopted by APH 7.10h)."
+                "Anonymous complaint not processed (CVC guidance adopted by APH 7.10)."
                 if anonymous
                 else None
             ),
-            rejection_clause="APH 7.10h" if anonymous else None,
+            rejection_clause="APH 7.10" if anonymous else None,
             apH_clause="APH 7.10",
         )
         db.add(complaint)
@@ -2269,7 +2269,7 @@ def _add_scenario_alerts(
             title="Security Deposit penalty of 20% applied",
             message=(
                 "The deposit proof was not received by 31 July, so a 20% penalty "
-                "applies (APH 6.46a)."
+                "applies (APH 6.46)."
             ),
             dedupe_key=f"demo:{key}:{app.id}",
             days_ago=3,

@@ -77,12 +77,18 @@ export default function ApplicationStatusTracker({
           );
         })}
       </ol>
-      <div className="flex justify-between text-12 uppercase tracking-[0.08em] text-ink-500">
+      <p className="text-11 text-ink-500 sm:hidden">
+        Stage {Math.min(displayIndex + 1, STAGES.length)} of {STAGES.length} ·{" "}
+        {STAGES[currentIndex]?.label ?? "Application"}
+      </p>
+      <div className="hidden grid-cols-6 gap-1 text-11 uppercase tracking-[0.04em] text-ink-500 sm:grid">
         {STAGES.map((stage, index) => (
           <span
             key={stage.key}
             className={cn(
-              "truncate",
+              "min-w-0 truncate text-center",
+              index === 0 && "text-left",
+              index === STAGES.length - 1 && "text-right",
               !isClosed && index === currentIndex && "font-semibold text-ink-700",
               index < displayIndex && "text-ok-strong",
             )}

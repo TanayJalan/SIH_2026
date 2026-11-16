@@ -80,7 +80,7 @@ export default function CaseDepositRelease({
       </div>
       <p className="mt-1 text-13 text-ink-500">
         Release needs clearances from PGRC, the Vigilance Cell and the grants cell; the NOC or
-        sanction order follows (APH 6.46b-d).
+        sanction order follows (APH 6.46).
       </p>
       <ul className="mt-4 space-y-3">
         {(query.data ?? []).map((deposit) => (
@@ -286,7 +286,7 @@ function DepositRow({
                 )
               }
             >
-              Request release (APH 6.46a)
+              Request release (APH 6.46)
             </Button>
           ) : null}
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/auth/AuthContext";
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/Toast";
 import { API_BASE_URL } from "@/lib/api";
 
 /** Query roots that depend on simulated time or alert delivery. */

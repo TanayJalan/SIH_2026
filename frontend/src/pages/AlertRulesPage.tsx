@@ -612,7 +612,7 @@ export default function AlertRulesPage() {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0}>
             <Table density="dense">
               <TableHeader>
                 <TableRow>
@@ -666,8 +666,8 @@ export default function AlertRulesPage() {
                         disabled={toggleMutation.isPending}
                         aria-label={
                           rule.is_active
-                            ? `Deactivate ${rule.name}`
-                            : `Activate ${rule.name}`
+                            ? `Active: deactivate ${rule.name}`
+                            : `Inactive: activate ${rule.name}`
                         }
                         title={
                           rule.is_active

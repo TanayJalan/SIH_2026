@@ -1,7 +1,7 @@
 """Security Deposit release endpoints (APH 6.46).
 
-The institution requests release and uploads the 6.46a documents; PGRC, the
-Vigilance Cell and the grants cell record clearances (6.46b); the Approval
+The institution requests release and uploads the 6.46 documents; PGRC, the
+Vigilance Cell and the grants cell record clearances (6.46); the Approval
 Bureau or Council issues the NOC/sanction order (6.46c-d). A deposit that is
 still unpaid cannot be released.
 """
@@ -98,7 +98,7 @@ def list_security_deposits(
 @router.post(
     "/applications/{application_id}/security-deposits/{deposit_id}/release-request",
     response_model=SecurityDepositRead,
-    summary="Request release of the Security Deposit (APH 6.46a)",
+    summary="Request release of the Security Deposit (APH 6.46)",
     dependencies=[Depends(require_roles(Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN))],
 )
 def create_release_request(
@@ -131,7 +131,7 @@ def create_release_request(
 @router.post(
     "/applications/{application_id}/security-deposits/{deposit_id}/clearance",
     response_model=SecurityDepositRead,
-    summary="Record a PGRC/Vigilance/grants clearance (APH 6.46b)",
+    summary="Record a PGRC/Vigilance/grants clearance (APH 6.46)",
     dependencies=[Depends(require_roles(*_CLEARANCE_ROLES))],
 )
 def create_clearance(
@@ -166,7 +166,7 @@ def create_clearance(
 @router.post(
     "/applications/{application_id}/security-deposits/{deposit_id}/release",
     response_model=SecurityDepositRead,
-    summary="Approve the release and record the NOC (APH 6.46c-d)",
+    summary="Approve the release and record the NOC (APH 6.46)",
     dependencies=[Depends(require_roles(*_APPROVE_ROLES))],
 )
 def approve_deposit_release(

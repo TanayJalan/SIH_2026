@@ -153,6 +153,18 @@ export default function CaseOverview({
 
   return (
     <div className="space-y-6">
+      <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
+        <h2 className="font-serif text-20 font-semibold text-ink">Case facts</h2>
+        <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-line pt-5 sm:grid-cols-2">
+          {facts.map((fact) => (
+            <Fact key={fact.label} {...fact} />
+          ))}
+        </dl>
+      </section>
+
+      {/* The flags come from the compliance preview, which resolves after the
+          case record. Keeping them below the facts means the block can arrive
+          without pushing already-painted facts and programmes around. */}
       {failedRules.length > 0 ? (
         <section
           aria-label="Anomaly flags"
@@ -180,15 +192,6 @@ export default function CaseOverview({
       ) : null}
 
       <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
-        <h2 className="font-serif text-20 font-semibold text-ink">Case facts</h2>
-        <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-line pt-5 sm:grid-cols-2">
-          {facts.map((fact) => (
-            <Fact key={fact.label} {...fact} />
-          ))}
-        </dl>
-      </section>
-
-      <section className="rounded-panel border border-line bg-surface p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="font-serif text-20 font-semibold text-ink">Programmes</h2>
           <span className="rounded-pill bg-paper px-2.5 py-1 text-12 text-ink-700">
@@ -200,7 +203,7 @@ export default function CaseOverview({
             No programmes recorded on this application.
           </p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-panel border border-line">
+          <div className="mt-4 overflow-x-auto rounded-panel border border-line" tabIndex={0}>
             <table className="w-full min-w-[480px] text-left text-13">
               <caption className="sr-only">Programmes applied for</caption>
               <thead>

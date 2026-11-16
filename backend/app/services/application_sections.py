@@ -394,7 +394,7 @@ def build_application_checklist(
                     section="Documents",
                     message=(
                         f"Replace {document.label}: {reason} "
-                        f"({document.apH_clause or 'APH 1.8f'})."
+                        f"({document.apH_clause or 'APH 1.8'})."
                     ),
                 )
             )
@@ -410,7 +410,7 @@ def build_application_checklist(
                     message=(
                         f"Replace {document.label} with a legible copy: "
                         f"{document.verification_reason or 'the document was flagged'} "
-                        "(APH 1.8f)."
+                        "(APH 1.8)."
                     ),
                 )
             )

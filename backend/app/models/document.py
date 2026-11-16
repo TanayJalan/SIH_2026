@@ -35,7 +35,7 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     Every upload is an immutable version. A reviewer may reject or flag a
     document; the institution then uploads a new version and the earlier row is
-    kept, marked ``superseded_by`` and still downloadable (APH 1.4.3, 1.8f).
+    kept, marked ``superseded_by`` and still downloadable (APH 1.4.3, 1.8).
     """
 
     __tablename__ = "documents"
@@ -110,7 +110,7 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     apH_clause: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    """APH clause for the review decision, for example ``APH 1.8f``."""
+    """APH clause for the review decision, for example ``APH 1.8``."""
     superseded_by: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("documents.id", ondelete="SET NULL"),

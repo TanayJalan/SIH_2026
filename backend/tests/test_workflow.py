@@ -1014,7 +1014,7 @@ def test_track_d_failed_closure_gets_zero_intake(
     workspace_applications: list[uuid.UUID],
     future_calendar: None,
 ) -> None:
-    """Track D: year-round closure decision, guards and zero intake (2.3.3h)."""
+    """Track D: year-round closure decision, guards and zero intake (2.21)."""
     application_id, admin = _create_and_submit(
         api_client,
         test_data,

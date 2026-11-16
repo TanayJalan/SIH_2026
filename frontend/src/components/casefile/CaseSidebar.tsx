@@ -192,13 +192,13 @@ function NextStepPanel({
   )?.apH_clause;
   return (
     <Panel title="Next step">
-      <dl className="space-y-3 text-13">
-        <div>
+      <div className="space-y-3 text-13">
+        <dl>
           <dt className="text-12 font-medium text-ink-500">What must happen</dt>
           <dd className="mt-0.5 font-medium text-ink">{primary.label}</dd>
-        </div>
+        </dl>
         <p className="text-12 leading-5 text-ink-700">{primary.description}</p>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line pt-3">
+        <dl className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line pt-3">
           <div>
             <dt className="text-12 font-medium text-ink-500">Owner</dt>
             <dd className="mt-0.5 text-ink">
@@ -213,18 +213,18 @@ function NextStepPanel({
                 : "No SLA clock running"}
             </dd>
           </div>
-        </div>
+        </dl>
         {transitionClause ? (
-          <div className="border-t border-line pt-3">
+          <dl className="border-t border-line pt-3">
             <dt className="text-12 font-medium text-ink-500">Clause</dt>
             <dd className="mt-0.5">
               <span className="rounded-pill bg-neutral-soft px-2 py-0.5 text-11 font-medium text-ink-700">
                 {transitionClause}
               </span>
             </dd>
-          </div>
+          </dl>
         ) : null}
-      </dl>
+      </div>
     </Panel>
   );
 }
@@ -281,13 +281,15 @@ function RiskExplanationPanel({
       <ul className="mt-2 space-y-2">
         {explanation.factors.map((factor) => (
           <li key={factor.code}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-12 font-medium text-ink">
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-12 font-medium text-ink">
                 {factor.name}
               </span>
-              <StatusPill status={SEVERITY_PILL_TONE[factor.severity]}>
-                {factor.severity}
-              </StatusPill>
+              <span className="shrink-0">
+                <StatusPill status={SEVERITY_PILL_TONE[factor.severity]}>
+                  {factor.severity}
+                </StatusPill>
+              </span>
             </div>
             <div
               role="img"
@@ -344,7 +346,7 @@ function DocumentWaitingPanel({
         Waiting for the institution to re-upload {outstanding.length}{" "}
         {outstanding.length === 1 ? "document" : "documents"}
         {due ? ` (due ${formatDate(due)}` : " ("}
-        {due ? ", APH 1.8f / 2.4)" : "APH 1.8f / 2.4)"}.
+        {due ? ", APH 1.8 / 2.4)" : "APH 1.8 / 2.4)"}.
       </p>
       <dl className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line pt-3 text-13">
         <div>
@@ -523,19 +525,33 @@ export default function CaseSidebar({
 
   return (
     <aside className="min-w-0 space-y-6 self-start xl:sticky xl:top-6">
-      <NextStepPanel application={application} actions={sortedActions} definition={definition} />
-      <DocumentWaitingPanel applicationId={application.id} token={token} />
+      {/* Risk first: its skeleton already reserves its own height, and the
+          panels whose content arrives later sit below it, so a late document
+          or action list cannot push the visible risk summary down. */}
       <RiskExplanationPanel
         explanation={explanation}
         pending={complianceQuery.isPending}
         errorText={errorText}
       />
-      <WhyThisDecisionPanel
-        application={application}
-        events={events}
-        definition={definition}
-      />
-      <RelatedAlerts applicationId={application.id} token={token} />
+      {/* The risk panel grows from a short skeleton to a long list of failed
+          rules. Mounting the panels below only after that read settles keeps
+          them from being pushed hundreds of pixels on a cold load. */}
+      {complianceQuery.isPending ? null : (
+        <>
+          <NextStepPanel
+            application={application}
+            actions={sortedActions}
+            definition={definition}
+          />
+          <DocumentWaitingPanel applicationId={application.id} token={token} />
+          <WhyThisDecisionPanel
+            application={application}
+            events={events}
+            definition={definition}
+          />
+          <RelatedAlerts applicationId={application.id} token={token} />
+        </>
+      )}
     </aside>
   );
 }

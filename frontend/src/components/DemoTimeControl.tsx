@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, Check, Clock3, RotateCcw } from "lucide-react";
 
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "../auth/AuthContext";
 import {
   ApiError,
@@ -95,7 +95,7 @@ export default function DemoTimeControl() {
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Demo time controls, simulated date ${formatDate(time.simulated_now)}`}
+        aria-label={`Demo time ${formatDate(time.simulated_now)} controls`}
         title={`Demo time · ${formatDate(time.simulated_now)}`}
         className={cn(
           "inline-flex h-9 items-center gap-2 rounded-input border border-dashed border-line px-2.5 text-12 font-medium text-ink-700 transition-colors hover:border-ink-300 hover:bg-paper",
@@ -103,7 +103,7 @@ export default function DemoTimeControl() {
         )}
       >
         <Clock3 aria-hidden="true" className="size-3.5" />
-        <span className="hidden sm:inline">Demo time</span>
+        <span className="hidden sm:inline">Demo time</span>{" "}
         <span className="hidden text-ink-500 xl:inline">{formatDate(time.simulated_now)}</span>
       </button>
 

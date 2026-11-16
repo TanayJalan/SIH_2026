@@ -975,7 +975,7 @@ export function WorkflowDialogHost({
                 />
                 <span>
                   The linked closure did not succeed; grant the extension with zero
-                  approved intake (APH 2.3.3h).
+                  approved intake (APH 2.21).
                 </span>
               </label>
             ) : null}

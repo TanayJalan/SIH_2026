@@ -30,6 +30,7 @@ export function Table({
           "relative w-full overflow-auto rounded-panel border border-line bg-surface",
           containerClassName,
         )}
+        tabIndex={0}
       >
         <table
           className={cn(

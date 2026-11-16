@@ -2086,7 +2086,12 @@ export default function ApplicationWizardPage() {
           <div className="xl:hidden">{renderCompliancePanel()}</div>
         </div>
 
-        <aside className="hidden min-w-0 xl:sticky xl:top-24 xl:block xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:pr-1">
+        <aside
+          tabIndex={0}
+          role="region"
+          aria-label="Compliance summary"
+          className="hidden min-w-0 xl:sticky xl:top-24 xl:block xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:pr-1"
+        >
           {renderCompliancePanel()}
         </aside>
       </div>

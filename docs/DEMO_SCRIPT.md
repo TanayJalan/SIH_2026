@@ -80,7 +80,7 @@ Point at the footer/disclaimer, then go to **Window A**.
 
 5. **Documents** tab. Two flags are already there:
    - `fire_safety_certificate_expired.pdf` — **REJECTED**, reason `EXPIRED`,
-     clause `APH 1.8f`.
+     clause `APH 1.8`.
    - `dsc_certificate_unsigned.pdf` — **FLAGGED**, reason `NO_DSC`,
      clause `APH 1.4.3`.
 6. **Compliance** tab. Every row shows requirement, observed value, severity,
@@ -145,7 +145,7 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
    **Draft deficiency** — the dialog opens pre-filled with the rule's category
    and message.
 3. Add a second deficiency with **Add another deficiency** (category
-   *Documents*, e.g. "Upload the digitally signed DSC certificate, APH 2.3.4a")
+   *Documents*, e.g. "Upload the digitally signed DSC certificate, APH 1.4.3")
    and set a due date 15 days out.
 4. Submit. The action is **Communicate deficiencies (LoD)**: status moves
    `SCRUTINY → DEFICIENCY_COMMUNICATED` through the state machine, the
@@ -163,7 +163,7 @@ Review step before submission. It is demoed live in Appendix A if time allows.)*
 
 1. Refresh. The dashboard's **Open deficiencies** block counts the new items,
    and the sidebar offers **Submit compliance** — but the action stays blocked
-   until the rejected document is replaced (`documents_reuploaded`, APH 1.8f).
+   until the rejected document is replaced (`documents_reuploaded`, APH 1.8).
 2. Open the case → **Documents** → **Fire Safety Certificate** → **Re-upload**.
    Choose `backend/uploads/demo/fire_safety_certificate_valid.pdf` (the seed
    writes the sample PDFs there for the host file picker), tick **digitally

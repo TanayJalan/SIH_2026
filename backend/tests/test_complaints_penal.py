@@ -3,7 +3,7 @@
 Covers the four guards the acceptance criteria name:
 
 * the appeal window and the one-appeal rule (APH 1.11a);
-* complaint anonymity auto-rejection with the CVC reason (APH 7.10h);
+* complaint anonymity auto-rejection with the CVC reason (APH 7.10);
 * the hearing-before-action guard (APH 6.50h proviso);
 * the excess-admission fine of five times the total course fee (APH 7.3g).
 """
@@ -118,7 +118,7 @@ def test_only_one_appeal_is_permitted(test_data: TestData) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Complaint anonymity (APH 7.10h)
+# Complaint anonymity (APH 7.10)
 # ---------------------------------------------------------------------------
 
 
@@ -147,7 +147,7 @@ def test_anonymous_complaint_is_rejected_with_the_cvc_reason(
     body = response.json()
     assert body["status"] == "RECEIVED"
     assert body["is_anonymous"] is True
-    assert body["rejection_clause"] == "APH 7.10h"
+    assert body["rejection_clause"] == "APH 7.10"
     assert "CVC" in body["rejection_reason"]
     assert body["complainant_verified"] is False
 
@@ -155,7 +155,7 @@ def test_anonymous_complaint_is_rejected_with_the_cvc_reason(
     verifier = _auth_headers(api_client, test_data, "complaints")
     verify = api_client.post(f"/complaints/{body['id']}/verify", headers=verifier, json={})
     assert verify.status_code == 400
-    assert "APH 7.10h" in verify.json()["detail"]
+    assert "APH 7.10" in verify.json()["detail"]
 
     with SessionLocal() as db:
         db.execute(delete(PenalAction).where(PenalAction.complaint_id == uuid.UUID(body["id"])))
@@ -504,7 +504,7 @@ def test_demo_case_runs_complaint_to_restoration(
             headers=ec,
             json={
                 "decision": "PENAL_ACTION",
-                "speaking_order": "Fictional detailed Speaking Order (APH 7.10g).",
+                "speaking_order": "Fictional detailed Speaking Order (APH 7.10).",
             },
         )
         assert ec_decision.status_code == 200, ec_decision.text
@@ -576,7 +576,7 @@ def test_demo_case_runs_complaint_to_restoration(
 def test_deposit_release_waits_for_every_clearance(
     api_client: TestClient, test_data: TestData
 ) -> None:
-    """The NOC needs PGRC, Vigilance and grants clearance first (APH 6.46b-d)."""
+    """The NOC needs PGRC, Vigilance and grants clearance first (APH 6.46)."""
 
     application_id = test_data.applications["west"]
     with SessionLocal() as db:

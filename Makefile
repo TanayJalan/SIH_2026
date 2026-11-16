@@ -38,6 +38,7 @@ coverage:
 		--cov=app.services.workflow_catalogue \
 		--cov=app.services.compliance \
 		--cov=app.services.compliance_calculators \
+		--cov=app.services.eligibility_advisor \
 		--cov=app.services.alert_engine \
 		--cov=app.services.alert_triggers \
 		--cov=app.services.fee_calculator \

@@ -6,7 +6,7 @@ import type {
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** Institution-facing wording for the reviewer's reason code (APH 1.8f). */
+/** Institution-facing wording for the reviewer's reason code (APH 1.8). */
 export const REJECTION_REASON_LABELS: Record<DocumentRejectionReason, string> = {
   UNREADABLE: "Unreadable scan",
   NO_DSC: "Not digitally signed",
@@ -47,7 +47,7 @@ interface DocumentStatusChipProps {
  *
  * It shows the verification status plus, when a reviewer rejected the file, the
  * controlled reason code, their comment and the APH clause so the institution
- * knows exactly what to replace (APH 1.8f, 1.8g).
+ * knows exactly what to replace (APH 1.8).
  */
 export default function DocumentStatusChip({
   status,

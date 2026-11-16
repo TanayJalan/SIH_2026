@@ -6072,7 +6072,7 @@
         "type": "object"
       },
       "DepositReleaseApproveRequest": {
-        "description": "Approve the release with the NOC number (APH 6.46c-d).",
+        "description": "Approve the release with the NOC number (APH 6.46).",
         "properties": {
           "noc_number": {
             "maxLength": 64,
@@ -6100,7 +6100,7 @@
         "type": "object"
       },
       "DepositReleaseRequest": {
-        "description": "Institution request to release the Security Deposit (APH 6.46a).",
+        "description": "Institution request to release the Security Deposit (APH 6.46).",
         "properties": {
           "requested_on": {
             "anyOf": [
@@ -6157,7 +6157,7 @@
         "type": "object"
       },
       "DocumentRead": {
-        "description": "Metadata for one uploaded document version.\n\nRejection fields and ``allowed_actions`` drive the reviewer and institution\nUI: only a document the server says may be rejected or replaced shows the\ncorresponding button (APH 1.8f, 2.4).",
+        "description": "Metadata for one uploaded document version.\n\nRejection fields and ``allowed_actions`` drive the reviewer and institution\nUI: only a document the server says may be rejected or replaced shows the\ncorresponding button (APH 1.8, 2.4).",
         "properties": {
           "allowed_actions": {
             "items": {
@@ -6476,7 +6476,7 @@
         "type": "object"
       },
       "DocumentRejectionReason": {
-        "description": "Reason a reviewer rejected a document (APH 1.8f, 1.8g).\n\nThe vocabulary is stored on the document and copied into the linked\ndeficiency so the institution knows exactly what to replace.",
+        "description": "Reason a reviewer rejected a document (APH 1.8).\n\nThe vocabulary is stored on the document and copied into the linked\ndeficiency so the institution knows exactly what to replace.",
         "enum": [
           "UNREADABLE",
           "NO_DSC",
@@ -6542,7 +6542,7 @@
         "type": "object"
       },
       "EcDecisionRequest": {
-        "description": "EC decision with its Speaking Order (APH 7.10f-g).",
+        "description": "EC decision with its Speaking Order (APH 7.10).",
         "properties": {
           "decided_on": {
             "anyOf": [
@@ -6573,6 +6573,179 @@
         ],
         "title": "EcDecisionRequest",
         "type": "object"
+      },
+      "EligibilityAdvisorRead": {
+        "description": "All five route verdicts for the signed-in institution.",
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "institution_id": {
+            "format": "uuid",
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "institution_name": {
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/EligibilityRouteRead"
+            },
+            "title": "Routes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "institution_id",
+          "institution_name",
+          "as_of"
+        ],
+        "title": "EligibilityAdvisorRead",
+        "type": "object"
+      },
+      "EligibilityCriterionRead": {
+        "description": "One test of one route, with the value observed and what would fix it.",
+        "properties": {
+          "apH_clause": {
+            "title": "Aph Clause",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed"
+          },
+          "required": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EligibilityStatus"
+          },
+          "suggestion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestion"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "apH_clause",
+          "status",
+          "detail"
+        ],
+        "title": "EligibilityCriterionRead",
+        "type": "object"
+      },
+      "EligibilityRouteRead": {
+        "description": "The verdict for one approval route.",
+        "properties": {
+          "apH_clause": {
+            "title": "Aph Clause",
+            "type": "string"
+          },
+          "application_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Type"
+          },
+          "code": {
+            "$ref": "#/components/schemas/RouteCode"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/EligibilityCriterionRead"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EligibilityStatus"
+          },
+          "suggestions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "apH_clause",
+          "status",
+          "summary"
+        ],
+        "title": "EligibilityRouteRead",
+        "type": "object"
+      },
+      "EligibilityStatus": {
+        "description": "Outcome of one eligibility criterion.",
+        "enum": [
+          "PASS",
+          "FAIL",
+          "UNKNOWN"
+        ],
+        "title": "EligibilityStatus",
+        "type": "string"
       },
       "ErrorResponse": {
         "description": "Standard error payload.",
@@ -8254,7 +8427,7 @@
         "type": "object"
       },
       "PenalActionIssueRequest": {
-        "description": "Issue the action after its hearing (APH 6.50h, 7.10g).",
+        "description": "Issue the action after its hearing (APH 6.50h, 7.10).",
         "properties": {
           "issued_on": {
             "anyOf": [
@@ -9183,6 +9356,18 @@
         "title": "Role",
         "type": "string"
       },
+      "RouteCode": {
+        "description": "The five approval routes the advisor covers.",
+        "enum": [
+          "EXTENDED_EOA",
+          "FN_OCI",
+          "OFF_CAMPUS",
+          "WORKING_PROFESSIONAL",
+          "TFW"
+        ],
+        "title": "RouteCode",
+        "type": "string"
+      },
       "RouteDocumentRead": {
         "description": "One required/conditional document for the selected type.",
         "properties": {
@@ -9321,7 +9506,7 @@
         "type": "object"
       },
       "ScscDecisionRequest": {
-        "description": "SCSC recommendation (APH 7.10c).",
+        "description": "SCSC recommendation (APH 7.10).",
         "properties": {
           "decided_on": {
             "anyOf": [
@@ -9909,7 +10094,7 @@
         "type": "object"
       },
       "ShcHearingRequest": {
-        "description": "SHC hearing record (APH 7.10d-e).",
+        "description": "SHC hearing record (APH 7.10).",
         "properties": {
           "findings": {
             "minLength": 1,
@@ -9930,7 +10115,7 @@
         "type": "object"
       },
       "ShowCauseReplyRequest": {
-        "description": "Institution reply to a show-cause notice (APH 7.10d).",
+        "description": "Institution reply to a show-cause notice (APH 7.10).",
         "properties": {
           "replied_on": {
             "anyOf": [
@@ -13285,7 +13470,7 @@
     },
     "/applications/{application_id}/documents": {
       "get": {
-        "description": "Return every uploaded version, newest document type first.\n\n``only_to_recheck`` is the Re-Scrutiny view: it keeps only the latest version\nof each type that a reviewer rejected or that the institution re-uploaded and\nis waiting for verification (APH 1.8g).",
+        "description": "Return every uploaded version, newest document type first.\n\n``only_to_recheck`` is the Re-Scrutiny view: it keeps only the latest version\nof each type that a reviewer rejected or that the institution re-uploaded and\nis waiting for verification (APH 1.8).",
         "operationId": "list_documents_applications__application_id__documents_get",
         "parameters": [
           {
@@ -13616,7 +13801,7 @@
     },
     "/applications/{application_id}/documents/{document_id}/reject": {
       "post": {
-        "description": "Reject one document, link a deficiency and notify the institution (APH 1.8f).",
+        "description": "Reject one document, link a deficiency and notify the institution (APH 1.8).",
         "operationId": "reject_document_applications__application_id__documents__document_id__reject_post",
         "parameters": [
           {
@@ -13834,7 +14019,7 @@
     },
     "/applications/{application_id}/documents/{document_id}/verify": {
       "post": {
-        "description": "Verify a replacement so Re-Scrutiny can close the listed deficiency (APH 1.8g).",
+        "description": "Verify a replacement so Re-Scrutiny can close the listed deficiency (APH 1.8).",
         "operationId": "verify_document_applications__application_id__documents__document_id__verify_post",
         "parameters": [
           {
@@ -15160,7 +15345,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record a PGRC/Vigilance/grants clearance (APH 6.46b)",
+        "summary": "Record a PGRC/Vigilance/grants clearance (APH 6.46)",
         "tags": [
           "security deposits"
         ]
@@ -15228,7 +15413,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Approve the release and record the NOC (APH 6.46c-d)",
+        "summary": "Approve the release and record the NOC (APH 6.46)",
         "tags": [
           "security deposits"
         ]
@@ -15296,7 +15481,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Request release of the Security Deposit (APH 6.46a)",
+        "summary": "Request release of the Security Deposit (APH 6.46)",
         "tags": [
           "security deposits"
         ]
@@ -16089,7 +16274,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record a complaint, auto-rejecting anonymous ones (APH 7.10h)",
+        "summary": "Record a complaint, auto-rejecting anonymous ones (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -16097,7 +16282,7 @@
     },
     "/complaints/catalogue": {
       "get": {
-        "description": "Return the visible complaint steps and the APH 7.10h rule.",
+        "description": "Return the visible complaint steps and the APH 7.10 rule.",
         "operationId": "complaint_catalogue_complaints_catalogue_get",
         "responses": {
           "200": {
@@ -16222,7 +16407,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record the EC decision and Speaking Order (APH 7.10f-g)",
+        "summary": "Record the EC decision and Speaking Order (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -16388,7 +16573,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record the SCSC decision (APH 7.10c)",
+        "summary": "Record the SCSC decision (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -16446,7 +16631,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record the SHC hearing and findings (APH 7.10d-e)",
+        "summary": "Record the SHC hearing and findings (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -16504,7 +16689,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Record the institution's show-cause reply (APH 7.10d)",
+        "summary": "Record the institution's show-cause reply (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -16552,7 +16737,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Verify the complaint and place it before the SCSC (APH 7.10c)",
+        "summary": "Verify the complaint and place it before the SCSC (APH 7.10)",
         "tags": [
           "complaints"
         ]
@@ -17462,6 +17647,53 @@
         "summary": "Advance or reset the DEBUG-only simulated clock",
         "tags": [
           "development"
+        ]
+      }
+    },
+    "/eligibility/advisor": {
+      "get": {
+        "description": "Return the five route verdicts and the evidence behind each one.\n\nThe reference date comes from the simulated clock so the NBA validity test\n(APH 2.1a(iii), 2.11a(iii)) and years of existence (APH 2.11a) move with the\ndemo time control.",
+        "operationId": "read_advisor_eligibility_advisor_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EligibilityAdvisorRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Eligibility advisor for the signed-in institution",
+        "tags": [
+          "eligibility"
         ]
       }
     },

@@ -201,7 +201,7 @@ def compute_committee_charge(
     base_academic_year: str,
     target_academic_year: str,
     annual_increase_pct: Decimal | int | float,
-    apH_clause: str = "APH 2.1 note",
+    apH_clause: str = "APH Table 2.1",
     needs_verification: bool = False,
 ) -> FeeLine:
     """Price an additional Scrutiny/SHC/SAC or EVC charge (flat per sitting)."""

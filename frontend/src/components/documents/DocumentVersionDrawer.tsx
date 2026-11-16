@@ -34,7 +34,7 @@ interface DocumentVersionDrawerProps {
  * Every version of one document, newest first.
  *
  * Earlier files stay downloadable after a replacement so Re-Scrutiny can compare
- * the rejected version with its replacement (APH 1.4.3, 1.8g).
+ * the rejected version with its replacement (APH 1.4.3, 1.8).
  */
 export default function DocumentVersionDrawer({
   open,

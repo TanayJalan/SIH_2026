@@ -68,7 +68,7 @@ function StatValue({
 }: StatValueProps) {
   if (value === null) {
     return (
-      <span className="font-serif text-40 leading-none text-ink-300">
+      <span className="font-serif text-40 leading-none text-ink-500">
         <span aria-hidden="true">—</span>
         <span className="sr-only">{unavailableLabel}</span>
       </span>
@@ -388,7 +388,7 @@ export default function LoginPage() {
         <div className="flex flex-col gap-2 px-6 py-5 text-12 text-ink-500 sm:flex-row sm:items-center sm:gap-5 sm:px-10 lg:px-14 xl:px-20">
           <span className="font-medium text-ink">AICTE Approval Workflow</span>
           <span className="sm:border-l sm:border-line sm:pl-5">
-            Prototype for Smart India Hackathon
+            Prototype: fictional data; norms from AICTE APH 2024-27; dates are demo values.
           </span>
           <a
             href={`${API_BASE_URL}/docs`}

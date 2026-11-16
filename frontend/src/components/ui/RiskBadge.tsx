@@ -35,7 +35,7 @@ export function RiskBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-input px-2 py-0.5 text-12 font-medium",
+        "inline-flex items-center whitespace-nowrap rounded-input px-2 py-0.5 text-12 font-medium",
         style.className,
         className,
       )}

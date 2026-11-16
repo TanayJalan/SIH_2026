@@ -273,8 +273,8 @@ function IntakeForm({
             : "Complaint recorded",
         description:
           complaint.status === "RECEIVED"
-            ? complaint.rejection_reason ?? "Anonymous complaints are not processed (APH 7.10h)."
-            : "PGRC will verify the complaint before it goes to the SCSC (APH 7.10b-c).",
+            ? complaint.rejection_reason ?? "Anonymous complaints are not processed (APH 7.10)."
+            : "PGRC will verify the complaint before it goes to the SCSC (APH 7.10).",
         variant: complaint.status === "RECEIVED" ? "error" : "success",
       });
     },
@@ -301,7 +301,7 @@ function IntakeForm({
       <h3 className="text-13 font-semibold text-ink">Record a complaint</h3>
       <p className="mt-1 text-12 leading-5 text-ink-500">
         {catalogue?.anonymity_reason ??
-          "Anonymous and pseudonymous complaints are not processed (APH 7.10h)."}
+          "Anonymous and pseudonymous complaints are not processed (APH 7.10)."}
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Select
@@ -348,7 +348,7 @@ function IntakeForm({
       </div>
       {error ? <p className="mt-2 text-13 text-breach-strong">{error}</p> : null}
       <div className="mt-3 flex items-center justify-between gap-3">
-        <Clause text={catalogue?.anonymity_clause ?? "APH 7.10h"} />
+        <Clause text={catalogue?.anonymity_clause ?? "APH 7.10"} />
         <Button onClick={submit} disabled={mutation.isPending}>
           {mutation.isPending ? "Recording…" : "Record complaint"}
         </Button>
@@ -469,7 +469,7 @@ function ComplaintCard({
             <div className="mt-3 rounded-input border border-line bg-surface p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusPill status="compliant">{humanizeEnum(complaint.ec_decision)}</StatusPill>
-                <Clause text="APH 7.10g" />
+                <Clause text="APH 7.10" />
                 {complaint.decided_on ? (
                   <span className="text-12 text-ink-500">Decided {formatDate(complaint.decided_on)}</span>
                 ) : null}
@@ -550,7 +550,7 @@ function ScscForm({
     <div className="mt-3 rounded-input border border-line bg-surface p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="text-13 font-semibold text-ink">SCSC decision</h4>
-        <Clause text="APH 7.10c" />
+        <Clause text="APH 7.10" />
       </div>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[200px_1fr]">
         <Select
@@ -607,7 +607,7 @@ function ShowCauseForm({
     <div className="mt-3 rounded-input border border-watch bg-watch-soft p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="text-13 font-semibold text-ink">Show-cause reply</h4>
-        <Clause text="APH 7.10d" />
+        <Clause text="APH 7.10" />
         {dueOn ? (
           <StatusPill status={dueIn !== null && dueIn < 0 ? "breach" : "watch"}>
             {dueIn === null
@@ -664,7 +664,7 @@ function ShcForm({
     <div className="mt-3 rounded-input border border-line bg-surface p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="text-13 font-semibold text-ink">SHC hearing record</h4>
-        <Clause text="APH 7.10d-e" />
+        <Clause text="APH 7.10" />
       </div>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[180px_1fr]">
         <Input
@@ -714,7 +714,7 @@ function EcForm({
     <div className="mt-3 rounded-input border border-line bg-surface p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="text-13 font-semibold text-ink">Executive Committee decision</h4>
-        <Clause text="APH 7.10f-g" />
+        <Clause text="APH 7.10" />
       </div>
       <div className="mt-2">
         <Select

@@ -111,7 +111,7 @@ flowchart TD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_loa"| S_FINAL_LOA
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lod"| S_FINAL_LOD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lor"| S_FINAL_LOR
-    S_SAC_REVIEW -->|"send_back<br/>APH 1.11c<br/>if appeal_loop_available"| S_EVC_CONSTITUTED
+    S_SAC_REVIEW -->|"send_back<br/>APH 1.11<br/>if appeal_loop_available"| S_EVC_CONSTITUTED
     S_SAC_REVIEW -->|"sac_recommend<br/>APH 1.11d"| S_COUNCIL_FINAL
     S_COUNCIL_FINAL -->|"council_final<br/>APH 1.11e"| S_REGIONAL_ENDORSEMENT
     S_REGIONAL_ENDORSEMENT -->|"endorse_decision<br/>APH 1.11e<br/>if final_outcome_loa"| S_FINAL_LOA
@@ -160,7 +160,7 @@ flowchart TD
 | LOD_ISSUED | DECISION |  |  | APH 2.23.3 |
 | LOR_ISSUED | DECISION |  |  | APH 1.10 |
 | APPEAL_WINDOW | DECISION |  |  | APH 1.11a |
-| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11c |
+| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11 |
 | COUNCIL_FINAL | DECISION |  |  | APH 1.11e |
 | REGIONAL_ENDORSEMENT | COMMITTEE_REVIEW |  |  | APH 1.11e |
 | FINAL_LOA | COMPLETED |  |  | APH 1.10b |
@@ -207,7 +207,7 @@ flowchart TD
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOA | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_loa | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOD | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lod | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOR | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lor | APH 1.11a |
-| SAC_REVIEW | send_back | EVC_CONSTITUTED | SAC_MEMBER | appeal_loop_available | APH 1.11c |
+| SAC_REVIEW | send_back | EVC_CONSTITUTED | SAC_MEMBER | appeal_loop_available | APH 1.11 |
 | SAC_REVIEW | sac_recommend | COUNCIL_FINAL | SAC_MEMBER | — | APH 1.11d |
 | COUNCIL_FINAL | council_final | REGIONAL_ENDORSEMENT | EXECUTIVE_COMMITTEE_MEMBER | — | APH 1.11e |
 | REGIONAL_ENDORSEMENT | endorse_decision | FINAL_LOA | REGIONAL_OFFICER | final_outcome_loa | APH 1.11e |
@@ -285,7 +285,7 @@ flowchart TD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_loa"| S_FINAL_LOA
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lod"| S_FINAL_LOD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lor"| S_FINAL_LOR
-    S_SAC_REVIEW -->|"send_back<br/>APH 1.11c<br/>if appeal_loop_available"| S_SELF_DISCLOSURE_CHECK
+    S_SAC_REVIEW -->|"send_back<br/>APH 1.11<br/>if appeal_loop_available"| S_SELF_DISCLOSURE_CHECK
     S_SAC_REVIEW -->|"sac_recommend<br/>APH 1.11d"| S_COUNCIL_FINAL
     S_COUNCIL_FINAL -->|"council_final<br/>APH 1.11e"| S_REGIONAL_ENDORSEMENT
     S_REGIONAL_ENDORSEMENT -->|"endorse_decision<br/>APH 1.11e<br/>if final_outcome_loa"| S_FINAL_LOA
@@ -314,7 +314,7 @@ flowchart TD
 | ACTIVE_EOA | COMPLETED |  | yes | APH 2.25 |
 | SPEAKING_ORDER | DECISION |  |  | APH 2.24a |
 | APPEAL_WINDOW | DECISION |  |  | APH 1.11a |
-| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11c |
+| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11 |
 | COUNCIL_FINAL | DECISION |  |  | APH 1.11e |
 | REGIONAL_ENDORSEMENT | COMMITTEE_REVIEW |  |  | APH 1.11e |
 | FINAL_LOA | COMPLETED |  |  | APH 1.10b |
@@ -346,7 +346,7 @@ flowchart TD
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOA | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_loa | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOD | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lod | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOR | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lor | APH 1.11a |
-| SAC_REVIEW | send_back | SELF_DISCLOSURE_CHECK | SAC_MEMBER | appeal_loop_available | APH 1.11c |
+| SAC_REVIEW | send_back | SELF_DISCLOSURE_CHECK | SAC_MEMBER | appeal_loop_available | APH 1.11 |
 | SAC_REVIEW | sac_recommend | COUNCIL_FINAL | SAC_MEMBER | — | APH 1.11d |
 | COUNCIL_FINAL | council_final | REGIONAL_ENDORSEMENT | EXECUTIVE_COMMITTEE_MEMBER | — | APH 1.11e |
 | REGIONAL_ENDORSEMENT | endorse_decision | FINAL_LOA | REGIONAL_OFFICER | final_outcome_loa | APH 1.11e |
@@ -412,7 +412,7 @@ flowchart TD
     S_REGULATION_BUREAU_OBSERVATIONS -->|"list_for_ec<br/>APH 1.10a<br/>if route_not_requires_hearing"| S_EC_LISTING
     S_SHC_HEARING -->|"list_for_ec<br/>APH 2.23.3"| S_EC_LISTING
     S_EC_LISTING -->|"list_for_ec<br/>APH 2.25"| S_EC_DECISION
-    S_EC_DECISION -->|"ec_decide<br/>APH 2.6e<br/>if decision_eoa, core_branches_ok, eoa_before_last_date, no_pending_investigation, ec_quorum_met"| S_EOA_ISSUED
+    S_EC_DECISION -->|"ec_decide<br/>APH 2.6<br/>if decision_eoa, core_branches_ok, eoa_before_last_date, no_pending_investigation, ec_quorum_met"| S_EOA_ISSUED
     S_EC_DECISION -->|"ec_decide<br/>APH 2.24a<br/>if decision_lor, speaking_order_present, ec_quorum_met"| S_SPEAKING_ORDER
     S_EOA_ISSUED -->|"issue_eoa<br/>APH 2.25"| S_ACTIVE_EOA
     S_SPEAKING_ORDER -->|"issue_lor<br/>APH 2.24a<br/>if no_prior_appeal, speaking_order_present"| S_APPEAL_WINDOW
@@ -422,7 +422,7 @@ flowchart TD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_loa"| S_FINAL_LOA
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lod"| S_FINAL_LOD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lor"| S_FINAL_LOR
-    S_SAC_REVIEW -->|"send_back<br/>APH 1.11c<br/>if appeal_loop_available"| S_EVC_CONSTITUTED
+    S_SAC_REVIEW -->|"send_back<br/>APH 1.11<br/>if appeal_loop_available"| S_EVC_CONSTITUTED
     S_SAC_REVIEW -->|"sac_recommend<br/>APH 1.11d"| S_COUNCIL_FINAL
     S_COUNCIL_FINAL -->|"council_final<br/>APH 1.11e"| S_REGIONAL_ENDORSEMENT
     S_REGIONAL_ENDORSEMENT -->|"endorse_decision<br/>APH 1.11e<br/>if final_outcome_loa"| S_FINAL_LOA
@@ -466,7 +466,7 @@ flowchart TD
 | ACTIVE_EOA | COMPLETED |  | yes | APH 2.25 |
 | SPEAKING_ORDER | DECISION |  |  | APH 2.24a |
 | APPEAL_WINDOW | DECISION |  |  | APH 1.11a |
-| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11c |
+| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11 |
 | COUNCIL_FINAL | DECISION |  |  | APH 1.11e |
 | REGIONAL_ENDORSEMENT | COMMITTEE_REVIEW |  |  | APH 1.11e |
 | FINAL_LOA | COMPLETED |  |  | APH 1.10b |
@@ -497,7 +497,7 @@ flowchart TD
 | REGULATION_BUREAU_OBSERVATIONS | list_for_ec | EC_LISTING | REGULATION_BUREAU_OFFICER | route_not_requires_hearing | APH 1.10a |
 | SHC_HEARING | list_for_ec | EC_LISTING | SHC_MEMBER | — | APH 2.23.3 |
 | EC_LISTING | list_for_ec | EC_DECISION | REGULATION_BUREAU_OFFICER | — | APH 2.25 |
-| EC_DECISION | ec_decide | EOA_ISSUED | EXECUTIVE_COMMITTEE_MEMBER | decision_eoa, core_branches_ok, eoa_before_last_date, no_pending_investigation, ec_quorum_met | APH 2.6e |
+| EC_DECISION | ec_decide | EOA_ISSUED | EXECUTIVE_COMMITTEE_MEMBER | decision_eoa, core_branches_ok, eoa_before_last_date, no_pending_investigation, ec_quorum_met | APH 2.6 |
 | EC_DECISION | ec_decide | SPEAKING_ORDER | EXECUTIVE_COMMITTEE_MEMBER | decision_lor, speaking_order_present, ec_quorum_met | APH 2.24a |
 | EOA_ISSUED | issue_eoa | ACTIVE_EOA | EXECUTIVE_COMMITTEE_MEMBER | — | APH 2.25 |
 | SPEAKING_ORDER | issue_lor | APPEAL_WINDOW | EXECUTIVE_COMMITTEE_MEMBER | no_prior_appeal, speaking_order_present | APH 2.24a |
@@ -507,7 +507,7 @@ flowchart TD
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOA | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_loa | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOD | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lod | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOR | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lor | APH 1.11a |
-| SAC_REVIEW | send_back | EVC_CONSTITUTED | SAC_MEMBER | appeal_loop_available | APH 1.11c |
+| SAC_REVIEW | send_back | EVC_CONSTITUTED | SAC_MEMBER | appeal_loop_available | APH 1.11 |
 | SAC_REVIEW | sac_recommend | COUNCIL_FINAL | SAC_MEMBER | — | APH 1.11d |
 | COUNCIL_FINAL | council_final | REGIONAL_ENDORSEMENT | EXECUTIVE_COMMITTEE_MEMBER | — | APH 1.11e |
 | REGIONAL_ENDORSEMENT | endorse_decision | FINAL_LOA | REGIONAL_OFFICER | final_outcome_loa | APH 1.11e |
@@ -532,7 +532,7 @@ flowchart TD
 
 ## TRACK_D — Track D - year-round scrutiny-only changes
 
-Track D is the year-round closure cycle. Scrutiny is the only review step before the EC. A closure that fails is recorded as an EoA with zero intake (APH 2.3.3h); a pending court case, charge sheet or investigation blocks the decision (APH 2.6e).
+Track D is the year-round closure cycle. Scrutiny is the only review step before the EC. A closure that fails is recorded as an EoA with zero intake (APH 2.21); a pending court case, charge sheet or investigation blocks the decision (APH 2.6).
 
 Config: `{"appeal_start_event": "DECISION_UPLOADED", "security_deposit": false}`
 
@@ -562,7 +562,7 @@ flowchart TD
     S_SUBMITTED -->|"assign_scrutiny<br/>APH 1.8a"| S_SCRUTINY
     S_SCRUTINY -->|"scrutiny_recommend<br/>APH 1.8"| S_EC_LISTING
     S_EC_LISTING -->|"list_for_ec<br/>APH 1.10a"| S_EC_DECISION
-    S_EC_DECISION -->|"ec_decide<br/>APH 2.3.3h<br/>if decision_eoa, closure_outcome_present, eoa_before_last_date, no_pending_investigation, ec_quorum_met"| S_EOA_ISSUED
+    S_EC_DECISION -->|"ec_decide<br/>APH 2.21<br/>if decision_eoa, closure_outcome_present, eoa_before_last_date, no_pending_investigation, ec_quorum_met"| S_EOA_ISSUED
     S_EC_DECISION -->|"ec_decide<br/>APH 2.24a<br/>if decision_lor, speaking_order_present, ec_quorum_met"| S_SPEAKING_ORDER
     S_EOA_ISSUED -->|"issue_eoa<br/>APH 2.25"| S_ACTIVE_EOA
     S_SPEAKING_ORDER -->|"issue_lor<br/>APH 2.24a<br/>if no_prior_appeal, speaking_order_present"| S_APPEAL_WINDOW
@@ -572,7 +572,7 @@ flowchart TD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_loa"| S_FINAL_LOA
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lod"| S_FINAL_LOD
     S_APPEAL_WINDOW -->|"finalize_no_appeal<br/>APH 1.11a<br/>if appeal_window_closed, appeal_letter_lor"| S_FINAL_LOR
-    S_SAC_REVIEW -->|"send_back<br/>APH 1.11c<br/>if appeal_loop_available"| S_SCRUTINY
+    S_SAC_REVIEW -->|"send_back<br/>APH 1.11<br/>if appeal_loop_available"| S_SCRUTINY
     S_SAC_REVIEW -->|"sac_recommend<br/>APH 1.11d"| S_COUNCIL_FINAL
     S_COUNCIL_FINAL -->|"council_final<br/>APH 1.11e"| S_REGIONAL_ENDORSEMENT
     S_REGIONAL_ENDORSEMENT -->|"endorse_decision<br/>APH 1.11e<br/>if final_outcome_loa"| S_FINAL_LOA
@@ -601,7 +601,7 @@ flowchart TD
 | ACTIVE_EOA | COMPLETED |  | yes | APH 2.25 |
 | SPEAKING_ORDER | DECISION |  |  | APH 2.24a |
 | APPEAL_WINDOW | DECISION |  |  | APH 1.11a |
-| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11c |
+| SAC_REVIEW | COMMITTEE_REVIEW |  |  | APH 1.11 |
 | COUNCIL_FINAL | DECISION |  |  | APH 1.11e |
 | REGIONAL_ENDORSEMENT | COMMITTEE_REVIEW |  |  | APH 1.11e |
 | FINAL_LOA | COMPLETED |  |  | APH 1.10b |
@@ -618,7 +618,7 @@ flowchart TD
 | SUBMITTED | assign_scrutiny | SCRUTINY | REGULATION_BUREAU_OFFICER | — | APH 1.8a |
 | SCRUTINY | scrutiny_recommend | EC_LISTING | SCRUTINY_COMMITTEE_MEMBER | — | APH 1.8 |
 | EC_LISTING | list_for_ec | EC_DECISION | REGULATION_BUREAU_OFFICER | — | APH 1.10a |
-| EC_DECISION | ec_decide | EOA_ISSUED | EXECUTIVE_COMMITTEE_MEMBER | decision_eoa, closure_outcome_present, eoa_before_last_date, no_pending_investigation, ec_quorum_met | APH 2.3.3h |
+| EC_DECISION | ec_decide | EOA_ISSUED | EXECUTIVE_COMMITTEE_MEMBER | decision_eoa, closure_outcome_present, eoa_before_last_date, no_pending_investigation, ec_quorum_met | APH 2.21 |
 | EC_DECISION | ec_decide | SPEAKING_ORDER | EXECUTIVE_COMMITTEE_MEMBER | decision_lor, speaking_order_present, ec_quorum_met | APH 2.24a |
 | EOA_ISSUED | issue_eoa | ACTIVE_EOA | EXECUTIVE_COMMITTEE_MEMBER | — | APH 2.25 |
 | SPEAKING_ORDER | issue_lor | APPEAL_WINDOW | EXECUTIVE_COMMITTEE_MEMBER | no_prior_appeal, speaking_order_present | APH 2.24a |
@@ -628,7 +628,7 @@ flowchart TD
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOA | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_loa | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOD | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lod | APH 1.11a |
 | APPEAL_WINDOW | finalize_no_appeal | FINAL_LOR | REGULATION_BUREAU_OFFICER | appeal_window_closed, appeal_letter_lor | APH 1.11a |
-| SAC_REVIEW | send_back | SCRUTINY | SAC_MEMBER | appeal_loop_available | APH 1.11c |
+| SAC_REVIEW | send_back | SCRUTINY | SAC_MEMBER | appeal_loop_available | APH 1.11 |
 | SAC_REVIEW | sac_recommend | COUNCIL_FINAL | SAC_MEMBER | — | APH 1.11d |
 | COUNCIL_FINAL | council_final | REGIONAL_ENDORSEMENT | EXECUTIVE_COMMITTEE_MEMBER | — | APH 1.11e |
 | REGIONAL_ENDORSEMENT | endorse_decision | FINAL_LOA | REGIONAL_OFFICER | final_outcome_loa | APH 1.11e |

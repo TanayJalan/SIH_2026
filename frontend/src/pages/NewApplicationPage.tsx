@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, FilePlus2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -16,13 +16,21 @@ import {
 } from "../lib/api";
 import { formatDate, formatLakh } from "../lib/format";
 
+/** Read the application type from ``?type=`` so the advisor can preselect it. */
+function requestedType(value: string | null): ApplicationType {
+  const match = APPLICATION_TYPE_OPTIONS.find((option) => option.value === value);
+  return match ? match.value : "NEW_INSTITUTION";
+}
+
 export default function NewApplicationPage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [applicationType, setApplicationType] =
-    useState<ApplicationType>("NEW_INSTITUTION");
+  const [applicationType, setApplicationType] = useState<ApplicationType>(() =>
+    requestedType(searchParams.get("type")),
+  );
   const [academicYear, setAcademicYear] = useState(currentAcademicYear);
   const [error, setError] = useState<string | null>(null);
 
@@ -207,7 +215,7 @@ export default function NewApplicationPage() {
                           className={
                             step.applies
                               ? "text-13 text-ink-700"
-                              : "text-13 text-ink-300 line-through"
+                              : "text-13 text-ink-500 line-through"
                           }
                           title={step.description}
                         >

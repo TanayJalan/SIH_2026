@@ -384,6 +384,9 @@ function TrendPanel({
       minute: "2-digit",
     }),
   }));
+  const trendSummary = data
+    .map((point) => `${point.label}: score ${Math.round(point.score)} (${point.status})`)
+    .join("; ");
 
   return (
     <div>
@@ -400,7 +403,11 @@ function TrendPanel({
         </StatusPill>
       </div>
 
-      <div className="mt-4 h-64 w-full" aria-label="Institution compliance score trend">
+      <div
+        className="mt-4 h-64 w-full"
+        role="img"
+        aria-label={`Institution compliance score trend. ${trendSummary}`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -16 }}>
             <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" vertical={false} />
@@ -1203,7 +1210,7 @@ function RatioTable({
     <div>
       <p className="text-13 font-semibold text-ink">{title}</p>
       <p className="mt-0.5 text-12 leading-5 text-ink-500">{description}</p>
-      <div className="mt-2 overflow-x-auto rounded-input border border-line">
+      <div className="mt-2 overflow-x-auto rounded-input border border-line" tabIndex={0}>
         <table className="w-full min-w-[520px] text-left text-12">
           <thead>
             <tr className="border-b border-line bg-paper">
@@ -1833,7 +1840,7 @@ export default function ComplianceAdminPage() {
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" tabIndex={0}>
                   <Table density="dense">
                     <TableHeader>
                       <TableRow>
@@ -1886,7 +1893,7 @@ export default function ComplianceAdminPage() {
                             <TableCell className="text-12 text-ink-500">
                               <p>{formatDateTime(item.latest_evaluated_at)}</p>
                               {item.latest_trigger ? (
-                                <p className="mt-0.5 text-11 text-ink-300">
+                                <p className="mt-0.5 text-11 text-ink-500">
                                   {item.latest_trigger}
                                 </p>
                               ) : null}
@@ -2070,7 +2077,7 @@ export default function ComplianceAdminPage() {
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0}>
                 <Table density="dense">
                   <TableHeader>
                     <TableRow>

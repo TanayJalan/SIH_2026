@@ -4,6 +4,7 @@ export type NavIcon =
   | "overview"
   | "dashboard"
   | "applications"
+  | "advisor"
   | "compliance"
   | "alerts"
   | "alert-rules"
@@ -29,6 +30,20 @@ export const ROLE_LABELS: Record<Role, string> = {
   EXECUTIVE_COMMITTEE_MEMBER: "Executive Committee member",
   COMPLAINT_SCRUTINY_MEMBER: "Standing Complaint Scrutiny Committee member",
   SUPER_ADMIN: "Super administrator",
+};
+
+/** Compact role labels for the header badge, where space is limited. */
+export const ROLE_BADGE_LABELS: Record<Role, string> = {
+  INSTITUTION_ADMIN: "Institution admin",
+  REGULATION_BUREAU_OFFICER: "Regulation Bureau",
+  SCRUTINY_COMMITTEE_MEMBER: "Scrutiny Committee",
+  EVC_MEMBER: "EVC member",
+  REGIONAL_OFFICER: "Regional Officer",
+  SHC_MEMBER: "SHC member",
+  SAC_MEMBER: "SAC member",
+  EXECUTIVE_COMMITTEE_MEMBER: "EC member",
+  COMPLAINT_SCRUTINY_MEMBER: "SCSC member",
+  SUPER_ADMIN: "Super admin",
 };
 
 export const ROLE_SCOPE_DESCRIPTIONS: Record<Role, string> = {
@@ -98,10 +113,21 @@ const AUDIT_LOGS: NavItem = {
   shortcut: "g u",
 };
 
+const ADVISOR: NavItem = {
+  label: "Eligibility advisor",
+  to: "/eligibility",
+  icon: "advisor",
+  shortcut: "g e",
+};
+
 const ROLE_NAV: Record<Role, NavItem[]> = {
-  INSTITUTION_ADMIN: [OVERVIEW,
+  INSTITUTION_ADMIN: [
+    OVERVIEW,
     DASHBOARD,
-    applicationsItem("My applications"), ALERTS],
+    applicationsItem("My applications"),
+    ADVISOR,
+    ALERTS,
+  ],
   REGULATION_BUREAU_OFFICER: [
     OVERVIEW,
     DASHBOARD,
@@ -115,35 +141,19 @@ const ROLE_NAV: Record<Role, NavItem[]> = {
     applicationsItem("Scrutiny queue"),
     ALERTS,
   ],
-  EVC_MEMBER: [OVERVIEW,
-    DASHBOARD,
-    applicationsItem("Assigned inspections"), ALERTS],
+  EVC_MEMBER: [OVERVIEW, applicationsItem("Inspections"), ALERTS],
   REGIONAL_OFFICER: [
     OVERVIEW,
     DASHBOARD,
-    applicationsItem("Regional applications"),
+    applicationsItem("Regional cases"),
     COMPLIANCE,
     ALERTS,
     AUDIT_LOGS,
   ],
-  SHC_MEMBER: [OVERVIEW,
-    DASHBOARD,
-    applicationsItem("Hearing cases"), ALERTS],
-  SAC_MEMBER: [OVERVIEW,
-    DASHBOARD,
-    applicationsItem("Appeal cases"), ALERTS],
-  EXECUTIVE_COMMITTEE_MEMBER: [
-    OVERVIEW,
-    DASHBOARD,
-    applicationsItem("Committee cases"),
-    ALERTS,
-  ],
-  COMPLAINT_SCRUTINY_MEMBER: [
-    OVERVIEW,
-    DASHBOARD,
-    applicationsItem("Complaint cases"),
-    ALERTS,
-  ],
+  SHC_MEMBER: [OVERVIEW, applicationsItem("Hearing cases"), ALERTS],
+  SAC_MEMBER: [OVERVIEW, applicationsItem("Appeal cases"), ALERTS],
+  EXECUTIVE_COMMITTEE_MEMBER: [OVERVIEW, applicationsItem("Committee cases"), ALERTS],
+  COMPLAINT_SCRUTINY_MEMBER: [OVERVIEW, applicationsItem("Complaint cases"), ALERTS],
   SUPER_ADMIN: [
     OVERVIEW,
     DASHBOARD,

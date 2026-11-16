@@ -132,7 +132,7 @@ function DecisionsTable({ decisions }: { decisions: DecisionRecord[] }) {
     );
   }
   return (
-    <div className="overflow-x-auto rounded-panel border border-line">
+    <div className="overflow-x-auto rounded-panel border border-line" tabIndex={0}>
       <table className="w-full min-w-[720px] text-left text-13">
         <caption className="sr-only">Recorded committee decisions</caption>
         <thead>
@@ -331,7 +331,7 @@ function LettersTable({
   const now = useSimulatedNow();
 
   return (
-    <div className="overflow-x-auto rounded-panel border border-line">
+    <div className="overflow-x-auto rounded-panel border border-line" tabIndex={0}>
       <table className="w-full min-w-[760px] text-left text-13">
         <caption className="sr-only">Decision letters published on the portal</caption>
         <thead>

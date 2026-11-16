@@ -58,12 +58,14 @@ export default function CaseFileHeader({
   userRole,
   risk,
   definition,
+  definitionPending = false,
 }: {
   application: ApplicationDetail;
   token: string;
   userRole: string;
   risk: RiskSummary;
   definition?: WorkflowDefinition;
+  definitionPending?: boolean;
 }) {
   const { openAction } = useWorkflowActions();
   const allowedQuery = useQuery({
@@ -110,6 +112,11 @@ export default function CaseFileHeader({
                   {definition.track.replace("TRACK_", "Track ")}
                 </span>
               </Tooltip>
+            ) : definitionPending ? (
+              <span
+                aria-hidden="true"
+                className="inline-block h-[18px] w-14 rounded-pill bg-ink-100"
+              />
             ) : null}
             {application.decision_type ? (
               <Tooltip
@@ -157,7 +164,7 @@ export default function CaseFileHeader({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-4">
+        <div className="flex w-full flex-wrap items-center gap-4 sm:w-auto sm:shrink-0 sm:justify-end">
           {sla ? (
             <span className="flex flex-col items-center gap-1">
               <SlaRing
@@ -180,7 +187,7 @@ export default function CaseFileHeader({
             </span>
           ) : null}
 
-          <div className="flex flex-wrap justify-end items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 sm:justify-end">
             {canEditDraft ? (
               <Button asChild variant="secondary" size="sm">
                 <Link to={`/applications/${application.id}/edit`}>

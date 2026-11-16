@@ -85,7 +85,7 @@ class SecurityDeposit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     penalty_percent: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     release_requested_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     release_clearances: Mapped[list[dict[str, str]] | None] = mapped_column(JSONB, nullable=True)
-    """Clearances from PGRC, Vigilance and the grants cell (APH 6.46b)."""
+    """Clearances from PGRC, Vigilance and the grants cell (APH 6.46)."""
     released_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     noc_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)

@@ -1,6 +1,6 @@
 """Security Deposit request and release with clearances (APH 6.46).
 
-APH 6.46a-lists the documents an institution uploads for release; 6.46b then
+APH 6.46 lists the documents an institution uploads for release; 6.46 then
 requires clearance from the Public Grievance Redressal Cell, the Vigilance Cell
 and the other cells/bureaus that track grants. A NOC follows from the Approval
 Bureau for an FDR, or a sanction order from the Council for an RTGS transfer
@@ -24,34 +24,34 @@ from app.models.security_deposit import SecurityDeposit
 from app.models.user import User
 from app.services.audit import AuditService
 
-CLEARANCE_CLAUSE = "APH 6.46b"
+CLEARANCE_CLAUSE = "APH 6.46"
 
-#: The clearances APH 6.46b requires. ``mandatory=False`` marks the conditional
-#: NOC under 6.46e, which only applies when a government body reports dues.
+#: The clearances APH 6.46 requires. ``mandatory=False`` marks the conditional
+#: NOC under 6.46, which only applies when a government body reports dues.
 CLEARANCES: tuple[dict[str, Any], ...] = (
     {
         "code": "PGRC",
         "label": "Public Grievance Redressal Cell clearance",
         "mandatory": True,
-        "apH_clause": "APH 6.46b",
+        "apH_clause": "APH 6.46",
     },
     {
         "code": "VIGILANCE",
         "label": "Vigilance Cell clearance",
         "mandatory": True,
-        "apH_clause": "APH 6.46b",
+        "apH_clause": "APH 6.46",
     },
     {
         "code": "GRANTS",
         "label": "Grants and other cells/bureaus clearance",
         "mandatory": True,
-        "apH_clause": "APH 6.46b",
+        "apH_clause": "APH 6.46",
     },
     {
         "code": "GOVT_BODY_NOC",
         "label": "NOC from a Government body/bank (if dues are reported)",
         "mandatory": False,
-        "apH_clause": "APH 6.46e",
+        "apH_clause": "APH 6.46",
     },
 )
 
@@ -64,10 +64,10 @@ _RELEASABLE = frozenset(
 )
 
 _DOCUMENT_CHECKLIST = (
-    ("Application/request letter of the institution", "APH 6.46a(i)"),
-    ("Affidavit 6 with FDR/RTGS details", "APH 6.46a(ii)"),
-    ("Copy of the FDR/RPGF/online payment proof", "APH 6.46a(iii)"),
-    ("Copy of the latest LoA/EoA", "APH 6.46a(iv)"),
+    ("Application/request letter of the institution", "APH 6.46"),
+    ("Affidavit 6 with FDR/RTGS details", "APH 6.46"),
+    ("Copy of the FDR/RPGF/online payment proof", "APH 6.46"),
+    ("Copy of the latest LoA/EoA", "APH 6.46"),
 )
 
 
@@ -194,7 +194,7 @@ def record_clearance(
 
 
 def missing_clearances(deposit: SecurityDeposit) -> list[str]:
-    """Return the mandatory clearances that are not yet cleared (APH 6.46b)."""
+    """Return the mandatory clearances that are not yet cleared (APH 6.46)."""
     return [
         entry["code"]
         for entry in (deposit.release_clearances or [])
@@ -212,13 +212,13 @@ def approve_release(
     audit: AuditService,
     request: Request | None = None,
 ) -> SecurityDeposit:
-    """Release the deposit once every mandatory clearance is in place (APH 6.46c-d)."""
+    """Release the deposit once every mandatory clearance is in place (APH 6.46)."""
     if deposit.release_requested_on is None:
         raise DepositReleaseError("Start a release request before approving release.")
     missing = missing_clearances(deposit)
     if missing:
         raise DepositReleaseError(
-            "APH 6.46b requires clearance from "
+            "APH 6.46 requires clearance from "
             + ", ".join(missing)
             + " before the deposit can be released."
         )

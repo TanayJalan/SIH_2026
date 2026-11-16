@@ -20,8 +20,39 @@ class AphModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class AdmissionYear(AphModel):
+    """Admissions for one academic year against the approved intake.
+
+    APH 2.1a(vi) and 2.6(l) test admissions year by year, so the advisor needs
+    the raw numbers rather than an average. ``admitted`` may exceed
+    ``approved_intake``; that is how a fully filled course with wait-list
+    admissions is recorded on the portal.
+    """
+
+    academic_year: str = Field(pattern=r"^\d{4}-\d{2}$")
+    """Academic year in ``YYYY-YY`` form, for example ``2025-26``."""
+    approved_intake: int = Field(ge=0)
+    admitted: int = Field(ge=0)
+
+
+class CourseFill(AphModel):
+    """Fill rate of one approved course, used by the TFW checker (APH 6.42)."""
+
+    course_name: str = Field(min_length=1, max_length=200)
+    level: str = Field(default="UNDERGRADUATE", min_length=1, max_length=40)
+    """``UNDERGRADUATE``, ``POSTGRADUATE``, ``DIPLOMA`` or ``POST_DIPLOMA``."""
+    approved_intake: int = Field(ge=0)
+    admitted: int = Field(ge=0)
+
+
 class AccreditationProfile(AphModel):
-    """Accreditation criteria used by the Extended EoA checker (APH 2.1a)."""
+    """Accreditation criteria used by the Extended EoA checker (APH 2.1a).
+
+    Also carries the evidence the other eligibility checkers need: admissions
+    against approved intake for FN/OCI seats (APH 2.9), off-campus (APH 2.11a),
+    the working-professional division (APH 2.6l) and TFW seats (APH 6.42), plus
+    the aspirational-district flag for APH 2.6(l)(ii).
+    """
 
     nirf_8th: bool | None = None
     """Figured in NIRF 8th edition (APH 2.1a)."""
@@ -37,6 +68,12 @@ class AccreditationProfile(AphModel):
     """Autonomous status from UGC or AICTE (APH 2.1a)."""
     avg_admission_pct_5y: float | None = Field(default=None, ge=0, le=100)
     """Average admissions over the last five academic years (APH 2.1a)."""
+    admissions: list[AdmissionYear] = Field(default_factory=list)
+    """Per-year admissions against approved intake (APH 2.1a(vi), 2.9, 2.6l)."""
+    courses: list[CourseFill] = Field(default_factory=list)
+    """Per-course fill for the TFW check (APH 6.42d)."""
+    aspirational_district: bool | None = None
+    """Located in an aspirational district listed by NITI Aayog (APH 2.6l(ii))."""
 
 
 class CampusPlot(AphModel):

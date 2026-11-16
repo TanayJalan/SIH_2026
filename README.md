@@ -53,6 +53,11 @@ Implemented:
   Report PDF
 - A compliance tab on the application detail page with rule-by-rule pass/fail, severity badges,
   score gauge and human-readable explanations
+- An eligibility advisor (`GET /eligibility/advisor`, `/eligibility`) for `INSTITUTION_ADMIN`:
+  five approval routes (Extended EoA 2.1a, FN/OCI 2.9, off-campus 2.11a, working professionals
+  2.6l, TFW 6.42) explained through pure, clause-cited functions, each with the value on record,
+  the required threshold and a "what would it take" line, plus a link to start the matching
+  application type
 - DEBUG-only simulated clock for demonstrating deadline, SLA breach and escalation behaviour in
   seconds, including a day-by-day scheduler replay
 - React login, protected routing, role-specific navigation and account overview
@@ -328,7 +333,7 @@ escalation) without any manual setup.
 The seeder writes ten fictional PDFs with `reportlab` and attaches them to the scenario cases,
 including deliberate flaws the verification screen can reject:
 
-- `fire_safety_certificate_expired.pdf` (expired, APH 1.8f) and a valid replacement;
+- `fire_safety_certificate_expired.pdf` (expired, APH 1.8) and a valid replacement;
 - `dsc_certificate_unsigned.pdf` (no digital signature, APH 1.4.3);
 - `affidavit_3_name_mismatch.pdf` (portal name differs, APH 1.4.4);
 - `blank_scan.pdf` (unreadable) plus land, building-plan, faculty, audited-statement and
@@ -360,10 +365,11 @@ make e2e         # Playwright smoke tests against the running stack
 container. Tests create uniquely named fictional records and remove them afterwards.
 
 The coverage gate covers `app.services.workflow`, `workflow_catalogue`, `compliance`,
-`compliance_calculators`, `alert_engine`, `alert_triggers`, `fee_calculator`, `app.api.routes.auth`
-and `app.services.auth`. A build-failing configuration test also requires every `ComplianceRule`,
-`WorkflowTransition`, `FeeSchedule` and `AlertRule` row to carry an `apH_clause` (or
-`needs_verification=true`).
+`compliance_calculators`, `eligibility_advisor`, `alert_engine`, `alert_triggers`, `fee_calculator`,
+`app.api.routes.auth` and `app.services.auth`. A build-failing configuration test also requires
+every `ComplianceRule`, `WorkflowTransition`, `FeeSchedule` and `AlertRule` row to carry an
+`apH_clause` (or `needs_verification=true`), and the eligibility advisor's own tests assert that
+every route and criterion cites an APH clause.
 
 The Playwright suite exercises login, invalid credentials, a completed draft submission, a
 scrutiny action, the document re-upload cycle and a live alert pushed over SSE. The stack must be
@@ -531,7 +537,7 @@ submission; the acceptance gate counts required section fields and mandatory doc
 - `POST /applications/{id}/documents` — multipart form with `doc_type` and `file`.
 - `GET /applications/{id}/documents` — every uploaded version for the application.
   `?only_to_recheck=true` is the Re-Scrutiny view: only rejected documents and
-  replacements still awaiting verification (APH 1.8g).
+  replacements still awaiting verification (APH 1.8).
 - `GET /applications/{id}/documents/{document_id}/download` — authenticated file stream.
 - `GET /applications/{id}/documents/{document_id}/versions` — every version with its
   uploader, review status and download URL.
@@ -539,14 +545,14 @@ submission; the acceptance gate counts required section fields and mandatory doc
   reason code (`UNREADABLE`, `NO_DSC`, `EXPIRED`, `WRONG_DOCUMENT`, `NAME_MISMATCH`,
   `INCOMPLETE`, `OTHER`), a mandatory comment and the APH clause. It sets the document to
   `REJECTED`, opens or links a deficiency item, moves the case into the compliance
-  window and notifies the institution (APH 1.8f, 2.3.3b).
+  window and notifies the institution (APH 1.8, 2.3.3b).
 - `POST /applications/{id}/documents/{document_id}/reupload` — institution replacement
   (multipart: `file`, `signed_with_dsc`, `signer_name`, `valid_until`). It creates version
   N+1, marks the old row `superseded_by`, resets verification to `PENDING`, marks the
   linked deficiency `RESPONDED`, notifies the reviewer and writes an audit and workflow
-  event (APH 1.4.3, 1.8f, 2.4).
+  event (APH 1.4.3, 1.8, 2.4).
 - `POST /applications/{id}/documents/{document_id}/verify` — reviewer confirmation of a
-  replacement (APH 1.8g).
+  replacement (APH 1.8).
 
 Uploads must be PDF, JPEG or PNG, no larger than 10 MB. The service verifies the file signature
 rather than trusting the browser MIME type, and the `doc_type` must exist in the database checklist
@@ -555,7 +561,7 @@ for the application type. Files are stored under `STORAGE_DIR` (the Compose name
 public file URL: every download passes through the authenticated API. Re-uploading a document type
 creates the next version and a new audit row; earlier versions remain available in the file list.
 
-#### Rejection and replacement (APH 1.8f, 1.8g, 2.4)
+#### Rejection and replacement (APH 1.8, 2.4)
 
 A submitted application is locked (APH 1.4.3), but the institution may replace a document a
 reviewer rejected or flagged while the case is in `DEFICIENCY_COMMUNICATED`,
@@ -874,6 +880,7 @@ navigation sequences are:
 | `g d` | Overview |
 | `g a` | Role-specific applications list |
 | `g c` | Compliance (Super Admin and Regional Officer only) |
+| `g e` | Eligibility advisor (Institution Admin only) |
 | `g l` | Alerts |
 | `g r` | Alert rules (Super Admin only) |
 | `g u` | Audit logs (Super Admin, Regional Officer and Regulation Bureau only) |

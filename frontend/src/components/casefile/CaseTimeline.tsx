@@ -132,7 +132,7 @@ function TimelineEntry({
             <summary className="cursor-pointer text-ink-500 hover:text-ink">
               Audit detail
             </summary>
-            <pre className="mt-1 max-w-full overflow-x-auto rounded-input border border-line bg-paper p-2 text-11 text-ink-700">
+            <pre className="mt-1 max-w-full overflow-x-auto rounded-input border border-line bg-paper p-2 text-11 text-ink-700" tabIndex={0}>
               {JSON.stringify(
                 {
                   action: event.action,

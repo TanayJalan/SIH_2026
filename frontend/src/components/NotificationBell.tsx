@@ -4,7 +4,7 @@ import { Bell, BellRing, Check, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "@/auth/AuthContext";
-import { useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/Toast";
 import {
   ApiError,
   acknowledgeAlert,
@@ -127,19 +127,25 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        aria-label={unread > 0 ? `${unread} unread alerts` : "Alerts"}
+        aria-label={
+          unread > 99
+            ? `99+ unread alerts, ${unread} total`
+            : unread > 0
+              ? `${unread} unread alerts`
+              : "Alerts"
+        }
         aria-haspopup="dialog"
         aria-expanded={open}
         className={cn(
           "relative inline-flex size-9 items-center justify-center rounded-input text-ink-700 transition-colors hover:bg-paper hover:text-ink",
           open && "bg-paper text-ink",
-          ringing && "ring-2 ring-breach animate-ping",
+          ringing && "motion-safe:ring-2 motion-safe:ring-breach motion-safe:animate-ping",
         )}
       >
         {ringing ? (
           <BellRing
             aria-hidden="true"
-            className={cn("size-4", ringing && "text-breach-strong animate-bell")}
+            className={cn("size-4", ringing && "text-breach-strong motion-safe:animate-bell")}
           />
         ) : (
           <Bell aria-hidden="true" className="size-4" />

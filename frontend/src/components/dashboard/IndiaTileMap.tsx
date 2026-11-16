@@ -142,7 +142,7 @@ export function IndiaTileMap({
         <div
           role="radiogroup"
           aria-label="Tile colour metric"
-          className="inline-flex items-center rounded-input border border-line bg-surface"
+          className="inline-flex flex-wrap items-center rounded-input border border-line bg-surface"
         >
           {Object.entries(METRIC_LABELS).map(([key, label]) => {
             const value = key as TileMetric;
@@ -153,10 +153,10 @@ export function IndiaTileMap({
                 key={value}
                 type="button"
                 role="radio"
-                aria-pressed={isActive}
+                aria-checked={isActive}
                 onClick={() => onMetricChange(value)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-input px-2.5 py-1 text-12 font-medium transition-colors duration-300",
+                  "flex items-center gap-1.5 whitespace-nowrap rounded-input px-2.5 py-1 text-12 font-medium transition-colors duration-300",
                   isActive
                     ? "bg-saffron text-ink border-saffron"
                     : "text-ink-500 border-transparent hover:bg-paper hover:text-ink",
@@ -177,7 +177,7 @@ export function IndiaTileMap({
 
       <svg
         className="relative mx-auto block h-auto w-full max-w-[320px]"
-        role="img"
+        role="group"
         aria-label="Tile grid of Indian states and union territories"
         width={7 * (TILE + GAP)}
         height={8 * (TILE + GAP)}
@@ -268,7 +268,7 @@ export function IndiaTileMap({
         })}
       </svg>
 
-      <div className="mt-3 max-h-40 overflow-y-auto rounded-input border border-line bg-paper p-3 text-12">
+      <div className="mt-3 max-h-40 overflow-y-auto rounded-input border border-line bg-paper p-3 text-12" tabIndex={0}>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">
           State summary
         </p>
@@ -293,7 +293,7 @@ export function IndiaTileMap({
                     </span>
                     <span
                       className={cn(
-                        "text-[9px] font-medium rounded-input px-1.5 py-0.5",
+                        "text-[10px] font-medium rounded-input px-1.5 py-0.5",
                         complianceBandFor(agg.avgScore) === "ok"
                           ? "bg-ok-soft text-ok-strong"
                           : complianceBandFor(agg.avgScore) === "watch"

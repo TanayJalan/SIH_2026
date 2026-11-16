@@ -38,7 +38,7 @@ class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     The lifecycle is ``RECEIVED -> PGRC -> SCSC -> SHOW_CAUSE/EVC -> HEARING ->
     DECIDED``. Anonymous or pseudonymous complaints stop at ``RECEIVED`` with
-    ``rejection_reason`` set, because APH 7.10h adopts the CVC rule not to
+    ``rejection_reason`` set, because APH 7.10 adopts the CVC rule not to
     process them.
     """
 
@@ -76,15 +76,15 @@ class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     complainant_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
-    """Set when PGRC verifies the complainant (APH 7.10b-c)."""
+    """Set when PGRC verifies the complainant (APH 7.10)."""
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     rejection_clause: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_anonymous: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
-    """Anonymous or pseudonymous complaints are not processed (APH 7.10h)."""
+    """Anonymous or pseudonymous complaints are not processed (APH 7.10)."""
     scsc_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    """WARNING, SHOW_CAUSE or EVC (APH 7.10c)."""
+    """WARNING, SHOW_CAUSE or EVC (APH 7.10)."""
     scsc_decided_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     scsc_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     show_cause_issued_on: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -94,7 +94,7 @@ class Complaint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     shc_hearing_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     shc_findings: Mapped[str | None] = mapped_column(Text, nullable=True)
     ec_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    """WARNING, PENAL_ACTION or CLOSE (APH 7.10f-g)."""
+    """WARNING, PENAL_ACTION or CLOSE (APH 7.10)."""
     speaking_order: Mapped[str | None] = mapped_column(Text, nullable=True)
     decided_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     apH_clause: Mapped[str] = mapped_column(String(64), nullable=False)

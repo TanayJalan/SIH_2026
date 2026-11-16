@@ -51,7 +51,7 @@ class Appeal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Integer, nullable=False, default=1, server_default=text("1")
     )
     sac_recommendation: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    """RECOMMEND, NOT_RECOMMEND or SEND_BACK (APH 1.11c-d)."""
+    """RECOMMEND, NOT_RECOMMEND or SEND_BACK (APH 1.11)."""
     council_decision: Mapped[str | None] = mapped_column(Text, nullable=True)
     """The Council decision is final (APH 1.11e)."""
     decided_at: Mapped[datetime | None] = mapped_column(

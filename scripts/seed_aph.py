@@ -660,13 +660,166 @@ def _institution_name(city: str, kind: str, index: int) -> str:
     return f"{city} {theme} (Fictional)"
 
 
+# Five completed academic years, oldest first. The advisor checks the most recent
+# five for Extended EoA (APH 2.1a(vi)) and averages the most recent three for
+# FN/OCI seats and working-professional divisions (APH 2.9, 2.6l).
+_DEMO_ACADEMIC_YEARS = ("2021-22", "2022-23", "2023-24", "2024-25", "2025-26")
+
+# Course lists per institution type. The TFW check is per course (APH 6.42d(i)).
+_DEMO_ENGINEERING_COURSES = (
+    ("Civil Engineering", "UNDERGRADUATE", 60),
+    ("Computer Science and Engineering", "UNDERGRADUATE", 120),
+    ("Mechanical Engineering", "UNDERGRADUATE", 60),
+)
+_DEMO_MANAGEMENT_COURSES = (
+    ("Master of Business Administration", "POSTGRADUATE", 120),
+    ("Bachelor of Business Administration", "UNDERGRADUATE", 60),
+)
+
+# The five demo shapes, cycled by position in the directory. Each tuple is
+# (NIRF, QS Asia, NAAC score, NBA share %, NBA valid until, autonomous,
+# five-year admission shares). ``None`` means "not recorded", which the advisor
+# reports as UNKNOWN instead of guessing.
+_DEMO_PROFILES: tuple[dict[str, Any], ...] = (
+    {
+        # Strong on every criterion: the "clean Extended EoA" case.
+        "nirf_8th": True,
+        "qs_asia_2024": False,
+        "naac_score": 3.42,
+        "nba_courses_pct": 62.0,
+        "nba_valid_until": "2028-04-30",
+        "autonomous": True,
+        "admission_shares": (92, 88, 90, 86, 91),
+        "course_shares": (95, 88, 72),
+    },
+    {
+        # Meets NAAC 3.01 and averages above 80%, but one year dipped.
+        "nirf_8th": None,
+        "qs_asia_2024": False,
+        "naac_score": 3.05,
+        "nba_courses_pct": 26.0,
+        "nba_valid_until": "2027-04-30",
+        "autonomous": False,
+        "admission_shares": (85, 82, 79, 84, 87),
+        "course_shares": (88, 64, 55),
+    },
+    {
+        # NAAC passes, NBA is short of 30% and admissions dipped: the mixed case.
+        "nirf_8th": None,
+        "qs_asia_2024": False,
+        "naac_score": 3.12,
+        "nba_courses_pct": 22.0,
+        "nba_valid_until": "2027-04-30",
+        "autonomous": False,
+        "admission_shares": (90, 88, 78, 79, 80),
+        "course_shares": (68, 80, 41),
+    },
+    {
+        # NBA share is above the bar but its validity has lapsed.
+        "nirf_8th": False,
+        "qs_asia_2024": False,
+        "naac_score": 2.72,
+        "nba_courses_pct": 55.0,
+        "nba_valid_until": "2025-04-30",
+        "autonomous": False,
+        "admission_shares": (74, 71, 76, 72, 75),
+        "course_shares": (44, 39, 36),
+    },
+    {
+        # Accreditation recorded, admissions not yet uploaded: the UNKNOWN case.
+        "nirf_8th": False,
+        "qs_asia_2024": None,
+        "naac_score": 3.6,
+        "nba_courses_pct": None,
+        "nba_valid_until": None,
+        "autonomous": None,
+        "admission_shares": None,
+        "course_shares": None,
+    },
+)
+
+
+# The two institutions the demo leans on: MAH-0001 is the mixed case used in
+# screenshots (NAAC passes, NBA is short of 30%), DL-0001 is the clean Extended
+# EoA case in docs/DEMO_SCRIPT.md.
+_DEMO_PROFILE_BY_AICTE_ID = {"MAH-0001": 2, "DL-0001": 0}
+
+
+def _demo_admissions(shares: tuple[int, ...] | None, intake: int) -> list[dict[str, Any]]:
+    """Return per-year admissions against approved intake as DEMO values."""
+    if shares is None:
+        return []
+    return [
+        {
+            "academic_year": academic_year,
+            "approved_intake": intake,
+            "admitted": round(intake * share / 100),
+        }
+        for academic_year, share in zip(_DEMO_ACADEMIC_YEARS, shares, strict=True)
+    ]
+
+
+def _demo_courses(
+    kind: str,
+    shares: tuple[int, ...] | None,
+) -> list[dict[str, Any]]:
+    """Return last year's course fill as DEMO values (APH 6.42d(i))."""
+    if shares is None:
+        return []
+    catalogue = (
+        _DEMO_MANAGEMENT_COURSES if kind == "MANAGEMENT" else _DEMO_ENGINEERING_COURSES
+    )
+    return [
+        {
+            "course_name": course_name,
+            "level": level,
+            "approved_intake": intake,
+            "admitted": round(intake * share / 100),
+        }
+        for (course_name, level, intake), share in zip(catalogue, shares, strict=False)
+    ]
+
+
+def _demo_accreditation(item: dict[str, Any], index: int) -> dict[str, Any]:
+    """Return the fictional accreditation and admission evidence for one institution.
+
+    The eligibility advisor reads these fields through
+    ``app.schemas.aph_profiles.AccreditationProfile``. Every number below is a
+    DEMO value invented for a fictional institution; the thresholds they are
+    compared against come from the handbook and live in
+    ``app.services.eligibility_advisor.EligibilityPolicy``. Nothing here is
+    AICTE data.
+
+    Positions 5, 28, 51 are left empty on purpose so the advisor screen also
+    shows the "no evidence recorded" state.
+    """
+    if index % 23 == 5:
+        return {}
+    position = _DEMO_PROFILE_BY_AICTE_ID.get(item["aicte_id"], index % len(_DEMO_PROFILES))
+    profile = _DEMO_PROFILES[position]
+    intake = 360 if item.get("type") != "MANAGEMENT" else 180
+    return {
+        "nirf_8th": profile["nirf_8th"],
+        "qs_asia_2024": profile["qs_asia_2024"],
+        "naac_score": profile["naac_score"],
+        "nba_courses_pct": profile["nba_courses_pct"],
+        "nba_valid_until": profile["nba_valid_until"],
+        "autonomous": profile["autonomous"],
+        "admissions": _demo_admissions(profile["admission_shares"], intake),
+        "courses": _demo_courses(item.get("type", "ENGINEERING"), profile["course_shares"]),
+        "aspirational_district": index % 19 == 7,
+    }
+
+
 def build_institutions() -> list[dict[str, Any]]:
     """Return 60 fictional institutions across 10 States and all 8 regions.
 
     Six institutions per State keeps every State visible on the tile map. The
     first two entries of Maharashtra, Tamil Nadu and Karnataka and the first of
     Gujarat and Delhi are the original hand-written demo records so existing
-    screenshots and references keep resolving.
+    screenshots and references keep resolving. Each record also carries the
+    fictional accreditation and admission evidence the eligibility advisor
+    reads (see :func:`_demo_accreditation`).
     """
     by_state: dict[str, list[dict[str, Any]]] = {}
     for base in INSTITUTIONS:
@@ -708,6 +861,7 @@ def build_institutions() -> list[dict[str, Any]]:
             item["aicte_id"] = f"{item['aicte_id']}-{index:02d}"
             item["pid"] = f"PRN-{item['aicte_id']}"
         seen.add(item["aicte_id"])
+        item["accreditation"] = _demo_accreditation(item, index)
         unique.append(item)
     return unique
 

@@ -1,7 +1,7 @@
 """Reviewer rejection, verification and institution replacement rules.
 
-APH 1.4.3 locks the submitted application, but 1.8f and 2.4 let the institution
-comply with deficiencies communicated through the portal, and 1.8g limits
+APH 1.4.3 locks the submitted application, but 1.8 and 2.4 let the institution
+comply with deficiencies communicated through the portal, and 1.8 limits
 Re-Scrutiny to the listed deficiencies. This module is the single decision point
 for whether a document may be rejected, verified or replaced; the API routes and
 the UI both read the same answer so a button can never call a forbidden action.
@@ -56,7 +56,7 @@ REVIEW_STATUSES: frozenset[ApplicationStatus] = frozenset(
     {
         ApplicationStatus.SCRUTINY,
         # A reviewer must be able to look again at a replacement while the case
-        # sits in the compliance cycle (APH 1.8g, 2.4).
+        # sits in the compliance cycle (APH 1.8, 2.4).
         *COMPLIANCE_WINDOW_STATUSES,
     }
 )
@@ -66,10 +66,10 @@ REVIEWER_ROLES = frozenset(
     {Role.SCRUTINY_COMMITTEE_MEMBER, Role.REGULATION_BUREAU_OFFICER}
 )
 
-REJECTION_CLAUSE = "APH 1.8f"
+REJECTION_CLAUSE = "APH 1.8"
 """Deficiencies are communicated through the portal and fulfilled by the institution."""
 
-VERIFICATION_CLAUSE = "APH 1.8g"
+VERIFICATION_CLAUSE = "APH 1.8"
 """Re-Scrutiny verifies only the deficiencies that were listed."""
 
 REUPLOAD_CLAUSE = "APH 2.4"
@@ -149,7 +149,7 @@ def replacement_block_reason(
     if not is_latest_version(db, document):
         return (
             "This version has already been superseded. Re-upload the latest version "
-            f"instead ({REUPLOAD_CLAUSE} / 1.8f)."
+            f"instead ({REUPLOAD_CLAUSE} / 1.8)."
         )
     if application.status == ApplicationStatus.DRAFT:
         # Nothing is locked before submission (APH 1.4.3), so the institution may
@@ -280,7 +280,7 @@ class DocumentReviewService:
 
         # Rejecting during Scrutiny communicates the deficiency through the
         # seeded edge, so the case reaches the compliance window the same way a
-        # Scrutiny Committee's own Deficiency Report does (APH 1.8f, 2.3.3b).
+        # Scrutiny Committee's own Deficiency Report does (APH 1.8, 2.3.3b).
         # It runs before the document mutation because a refused transition
         # rolls the session back.
         deficiency = self._open_compliance_window(
@@ -471,7 +471,7 @@ class DocumentReviewService:
         The transition itself stays in ``workflow_transitions``; this method only
         asks the state machine which actions are legal for this actor and passes
         the rejection as the Deficiency Report payload that the edge expects
-        (APH 1.8f, 2.3.3b).
+        (APH 1.8, 2.3.3b).
         """
         if application.status in COMPLIANCE_WINDOW_STATUSES:
             return None

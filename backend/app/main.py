@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
@@ -83,6 +84,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
     app.add_middleware(RequestContextMiddleware)
+    # Report payloads (compliance previews, dashboards) are large JSON bodies;
+    # compressing them cuts transfer size on slower connections.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     if resolved_settings.security_headers_enabled:
         app.add_middleware(
             SecurityHeadersMiddleware,

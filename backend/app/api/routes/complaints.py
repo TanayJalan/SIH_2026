@@ -164,7 +164,7 @@ def _bad_request(exc: Exception) -> HTTPException:
     summary="Complaint lifecycle and anonymity rule (APH 7.10)",
 )
 def complaint_catalogue(_: CurrentUser) -> ComplaintCatalogue:
-    """Return the visible complaint steps and the APH 7.10h rule."""
+    """Return the visible complaint steps and the APH 7.10 rule."""
     return ComplaintCatalogue(
         steps=[ComplaintLifecycleStep(**step) for step in complaint_service.lifecycle()],
         anonymity_clause=complaint_service.ANONYMITY_CLAUSE,
@@ -217,7 +217,7 @@ def list_complaints(
     "/complaints",
     response_model=ComplaintRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Record a complaint, auto-rejecting anonymous ones (APH 7.10h)",
+    summary="Record a complaint, auto-rejecting anonymous ones (APH 7.10)",
     dependencies=[Depends(require_roles(*_INTAKE_ROLES))],
 )
 def create_complaint(
@@ -274,7 +274,7 @@ def get_complaint(complaint_id: uuid.UUID, db: DbSession, user: CurrentUser) -> 
 @router.post(
     "/complaints/{complaint_id}/verify",
     response_model=ComplaintRead,
-    summary="Verify the complaint and place it before the SCSC (APH 7.10c)",
+    summary="Verify the complaint and place it before the SCSC (APH 7.10)",
     dependencies=[Depends(require_roles(*_VERIFY_ROLES))],
 )
 def verify_complaint(
@@ -297,7 +297,7 @@ def verify_complaint(
 @router.post(
     "/complaints/{complaint_id}/scsc-decision",
     response_model=ComplaintRead,
-    summary="Record the SCSC decision (APH 7.10c)",
+    summary="Record the SCSC decision (APH 7.10)",
     dependencies=[Depends(require_roles(*_SCSC_ROLES))],
 )
 def record_scsc_decision(
@@ -330,7 +330,7 @@ def record_scsc_decision(
 @router.post(
     "/complaints/{complaint_id}/show-cause-reply",
     response_model=ComplaintRead,
-    summary="Record the institution's show-cause reply (APH 7.10d)",
+    summary="Record the institution's show-cause reply (APH 7.10)",
     dependencies=[Depends(require_roles(Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN))],
 )
 def record_show_cause_reply(
@@ -362,7 +362,7 @@ def record_show_cause_reply(
 @router.post(
     "/complaints/{complaint_id}/shc-hearing",
     response_model=ComplaintRead,
-    summary="Record the SHC hearing and findings (APH 7.10d-e)",
+    summary="Record the SHC hearing and findings (APH 7.10)",
     dependencies=[Depends(require_roles(*_SHC_ROLES))],
 )
 def record_shc_hearing(
@@ -394,7 +394,7 @@ def record_shc_hearing(
 @router.post(
     "/complaints/{complaint_id}/ec-decision",
     response_model=ComplaintRead,
-    summary="Record the EC decision and Speaking Order (APH 7.10f-g)",
+    summary="Record the EC decision and Speaking Order (APH 7.10)",
     dependencies=[Depends(require_roles(*_EC_ROLES))],
 )
 def record_ec_decision(

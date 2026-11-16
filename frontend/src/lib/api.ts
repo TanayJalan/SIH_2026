@@ -347,7 +347,7 @@ export type DocumentVerificationStatus =
   | "FLAGGED"
   | "REJECTED";
 
-/** Controlled reviewer vocabulary for a rejection (APH 1.8f). */
+/** Controlled reviewer vocabulary for a rejection (APH 1.8). */
 export type DocumentRejectionReason =
   | "UNREADABLE"
   | "NO_DSC"
@@ -1721,7 +1721,7 @@ export function rejectApplicationDocument(
       body: {
         reason_code: input.reasonCode,
         comment: input.comment,
-        apH_clause: input.apHclause ?? "APH 1.8f",
+        apH_clause: input.apHclause ?? "APH 1.8",
       },
     },
   );
@@ -1740,7 +1740,7 @@ export function verifyApplicationDocument(
       token,
       body: {
         comment: input.comment,
-        apH_clause: input.apHclause ?? "APH 1.8g",
+        apH_clause: input.apHclause ?? "APH 1.8",
       },
     },
   );
@@ -2070,7 +2070,7 @@ export interface ReuploadDocumentOptions {
  * Replace a rejected or flagged document with version N+1.
  *
  * Sent with XHR so the dialog can show upload progress and per-field errors
- * from the strict replacement contract (APH 1.4.3, 1.8f, 2.4).
+ * from the strict replacement contract (APH 1.4.3, 1.8, 2.4).
  */
 export function reuploadApplicationDocument(
   token: string,
@@ -3272,4 +3272,52 @@ export async function downloadApplicationReportPdf(
   link.click();
   link.remove();
   window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
+}
+
+// ---------------------------------------------------------------------------
+// Eligibility advisor (APH 2.1a, 2.6l, 2.9, 2.11a, 6.42)
+// ---------------------------------------------------------------------------
+
+export type EligibilityStatus = "PASS" | "FAIL" | "UNKNOWN";
+
+export type EligibilityRouteCode =
+  | "EXTENDED_EOA"
+  | "FN_OCI"
+  | "OFF_CAMPUS"
+  | "WORKING_PROFESSIONAL"
+  | "TFW";
+
+export interface EligibilityCriterion {
+  code: string;
+  label: string;
+  apH_clause: string;
+  status: EligibilityStatus;
+  observed: string | null;
+  required: string | null;
+  detail: string;
+  suggestion: string | null;
+}
+
+export interface EligibilityRoute {
+  code: EligibilityRouteCode;
+  label: string;
+  apH_clause: string;
+  status: EligibilityStatus;
+  summary: string;
+  criteria: EligibilityCriterion[];
+  suggestions: string[];
+  application_type: ApplicationType | null;
+  notes: string[];
+}
+
+export interface EligibilityAdvisor {
+  institution_id: string;
+  institution_name: string;
+  /** The date the checks were run, used for NBA validity and years of existence. */
+  as_of: string;
+  routes: EligibilityRoute[];
+}
+
+export function getEligibilityAdvisor(token: string): Promise<EligibilityAdvisor> {
+  return request<EligibilityAdvisor>("/eligibility/advisor", { token });
 }

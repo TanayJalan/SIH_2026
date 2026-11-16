@@ -14,6 +14,7 @@ from app.api.routes import (
     complaints,
     compliance_admin,
     deposits,
+    eligibility,
     health,
     letters,
     public,
@@ -42,3 +43,4 @@ api_router.include_router(search.router)
 api_router.include_router(committees.router)
 api_router.include_router(complaints.router)
 api_router.include_router(deposits.router)
+api_router.include_router(eligibility.router)

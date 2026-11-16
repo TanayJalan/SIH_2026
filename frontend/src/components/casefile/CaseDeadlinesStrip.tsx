@@ -170,6 +170,18 @@ function DepositCard({ deposit }: { deposit: DepositDeadline | null }) {
   );
 }
 
+/** True when the payload carries at least one statutory clock to show. */
+export function hasDeadlines(deadlines: ApplicationDeadlines | undefined): boolean {
+  if (!deadlines) {
+    return false;
+  }
+  return (
+    deadlines.appeal?.deadline != null ||
+    deadlines.security_deposit !== null ||
+    deadlines.loa_validity !== null
+  );
+}
+
 export default function CaseDeadlinesStrip({
   deadlines,
   pending,
@@ -189,11 +201,7 @@ export default function CaseDeadlinesStrip({
     );
   }
 
-  const hasAny =
-    (deadlines.appeal?.deadline != null) ||
-    deadlines.security_deposit !== null ||
-    deadlines.loa_validity !== null;
-  if (!hasAny) {
+  if (!hasDeadlines(deadlines)) {
     return null;
   }
 

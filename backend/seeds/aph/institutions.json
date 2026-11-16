@@ -12,7 +12,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Vidya Vikas Trust (Fictional)"
+    "affiliating_body": "Vidya Vikas Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MAH-0002",
@@ -27,7 +83,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Sahyadri Education Society (Fictional)"
+    "affiliating_body": "Sahyadri Education Society (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 153
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 148
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 142
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 151
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 157
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 38
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MAH-0003",
@@ -42,7 +148,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Nagpur Education Trust (Fictional)"
+    "affiliating_body": "Nagpur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MAH-0004",
@@ -57,7 +219,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Nashik Education Trust (Fictional)"
+    "affiliating_body": "Nashik Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 133
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 128
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 137
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 130
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 135
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 53
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 23
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MAH-0005",
@@ -72,7 +284,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Kolhapur Education Trust (Fictional)"
+    "affiliating_body": "Kolhapur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MAH-0006",
@@ -87,7 +310,8 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Aurangabad Education Trust (Fictional)"
+    "affiliating_body": "Aurangabad Education Trust (Fictional)",
+    "accreditation": {}
   },
   {
     "aicte_id": "TN-0001",
@@ -102,7 +326,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Chola Educational Trust (Fictional)"
+    "affiliating_body": "Chola Educational Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TN-0002",
@@ -117,7 +397,57 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Pallava Trust (Fictional)"
+    "affiliating_body": "Pallava Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 162
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 158
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 140
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 142
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 144
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 82
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 48
+        }
+      ],
+      "aspirational_district": true
+    }
   },
   {
     "aicte_id": "TN-0003",
@@ -132,7 +462,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Madurai Education Trust (Fictional)"
+    "affiliating_body": "Madurai Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TN-0004",
@@ -147,7 +533,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Tiruchirappalli Education Trust (Fictional)"
+    "affiliating_body": "Tiruchirappalli Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TN-0005",
@@ -162,7 +559,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Salem Education Trust (Fictional)"
+    "affiliating_body": "Salem Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TN-0006",
@@ -177,7 +630,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Vellore Education Trust (Fictional)"
+    "affiliating_body": "Vellore Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0001",
@@ -192,7 +701,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Vijayanagara Trust (Fictional)"
+    "affiliating_body": "Vijayanagara Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0002",
@@ -207,7 +772,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Nagarjuna Trust (Fictional)"
+    "affiliating_body": "Nagarjuna Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 133
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 128
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 137
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 130
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 135
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 53
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 23
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0003",
@@ -222,7 +837,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Mangaluru Education Trust (Fictional)"
+    "affiliating_body": "Mangaluru Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0004",
@@ -237,7 +863,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Hubballi Education Trust (Fictional)"
+    "affiliating_body": "Hubballi Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 166
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 158
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 162
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 155
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 164
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 114
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0005",
@@ -252,7 +928,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Belagavi Education Trust (Fictional)"
+    "affiliating_body": "Belagavi Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "KA-0006",
@@ -267,7 +999,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Shivamogga Education Trust (Fictional)"
+    "affiliating_body": "Shivamogga Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0001",
@@ -282,7 +1070,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Gujarat Education Society (Fictional)"
+    "affiliating_body": "Gujarat Education Society (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0002",
@@ -297,7 +1141,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Surat Education Trust (Fictional)"
+    "affiliating_body": "Surat Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0003",
@@ -312,7 +1167,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Vadodara Education Trust (Fictional)"
+    "affiliating_body": "Vadodara Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0004",
@@ -327,7 +1238,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Rajkot Education Trust (Fictional)"
+    "affiliating_body": "Rajkot Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 153
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 148
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 142
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 151
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 157
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 38
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0005",
@@ -342,7 +1303,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Bhavnagar Education Trust (Fictional)"
+    "affiliating_body": "Bhavnagar Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "GJ-0006",
@@ -357,7 +1374,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Anand Education Trust (Fictional)"
+    "affiliating_body": "Anand Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "DL-0001",
@@ -372,7 +1445,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Apex Educational Society (Fictional)"
+    "affiliating_body": "Apex Educational Society (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "DL-0002",
@@ -387,7 +1516,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Dwarka Education Trust (Fictional)"
+    "affiliating_body": "Dwarka Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "DL-0003",
@@ -402,7 +1587,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Rohini Education Trust (Fictional)"
+    "affiliating_body": "Rohini Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": true
+    }
   },
   {
     "aicte_id": "DL-0004",
@@ -417,7 +1658,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Pitampura Education Trust (Fictional)"
+    "affiliating_body": "Pitampura Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 162
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 158
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 140
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 142
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 144
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 82
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 48
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "DL-0005",
@@ -432,7 +1723,8 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Janakpuri Education Trust (Fictional)"
+    "affiliating_body": "Janakpuri Education Trust (Fictional)",
+    "accreditation": {}
   },
   {
     "aicte_id": "DL-0006",
@@ -447,7 +1739,18 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Saket Education Trust (Fictional)"
+    "affiliating_body": "Saket Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0001",
@@ -462,7 +1765,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Bhopal Education Trust (Fictional)"
+    "affiliating_body": "Bhopal Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0002",
@@ -477,7 +1836,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Indore Education Trust (Fictional)"
+    "affiliating_body": "Indore Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0003",
@@ -492,7 +1907,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Jabalpur Education Trust (Fictional)"
+    "affiliating_body": "Jabalpur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0004",
@@ -507,7 +1978,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Gwalior Education Trust (Fictional)"
+    "affiliating_body": "Gwalior Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 133
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 128
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 137
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 130
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 135
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 53
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 23
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0005",
@@ -522,7 +2043,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Ujjain Education Trust (Fictional)"
+    "affiliating_body": "Ujjain Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "MP-0006",
@@ -537,7 +2069,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Sagar Education Trust (Fictional)"
+    "affiliating_body": "Sagar Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0001",
@@ -552,7 +2140,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Kolkata Education Trust (Fictional)"
+    "affiliating_body": "Kolkata Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0002",
@@ -567,7 +2211,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Howrah Education Trust (Fictional)"
+    "affiliating_body": "Howrah Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0003",
@@ -582,7 +2282,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Durgapur Education Trust (Fictional)"
+    "affiliating_body": "Durgapur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0004",
@@ -597,7 +2353,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Siliguri Education Trust (Fictional)"
+    "affiliating_body": "Siliguri Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0005",
@@ -612,7 +2379,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Asansol Education Trust (Fictional)"
+    "affiliating_body": "Asansol Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "WB-0006",
@@ -627,7 +2450,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Kharagpur Education Trust (Fictional)"
+    "affiliating_body": "Kharagpur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "OD-0001",
@@ -642,7 +2521,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Bhubaneswar Education Trust (Fictional)"
+    "affiliating_body": "Bhubaneswar Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "OD-0002",
@@ -657,7 +2592,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Cuttack Education Trust (Fictional)"
+    "affiliating_body": "Cuttack Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "OD-0003",
@@ -672,7 +2663,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Rourkela Education Trust (Fictional)"
+    "affiliating_body": "Rourkela Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "OD-0004",
@@ -687,7 +2689,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Berhampur Education Trust (Fictional)"
+    "affiliating_body": "Berhampur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 166
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 158
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 162
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 155
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 164
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 114
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        }
+      ],
+      "aspirational_district": true
+    }
   },
   {
     "aicte_id": "OD-0005",
@@ -702,7 +2754,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Sambalpur Education Trust (Fictional)"
+    "affiliating_body": "Sambalpur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "OD-0006",
@@ -717,7 +2825,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Balasore Education Trust (Fictional)"
+    "affiliating_body": "Balasore Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "RJ-0001",
@@ -732,7 +2896,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Jaipur Education Trust (Fictional)"
+    "affiliating_body": "Jaipur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "RJ-0002",
@@ -747,7 +2967,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Jodhpur Education Trust (Fictional)"
+    "affiliating_body": "Jodhpur Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "RJ-0003",
@@ -762,7 +2993,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Kota Education Trust (Fictional)"
+    "affiliating_body": "Kota Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "RJ-0004",
@@ -777,7 +3064,8 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Udaipur Education Trust (Fictional)"
+    "affiliating_body": "Udaipur Education Trust (Fictional)",
+    "accreditation": {}
   },
   {
     "aicte_id": "RJ-0005",
@@ -792,7 +3080,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Ajmer Education Trust (Fictional)"
+    "affiliating_body": "Ajmer Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 281
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 288
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 41
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 96
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 25
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "RJ-0006",
@@ -807,7 +3151,63 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Bikaner Education Trust (Fictional)"
+    "affiliating_body": "Bikaner Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0001",
@@ -822,7 +3222,18 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Hyderabad Education Trust (Fictional)"
+    "affiliating_body": "Hyderabad Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0002",
@@ -837,7 +3248,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Warangal Education Trust (Fictional)"
+    "affiliating_body": "Warangal Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": true,
+      "qs_asia_2024": false,
+      "naac_score": 3.42,
+      "nba_courses_pct": 62.0,
+      "nba_valid_until": "2028-04-30",
+      "autonomous": true,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 331
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 317
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 324
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 310
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 328
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 57
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 106
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 43
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0003",
@@ -852,7 +3319,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Nizamabad Education Trust (Fictional)"
+    "affiliating_body": "Nizamabad Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.05,
+      "nba_courses_pct": 26.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 306
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 295
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 284
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 302
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 313
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 53
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 77
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 33
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0004",
@@ -867,7 +3390,57 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Karimnagar Education Trust (Fictional)"
+    "affiliating_body": "Karimnagar Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": null,
+      "qs_asia_2024": false,
+      "naac_score": 3.12,
+      "nba_courses_pct": 22.0,
+      "nba_valid_until": "2027-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 180,
+          "admitted": 162
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 180,
+          "admitted": 158
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 180,
+          "admitted": 140
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 180,
+          "admitted": 142
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 180,
+          "admitted": 144
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Master of Business Administration",
+          "level": "POSTGRADUATE",
+          "approved_intake": 120,
+          "admitted": 82
+        },
+        {
+          "course_name": "Bachelor of Business Administration",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 48
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0005",
@@ -882,7 +3455,63 @@
     "is_women_only": false,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Khammam Education Trust (Fictional)"
+    "affiliating_body": "Khammam Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": false,
+      "naac_score": 2.72,
+      "nba_courses_pct": 55.0,
+      "nba_valid_until": "2025-04-30",
+      "autonomous": false,
+      "admissions": [
+        {
+          "academic_year": "2021-22",
+          "approved_intake": 360,
+          "admitted": 266
+        },
+        {
+          "academic_year": "2022-23",
+          "approved_intake": 360,
+          "admitted": 256
+        },
+        {
+          "academic_year": "2023-24",
+          "approved_intake": 360,
+          "admitted": 274
+        },
+        {
+          "academic_year": "2024-25",
+          "approved_intake": 360,
+          "admitted": 259
+        },
+        {
+          "academic_year": "2025-26",
+          "approved_intake": 360,
+          "admitted": 270
+        }
+      ],
+      "courses": [
+        {
+          "course_name": "Civil Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 26
+        },
+        {
+          "course_name": "Computer Science and Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 120,
+          "admitted": 47
+        },
+        {
+          "course_name": "Mechanical Engineering",
+          "level": "UNDERGRADUATE",
+          "approved_intake": 60,
+          "admitted": 22
+        }
+      ],
+      "aspirational_district": false
+    }
   },
   {
     "aicte_id": "TS-0006",
@@ -897,6 +3526,17 @@
     "is_women_only": true,
     "is_pwbd": false,
     "in_jk_ladakh_ne": false,
-    "affiliating_body": "Mahbubnagar Education Trust (Fictional)"
+    "affiliating_body": "Mahbubnagar Education Trust (Fictional)",
+    "accreditation": {
+      "nirf_8th": false,
+      "qs_asia_2024": null,
+      "naac_score": 3.6,
+      "nba_courses_pct": null,
+      "nba_valid_until": null,
+      "autonomous": null,
+      "admissions": [],
+      "courses": [],
+      "aspirational_district": false
+    }
   }
 ]

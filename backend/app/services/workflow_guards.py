@@ -243,7 +243,7 @@ def documents_reuploaded(ctx: TransitionContext) -> str | None:
 
     A reviewer rejection opens a document deficiency. Compliance cannot be
     submitted until the institution replaces every rejected document, because
-    Re-Scrutiny only verifies the listed deficiencies (APH 1.8f, 1.8g, 2.4).
+    Re-Scrutiny only verifies the listed deficiencies (APH 1.8, 2.4).
     """
     from app.models.document import Document
     from app.models.enums import DocumentVerificationStatus
@@ -267,7 +267,7 @@ def documents_reuploaded(ctx: TransitionContext) -> str | None:
     labels = ", ".join(sorted(document.doc_type for document in rejected))
     return (
         f"Re-upload the rejected document(s) before submitting compliance: {labels} "
-        "(APH 1.8f, 2.4)."
+        "(APH 1.8, 2.4)."
     )
 
 
@@ -613,7 +613,7 @@ def eoa_before_last_date(ctx: TransitionContext) -> str | None:
 
 
 def no_pending_investigation(ctx: TransitionContext) -> str | None:
-    """Pass when no court case, charge sheet or investigation is pending (APH 2.6e)."""
+    """Pass when no court case, charge sheet or investigation is pending (APH 2.6)."""
     data = ctx.application.data if isinstance(ctx.application.data, dict) else {}
     flags = {
         "pending_court_case": bool(ctx.payload.pending_court_case)
@@ -627,12 +627,12 @@ def no_pending_investigation(ctx: TransitionContext) -> str | None:
         return None
     return (
         "An intake increase or change is blocked while an investigation is pending "
-        f"({', '.join(active)}) (APH 2.6e)."
+        f"({', '.join(active)}) (APH 2.6)."
     )
 
 
 def core_branches_ok(ctx: TransitionContext) -> str | None:
-    """Pass when Engineering & Technology keeps the required core branches (APH 2.6c)."""
+    """Pass when Engineering & Technology keeps the required core branches (APH 2.6)."""
     required = int(ctx.definition.config.get("core_branches_required", 3))
     data = ctx.application.data if isinstance(ctx.application.data, dict) else {}
     branches = data.get("core_branches")
@@ -654,7 +654,7 @@ def core_branches_ok(ctx: TransitionContext) -> str | None:
         return None
     return (
         f"Engineering & Technology must retain at least {required} core branches; "
-        f"only {count} were identified (APH 2.6c)."
+        f"only {count} were identified (APH 2.6)."
     )
 
 
@@ -687,10 +687,10 @@ def _random_evc(ctx: TransitionContext) -> bool:
 
 
 def closure_outcome_present(ctx: TransitionContext) -> str | None:
-    """Pass when the closure outcome is recorded (APH 2.3.3h)."""
+    """Pass when the closure outcome is recorded (APH 2.21)."""
     if ctx.payload.closure_failed is not None:
         return None
-    return "Record whether the closure actually succeeded (APH 2.3.3h)."
+    return "Record whether the closure actually succeeded (APH 2.21)."
 
 
 GUARDS: dict[str, Guard] = {

@@ -81,7 +81,7 @@ function Snapshots({ record }: { record: AuditLogRecord }) {
         {record.before ? (
           <div>
             <p className="text-12 font-medium text-ink-500">Before</p>
-            <pre className="mt-1 max-w-md overflow-x-auto rounded-input bg-ink p-2 text-12 leading-4 text-surface">
+            <pre className="mt-1 max-w-md overflow-x-auto rounded-input bg-ink p-2 text-12 leading-4 text-surface" tabIndex={0}>
               {JSON.stringify(record.before, null, 2)}
             </pre>
           </div>
@@ -89,7 +89,7 @@ function Snapshots({ record }: { record: AuditLogRecord }) {
         {record.after ? (
           <div>
             <p className="text-12 font-medium text-ink-500">After</p>
-            <pre className="mt-1 max-w-md overflow-x-auto rounded-input bg-ink p-2 text-12 leading-4 text-surface">
+            <pre className="mt-1 max-w-md overflow-x-auto rounded-input bg-ink p-2 text-12 leading-4 text-surface" tabIndex={0}>
               {JSON.stringify(record.after, null, 2)}
             </pre>
           </div>

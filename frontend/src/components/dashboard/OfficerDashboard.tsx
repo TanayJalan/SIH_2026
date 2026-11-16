@@ -6,6 +6,7 @@ import { Clock, Building } from "lucide-react";
 import {
   Button,
   EmptyState,
+  ErrorState,
   Skeleton,
   Stat,
   StatusPill,
@@ -15,9 +16,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   RiskBadge,
   SlaRing,
 } from "../ui";
@@ -150,11 +148,10 @@ export default function OfficerDashboard() {
         <TableHeader>
           <TableRow>
             <TableHead>Application</TableHead>
-            <TableHead className="text-right">Institution</TableHead>
-            <TableHead className="text-right">Status</TableHead>
-            <TableHead className="text-right">Stage</TableHead>
-            <TableHead className="text-right">SLA</TableHead>
-            <TableHead className="text-right">Risk</TableHead>
+            <TableHead className="hidden text-right lg:table-cell">Status</TableHead>
+            <TableHead className="hidden text-right lg:table-cell">Stage</TableHead>
+            <TableHead className="hidden text-right lg:table-cell">SLA</TableHead>
+            <TableHead className="hidden text-right lg:table-cell">Risk</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -181,24 +178,41 @@ export default function OfficerDashboard() {
                       <span className="text-13 font-medium text-ink truncate">
                         {entry.portal_application_no ?? shortId(entry.application_id)}
                       </span>
-                      <p className="text-[10px] text-ink-500 truncate">
+                      <p className="text-[10px] leading-tight text-ink-500">
                         {entry.institution_name}
                       </p>
                     </div>
                   </div>
+                  {/* Below md the table collapses to one column, so the
+                      status, stage, SLA and risk travel with the case. */}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 lg:hidden">
+                    <StatusPill status={statusPillTone(entry.status)}>
+                      {humanizeEnum(entry.status)}
+                    </StatusPill>
+                    <span className="text-[10px] text-ink-500">
+                      {humanizeEnum(entry.current_stage)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-ink-500">
+                      <SlaRing
+                        value={slastringValue}
+                        daysLeft={daysLeft ?? 0}
+                        state={state}
+                        className="size-5"
+                      />
+                      {slaLabel}
+                    </span>
+                    <RiskBadge level={risk} />
+                  </div>
                 </TableCell>
-                <TableCell className="text-right text-13 text-ink-700 truncate max-w-[120px]">
-                  {entry.institution_name}
-                </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="hidden text-right lg:table-cell">
                   <StatusPill status={statusPillTone(entry.status)}>
                     {humanizeEnum(entry.status)}
                   </StatusPill>
                 </TableCell>
-                <TableCell className="text-right text-[11px] text-ink-500">
+                <TableCell className="hidden text-right text-[11px] text-ink-500 lg:table-cell">
                   {humanizeEnum(entry.current_stage)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="hidden text-right lg:table-cell">
                   <div className="flex items-center gap-2">
                     <SlaRing
                       value={slastringValue}
@@ -206,10 +220,10 @@ export default function OfficerDashboard() {
                       state={state}
                       className="size-7"
                     />
-                    <span className="text-[10px] font-medium">{slaLabel}</span>
+                    <span className="whitespace-nowrap text-[10px] font-medium">{slaLabel}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="hidden text-right lg:table-cell">
                   <RiskBadge level={risk} />
                 </TableCell>
               </TableRow>
@@ -231,35 +245,42 @@ export default function OfficerDashboard() {
   } else {
     workloadContent = (
       <div className="p-5">
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart
-            data={STAGE_ORDER.map((stage) => ({
-              stage: humanizeEnum(stage),
-              count: stageCounts.get(stage) ?? 0,
-            }))}
-          >
-            <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-            <YAxis type="number" dataKey="count" hide />
-            <Tooltip
-              cursor={{ fill: "var(--ink-200)" }}
-              content={({ active, payload }: any) => {
-                if (active && payload && payload.length) {
-                  const entry = payload[0].payload;
-                  return (
-                    <div className="rounded-input border border-line bg-surface p-2 text-ink">
-                      <p className="text-11 font-medium">{entry.stage}</p>
-                      <p className="text-10 text-ink-500">
-                        {entry.count} application{entry.count === 1 ? "" : "s"}
-                      </p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Bar dataKey="count" fill="var(--saffron)" radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div
+          role="img"
+          aria-label={`Workload by stage: ${STAGE_ORDER.map(
+            (stage) => `${humanizeEnum(stage)} ${stageCounts.get(stage) ?? 0}`,
+          ).join(", ")}`}
+        >
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart
+              data={STAGE_ORDER.map((stage) => ({
+                stage: humanizeEnum(stage),
+                count: stageCounts.get(stage) ?? 0,
+              }))}
+            >
+              <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
+              <YAxis type="number" dataKey="count" hide />
+              <Tooltip
+                cursor={{ fill: "var(--ink-200)" }}
+                content={({ active, payload }: any) => {
+                  if (active && payload && payload.length) {
+                    const entry = payload[0].payload;
+                    return (
+                      <div className="rounded-input border border-line bg-surface p-2 text-ink">
+                        <p className="text-11 font-medium">{entry.stage}</p>
+                        <p className="text-10 text-ink-500">
+                          {entry.count} application{entry.count === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar dataKey="count" fill="var(--saffron)" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     );
   }
@@ -288,7 +309,6 @@ export default function OfficerDashboard() {
         <TableHeader>
           <TableRow>
             <TableHead>Institution</TableHead>
-            <TableHead className="text-right">Application</TableHead>
             <TableHead className="text-right">Scheduled</TableHead>
             <TableHead className="text-right">Status</TableHead>
           </TableRow>
@@ -296,11 +316,11 @@ export default function OfficerDashboard() {
         <TableBody>
           {(dashboard?.upcoming_evc_dates ?? []).map((evc) => (
             <TableRow key={evc.inspection_id}>
-              <TableCell className="text-ink truncate max-w-[150px]">
+              <TableCell className="text-ink">
                 {evc.institution_name}
-              </TableCell>
-              <TableCell className="text-right text-13 text-ink-700 truncate max-w-[100px]">
-                {evc.portal_application_no ?? shortId(evc.application_id)}
+                <p className="text-[10px] text-ink-500">
+                  {evc.portal_application_no ?? shortId(evc.application_id)}
+                </p>
               </TableCell>
               <TableCell className="text-right text-13 text-ink-700">
                 {formatDate(evc.scheduled_on)}
@@ -316,6 +336,23 @@ export default function OfficerDashboard() {
           ))}
         </TableBody>
       </Table>
+    );
+  }
+
+  if (dashboardQuery.isError) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Officer dashboard"
+          title="My queue"
+          description="Applications awaiting your action, sorted by risk and SLA. Queue entries come from the workflow state machine."
+        />
+        <ErrorState
+          error={dashboardQuery.error}
+          message="Your queue could not be loaded. Check the API connection and try again."
+          onRetry={() => void dashboardQuery.refetch()}
+        />
+      </>
     );
   }
 
@@ -379,21 +416,38 @@ export default function OfficerDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-11 font-medium text-ink-500">Stage</span>
-            <Tabs
-              value={filterStage}
-              onValueChange={setFilterStage}
-              className="bg-transparent border-none"
+            <span className="text-11 font-medium text-ink-500" id="stage-filter-label">
+              Stage
+            </span>
+            <div
+              role="group"
+              aria-labelledby="stage-filter-label"
+              className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-input border border-line bg-paper p-1 text-ink-700"
             >
-              <TabsList>
-                <TabsTrigger value="all">All stages</TabsTrigger>
-                {STAGE_ORDER.map((stage) => (
-                  <TabsTrigger key={stage} value={stage}>
-                    {humanizeEnum(stage)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+              {[{ value: "all", label: "All stages" }].concat(
+                STAGE_ORDER.map((stage) => ({
+                  value: stage,
+                  label: humanizeEnum(stage),
+                })),
+              ).map((option) => {
+                const isActive = filterStage === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setFilterStage(option.value)}
+                    className={
+                      isActive
+                        ? "inline-flex h-8 items-center justify-center whitespace-nowrap rounded-input border border-line bg-surface px-3 text-13 font-medium text-ink"
+                        : "inline-flex h-8 items-center justify-center whitespace-nowrap rounded-input border border-transparent px-3 text-13 font-medium text-ink-700 transition-colors hover:text-ink"
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
         {queueContent}

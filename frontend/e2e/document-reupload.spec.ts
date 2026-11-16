@@ -6,7 +6,7 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  * A Scrutiny Committee member rejects the fire-safety certificate with the
  * EXPIRED reason, the institution sees the reason and re-uploads version 2, the
  * linked deficiency is marked responded, and the reviewer verifies the
- * replacement (APH 1.8f, 1.8g, 2.4).
+ * replacement (APH 1.8, 2.4).
  *
  * The case is created through the API so the test is deterministic and does not
  * depend on which seeded application happens to be in Scrutiny.

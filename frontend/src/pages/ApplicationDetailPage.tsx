@@ -1,25 +1,20 @@
 import { Link, Navigate, useParams } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 
 import Breadcrumbs from "../components/Breadcrumbs";
 import PageHeader from "../components/PageHeader";
-import DeficiencyReportPanel from "../components/application/DeficiencyReportPanel";
 import ReopenApplicationPanel from "../components/application/ReopenApplicationPanel";
-import CaseCommittees from "../components/casefile/CaseCommittees";
-import CaseComplaints from "../components/casefile/CaseComplaints";
-import CaseCompliance from "../components/casefile/CaseCompliance";
-import CaseDeadlinesStrip from "../components/casefile/CaseDeadlinesStrip";
-import CaseDecisionLetters from "../components/casefile/CaseDecisionLetters";
-import CaseDeficiencies from "../components/casefile/CaseDeficiencies";
-import CaseDocuments from "../components/casefile/CaseDocuments";
-import CaseFees from "../components/casefile/CaseFees";
+import CaseDeadlinesStrip, { hasDeadlines } from "../components/casefile/CaseDeadlinesStrip";
 import CaseFileHeader, { type RiskSummary } from "../components/casefile/CaseFileHeader";
-import CaseInspection from "../components/casefile/CaseInspection";
 import CaseOverview from "../components/casefile/CaseOverview";
 import CaseSidebar from "../components/casefile/CaseSidebar";
-import CaseTimeline from "../components/casefile/CaseTimeline";
-import { stagesFromDefinition, buildStageEvents } from "../components/casefile/stages";
+import {
+  stagesFromDefinition,
+  buildStageEvents,
+  hasStatutoryClock,
+} from "../components/casefile/stages";
 import { WorkflowDialogHost } from "../components/workflow/WorkflowDialogHost";
 import {
   Skeleton,
@@ -42,7 +37,36 @@ import {
   type ComplianceRulePreview,
 } from "../lib/api";
 import { shortId, formatDate, formatDateTime } from "../lib/format";
+import { applicationQueryKey } from "../lib/prefetch";
 import { applicationsLabelFor } from "../lib/roles";
+
+/*
+ * Only the overview panel is visible on first paint. Every other panel is
+ * pulled on demand, which keeps the case-file chunk small enough to paint the
+ * page header and stage track quickly.
+ */
+const CaseDocuments = lazy(() => import("../components/casefile/CaseDocuments"));
+const CaseCompliance = lazy(() => import("../components/casefile/CaseCompliance"));
+const DeficiencyReportPanel = lazy(
+  () => import("../components/application/DeficiencyReportPanel"),
+);
+const CaseDeficiencies = lazy(() => import("../components/casefile/CaseDeficiencies"));
+const CaseCommittees = lazy(() => import("../components/casefile/CaseCommittees"));
+const CaseInspection = lazy(() => import("../components/casefile/CaseInspection"));
+const CaseDecisionLetters = lazy(() => import("../components/casefile/CaseDecisionLetters"));
+const CaseFees = lazy(() => import("../components/casefile/CaseFees"));
+const CaseComplaints = lazy(() => import("../components/casefile/CaseComplaints"));
+const CaseTimeline = lazy(() => import("../components/casefile/CaseTimeline"));
+
+function TabPanelLoader() {
+  return (
+    <div className="space-y-3" role="status">
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className="h-28 w-full rounded-panel" />
+      <span className="sr-only">Loading case file section</span>
+    </div>
+  );
+}
 
 const TABS = [
   { value: "overview", label: "Overview" },
@@ -66,11 +90,12 @@ function riskLevelFor(rules: ComplianceRulePreview[]): RiskLevel {
   return "low";
 }
 
-export default function ApplicationDetailPage() {  const { applicationId } = useParams<{ applicationId: string }>();
+export default function ApplicationDetailPage() {
+  const { applicationId } = useParams<{ applicationId: string }>();
   const { user, token } = useAuth();
 
   const applicationQuery = useQuery({
-    queryKey: ["application", applicationId],
+    queryKey: applicationQueryKey(applicationId ?? ""),
     queryFn: () => getApplication(token ?? "", applicationId ?? ""),
     enabled: Boolean(token && applicationId),
     retry: false,
@@ -183,6 +208,15 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
   }
 
   const caseStages = stagesFromDefinition(definitionQuery.data);
+  /*
+   * The deadlines strip only exists for cases with a statutory clock. Reserving
+   * its space while the request is in flight keeps the case body from jumping,
+   * and the cases without a clock render nothing at all.
+   */
+  const showDeadlines =
+    deadlinesQuery.data !== undefined
+      ? hasDeadlines(deadlinesQuery.data)
+      : hasStatutoryClock(application.status);
   const stageEvents = buildStageEvents(
     application,
     timelineQuery.data?.events ?? [],
@@ -219,6 +253,7 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
           userRole={user.role}
           risk={risk}
           definition={definitionQuery.data}
+          definitionPending={definitionQuery.isPending}
         />
 
         {application.locked_at && application.status !== "DRAFT" ? (
@@ -244,7 +279,21 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
           <ReopenApplicationPanel application={application} token={token ?? ""} />
         ) : null}
 
-        {caseStages.length > 0 ? (
+        {definitionQuery.isPending ? (
+          <div
+            className="min-h-[422px] rounded-panel border border-line bg-surface p-5 sm:p-6 md:min-h-[146px] xl:min-h-[130px]"
+            role="status"
+          >
+            <div className="space-y-3" aria-hidden="true">
+              <Skeleton className="h-4 w-40" />
+              {/* The skeleton stays inside the min-heights above, which match
+                  the rendered stage track, so the case body does not jump
+                  when the definition arrives on a cold load. */}
+              <Skeleton className="h-24 w-full md:h-5" />
+            </div>
+            <span className="sr-only">Loading workflow stages</span>
+          </div>
+        ) : caseStages.length > 0 ? (
           <>
             <StageTrack
               stages={caseStages}
@@ -256,10 +305,12 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
               deposit={deadlinesQuery.data?.security_deposit ?? null}
               loaValidity={deadlinesQuery.data?.loa_validity ?? null}
             />
-            <CaseDeadlinesStrip
-              deadlines={deadlinesQuery.data}
-              pending={deadlinesQuery.isPending}
-            />
+            {showDeadlines ? (
+              <CaseDeadlinesStrip
+                deadlines={deadlinesQuery.data}
+                pending={deadlinesQuery.isPending}
+              />
+            ) : null}
           </>
         ) : null}
 
@@ -282,77 +333,93 @@ export default function ApplicationDetailPage() {  const { applicationId } = use
               </TabsContent>
 
               <TabsContent value="documents">
-                <CaseDocuments applicationId={application.id} token={token ?? ""} />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseDocuments applicationId={application.id} token={token ?? ""} />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="compliance">
-                <div className="space-y-5">
-                  <CaseCompliance
-                    applicationId={application.id}
-                    token={token ?? ""}
-                    canRaiseDeficiency={officerRole}
-                  />
-                  <DeficiencyReportPanel
-                    applicationId={application.id}
-                    token={token ?? ""}
-                  />
-                </div>
+                <Suspense fallback={<TabPanelLoader />}>
+                  <div className="space-y-5">
+                    <CaseCompliance
+                      applicationId={application.id}
+                      token={token ?? ""}
+                      canRaiseDeficiency={officerRole}
+                    />
+                    <DeficiencyReportPanel
+                      applicationId={application.id}
+                      token={token ?? ""}
+                    />
+                  </div>
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="deficiencies">
-                <CaseDeficiencies
-                  applicationId={application.id}
-                  token={token ?? ""}
-                  canRespond={institutionRole}
-                  canClose={officerRole}
-                />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseDeficiencies
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    canRespond={institutionRole}
+                    canClose={officerRole}
+                  />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="committees">
-                <div className="space-y-5">
-                  <CaseCommittees
-                    applicationId={application.id}
-                    token={token ?? ""}
-                    canSelect={
-                      regionalRole ||
-                      user.role === "REGULATION_BUREAU_OFFICER" ||
-                      user.role === "SUPER_ADMIN"
-                    }
-                  />
-                  <CaseInspection
-                    applicationId={application.id}
-                    token={token ?? ""}
-                    canSchedule={regionalRole}
-                  />
-                </div>
+                <Suspense fallback={<TabPanelLoader />}>
+                  <div className="space-y-5">
+                    <CaseCommittees
+                      applicationId={application.id}
+                      token={token ?? ""}
+                      canSelect={
+                        regionalRole ||
+                        user.role === "REGULATION_BUREAU_OFFICER" ||
+                        user.role === "SUPER_ADMIN"
+                      }
+                    />
+                    <CaseInspection
+                      applicationId={application.id}
+                      token={token ?? ""}
+                      canSchedule={regionalRole}
+                    />
+                  </div>
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="decision">
-                <CaseDecisionLetters
-                  application={application}
-                  token={token ?? ""}
-                  institutionAdmin={institutionRole}
-                />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseDecisionLetters
+                    application={application}
+                    token={token ?? ""}
+                    institutionAdmin={institutionRole}
+                  />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="fees">
-                <CaseFees
-                  application={application}
-                  token={token ?? ""}
-                  institutionAdmin={institutionRole}
-                />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseFees
+                    application={application}
+                    token={token ?? ""}
+                    institutionAdmin={institutionRole}
+                  />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="complaints">
-                <CaseComplaints application={application} token={token ?? ""} />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseComplaints application={application} token={token ?? ""} />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="timeline">
-                <CaseTimeline
-                  applicationId={application.id}
-                  token={token ?? ""}
-                  definition={definitionQuery.data}
-                />
+                <Suspense fallback={<TabPanelLoader />}>
+                  <CaseTimeline
+                    applicationId={application.id}
+                    token={token ?? ""}
+                    definition={definitionQuery.data}
+                  />
+                </Suspense>
               </TabsContent>
             </Tabs>
           </div>

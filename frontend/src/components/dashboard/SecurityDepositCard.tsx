@@ -133,7 +133,7 @@ export default function SecurityDepositCard({
                             : ` · ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
                       </>
                     ) : (
-                      "Deposit settled; release can be requested with the 6.46b clearances"
+                      "Deposit settled; release can be requested with the 6.46 clearances"
                     )}
                   </span>
                   <Link

@@ -1644,7 +1644,7 @@ def notify_document_rejected(
     notifications: NotificationService,
     clock: SimulatedClock,
 ) -> int:
-    """Tell the institution that a reviewer rejected a document (APH 1.8f)."""
+    """Tell the institution that a reviewer rejected a document (APH 1.8)."""
     engine = AlertEngine(db, clock, notifications=notifications)
     recipients = _document_recipients(application, reviewer=False)
     if not recipients:
@@ -1666,7 +1666,7 @@ def notify_document_rejected(
         f"Reason: {reason}. "
         f"{document.rejection_comment or ''} Re-upload a compliant version"
         + (f" by {_format_due(due)}" if due is not None else "")
-        + " (APH 1.8f, 2.4)."
+        + " (APH 1.8, 2.4)."
     )
     created = engine._create_alert(  # noqa: SLF001 - reuse the shared alert engine
         rule=first_rule_for_handler(db, "DOCUMENT_REJECTED"),
@@ -1706,7 +1706,7 @@ def notify_document_reuploaded(
     title = f"Document re-uploaded: {application.institution.name}"
     message = (
         f"{actor.name} re-uploaded {document.doc_type} as version {document.version} "
-        "after a rejection. Review the replacement (APH 1.8g, 2.4)."
+        "after a rejection. Review the replacement (APH 1.8, 2.4)."
     )
     created = engine._create_alert(  # noqa: SLF001 - reuse the shared alert engine
         rule=first_rule_for_handler(db, "DOCUMENT_REUPLOADED"),

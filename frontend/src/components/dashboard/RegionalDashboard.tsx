@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
   Bar,
+  Cell,
+  LabelList,
   XAxis,
   YAxis,
   Tooltip,
@@ -13,6 +15,7 @@ import { Building, IndianRupee } from "lucide-react";
 import {
   Button,
   EmptyState,
+  ErrorState,
   Skeleton,
   Stat,
   StatusPill,
@@ -32,6 +35,12 @@ import { useAuth } from "../../auth/AuthContext";
 import { humanizeEnum, formatDate, shortId } from "@/lib/format";
 import PageHeader from "../PageHeader";
 import { IndiaTileMap, type TileMetric } from "./IndiaTileMap";
+
+const BAND_FILLS: Record<string, string> = {
+  RED: "var(--breach)",
+  AMBER: "var(--watch)",
+  GREEN: "var(--ok)",
+};
 
 const COMPLIANCE_TONES: Record<string, "compliant" | "watch" | "breach"> = {
   GREEN: "compliant",
@@ -103,6 +112,23 @@ export default function RegionalDashboard() {
     (dashboard?.escalations ?? []).map((e) => [e.institution_name, e.level]),
   );
 
+  if (dashboardQuery.isError) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Regional dashboard"
+          title="Regional oversight"
+          description="Applications, compliance and SLA position across institutions in your scope. Figures come from SQL aggregations over configured rules."
+        />
+        <ErrorState
+          error={dashboardQuery.error}
+          message="The regional dashboard could not be loaded. Check the API connection and try again."
+          onRetry={() => void dashboardQuery.refetch()}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -149,10 +175,10 @@ export default function RegionalDashboard() {
       </section>
 
       {/* Main grid: tile map + needs attention */}
-      <section className="mb-6 grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="mb-6 grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <section className="min-w-0 rounded-panel border border-line bg-surface">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
-            <div>
+          <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+            <div className="min-w-0">
               <h2 className="font-serif text-20 font-semibold text-ink">
                 Institutional compliance
               </h2>
@@ -160,7 +186,7 @@ export default function RegionalDashboard() {
                 Tile-coloured by compliance RAG.
               </p>
             </div>
-            <div className="text-right">
+            <div className="hidden shrink-0 text-right sm:block">
               <p className="text-10 font-semibold uppercase tracking-[0.12em] text-ink-500">
                 Institutions
               </p>
@@ -214,8 +240,7 @@ export default function RegionalDashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Institution</TableHead>
-                  <TableHead className="text-right">Reason</TableHead>
-                  <TableHead className="text-right">Overdue</TableHead>
+                  <TableHead className="text-right">Attention</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -234,31 +259,28 @@ export default function RegionalDashboard() {
                           {inst.state} · {inst.region}
                         </p>
                       </TableCell>
-                      <TableCell className="text-right text-13 text-ink-700">
-                        <div className="flex items-end gap-2">
+                      <TableCell className="text-right">
+                        <div className="flex justify-end">
                           <StatusPill
                             status={COMPLIANCE_TONES[inst.status] ?? "neutral"}
+                            className="whitespace-nowrap"
                           >
                             {reason}
                           </StatusPill>
-                          <span className="text-[10px] font-medium text-ink-700">
-                            APH 7.13
-                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {daysOverdue != null ? (
-                          <div className="flex items-end gap-1">
-                            <span className="text-13 font-semibold text-breach-strong">
-                              {daysOverdue}
-                            </span>
-                            <span className="text-[10px] text-ink-500">days</span>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-ink-500">—</span>
-                        )}
+                        <p className="mt-1 whitespace-nowrap text-[10px] text-ink-700">
+                          <span className="font-medium">APH 7.13</span>
+                          {daysOverdue != null ? (
+                            <>
+                              {" · "}
+                              <span className="font-semibold text-breach-strong">
+                                {daysOverdue} days overdue
+                              </span>
+                            </>
+                          ) : null}
+                        </p>
                         {level != null && (
-                          <p className="text-[9px] text-ink-400 mt-0.5">
+                          <p className="text-[10px] leading-tight text-ink-500">
                             Escalation level {level} (illustrative)
                           </p>
                         )}
@@ -273,9 +295,9 @@ export default function RegionalDashboard() {
       </section>
 
       {/* Charts row */}
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {/* Funnel */}
-        <section className="min-w-0 rounded-panel border border-line bg-surface col-span-2 md:col-span-2 lg:col-span-1">
+        <section className="min-w-0 rounded-panel border border-line bg-surface">
           <div className="border-b border-line px-5 py-4 flex items-center justify-between">
             <h2 className="font-serif text-18 font-semibold text-ink">Funnel</h2>
             <p className="text-11 text-ink-500">Submitted → LoA / EoA</p>
@@ -288,36 +310,53 @@ export default function RegionalDashboard() {
             </div>
           ) : (
             <div className="p-5">
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={dashboard?.funnel ?? []} layout="vertical">
-                  <XAxis type="number" dataKey="count" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="stage"
-                    tick={{ fontSize: 11, fill: "var(--ink-500)" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "var(--ink-200)" }}
-                    content={({ active, payload }: any) => {
-                      if (active && payload && payload.length) {
-                        const entry = payload[0].payload;
-                        return (
-                          <div className="rounded-input border border-line bg-surface p-2 text-ink">
-                            <p className="text-11 font-medium">{entry.stage}</p>
-                            <p className="text-10 text-ink-500">
-                              {entry.count} application{entry.count === 1 ? "" : "s"}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="count" fill="var(--saffron)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div
+                role="img"
+                aria-label={`Funnel, applications by stage: ${
+                  (dashboard?.funnel ?? [])
+                    .map((entry) => `${entry.stage} ${entry.count}`)
+                    .join(", ") || "no data"
+                }`}
+              >
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={dashboard?.funnel ?? []} layout="vertical">
+                    <XAxis type="number" dataKey="count" hide domain={[0, "dataMax + 2"]} />
+                    <YAxis
+                      type="category"
+                      dataKey="stage"
+                      tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "var(--ink-200)" }}
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload.length) {
+                          const entry = payload[0].payload;
+                          return (
+                            <div className="rounded-input border border-line bg-surface p-2 text-ink">
+                              <p className="text-11 font-medium">{entry.stage}</p>
+                              <p className="text-10 text-ink-500">
+                                {entry.count} application{entry.count === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="count" fill="var(--saffron)" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                      <LabelList
+                        dataKey="count"
+                        position="right"
+                        className="fill-ink-700"
+                        fontSize={11}
+                        fontWeight={600}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <div className="mt-3 flex justify-end text-[10px] text-ink-500">
                 Bar length = applications at that stage
               </div>
@@ -326,7 +365,7 @@ export default function RegionalDashboard() {
         </section>
 
         {/* Top violation codes */}
-        <section className="min-w-0 rounded-panel border border-line bg-surface col-span-2 md:col-span-2 lg:col-span-1">
+        <section className="min-w-0 rounded-panel border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-serif text-18 font-semibold text-ink">
               Top violation codes
@@ -341,42 +380,60 @@ export default function RegionalDashboard() {
             </div>
           ) : (
             <div className="p-5">
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={(dashboard?.top_violation_codes ?? []).slice(0, 6)}
-                  layout="vertical"
-                >
-                  <XAxis type="number" dataKey="count" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="code"
-                    tick={{ fontSize: 11, fill: "var(--ink-500)" }}
-                    tickFormatter={(value: string) => `APH 7.4(${value})`}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "var(--ink-200)" }}
-                    content={({ active, payload }: any) => {
-                      if (active && payload && payload.length) {
-                        const entry = payload[0].payload;
-                        return (
-                          <div className="rounded-input border border-line bg-surface p-2 text-ink">
-                            <p className="text-11 font-medium">
-                              Violation {entry.code}
-                            </p>
-                            <p className="text-10 text-ink-500">
-                              {entry.count} action{entry.count === 1 ? "" : "s"}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="count" fill="var(--breach)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div
+                role="img"
+                aria-label={`Top violation codes, penal actions: ${
+                  (dashboard?.top_violation_codes ?? [])
+                    .slice(0, 6)
+                    .map((entry) => `APH 7.4(${entry.code}) ${entry.count}`)
+                    .join(", ") || "no data"
+                }`}
+              >
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart
+                    data={(dashboard?.top_violation_codes ?? []).slice(0, 6)}
+                    layout="vertical"
+                  >
+                    <XAxis type="number" dataKey="count" hide domain={[0, "dataMax + 2"]} />
+                    <YAxis
+                      type="category"
+                      dataKey="code"
+                      tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                      tickFormatter={(value: string) => `APH 7.4(${value})`}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "var(--ink-200)" }}
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload.length) {
+                          const entry = payload[0].payload;
+                          return (
+                            <div className="rounded-input border border-line bg-surface p-2 text-ink">
+                              <p className="text-11 font-medium">
+                                Violation {entry.code}
+                              </p>
+                              <p className="text-10 text-ink-500">
+                                {entry.count} action{entry.count === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="count" fill="var(--breach)" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                      <LabelList
+                        dataKey="count"
+                        position="right"
+                        className="fill-ink-700"
+                        fontSize={11}
+                        fontWeight={600}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <div className="mt-3 flex justify-end text-[10px] text-ink-500">
                 Most frequent penal-action codes
               </div>
@@ -385,7 +442,7 @@ export default function RegionalDashboard() {
         </section>
 
         {/* Compliance histogram */}
-        <section className="min-w-0 rounded-panel border border-line bg-surface col-span-2 md:col-span-2 lg:col-span-1">
+        <section className="min-w-0 rounded-panel border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-serif text-18 font-semibold text-ink">
               Compliance histogram
@@ -402,43 +459,59 @@ export default function RegionalDashboard() {
             </div>
           ) : (
             <div className="p-5">
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={histogramBins(institutions)}
-                  layout="vertical"
-                >
-                  <XAxis type="number" dataKey="count" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="band"
-                    tick={{ fontSize: 11, fill: "var(--ink-500)" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "var(--ink-200)" }}
-                    content={({ active, payload }: any) => {
-                      if (active && payload && payload.length) {
-                        const entry = payload[0].payload;
-                        return (
-                          <div className="rounded-input border border-line bg-surface p-2 text-ink">
-                            <p className="text-11 font-medium">{entry.band}</p>
-                            <p className="text-10 text-ink-500">
-                              {entry.count} institution{entry.count === 1 ? "" : "s"}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill="var(--saffron)"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <div
+                role="img"
+                aria-label={`Compliance histogram, institutions by latest score: ${histogramBins(
+                  institutions,
+                )
+                  .map((entry) => `${entry.band} ${entry.count}`)
+                  .join(", ")}`}
+              >
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart
+                    data={histogramBins(institutions)}
+                    layout="vertical"
+                  >
+                    <XAxis type="number" dataKey="count" hide />
+                    <YAxis
+                      type="category"
+                      dataKey="band"
+                      tick={{ fontSize: 11, fill: "var(--ink-500)" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "var(--ink-200)" }}
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload.length) {
+                          const entry = payload[0].payload;
+                          return (
+                            <div className="rounded-input border border-line bg-surface p-2 text-ink">
+                              <p className="text-11 font-medium">{entry.band}</p>
+                              <p className="text-10 text-ink-500">
+                                {entry.count} institution{entry.count === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                      {histogramBins(institutions).map((entry) => (
+                        <Cell key={entry.band} fill={BAND_FILLS[entry.band]} />
+                      ))}
+                      <LabelList
+                        dataKey="count"
+                        position="right"
+                        className="fill-ink-700"
+                        fontSize={11}
+                        fontWeight={600}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <div className="mt-3 flex justify-end text-[10px] text-ink-500">
                 Latest compliance RAG band per institution
               </div>
@@ -447,7 +520,7 @@ export default function RegionalDashboard() {
         </section>
 
         {/* Appeals + Deposits panels */}
-        <section className="min-w-0 rounded-panel border border-line bg-surface col-span-2 md:col-span-2 lg:col-span-1">
+        <section className="min-w-0 rounded-panel border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-serif text-18 font-semibold text-ink">Appeals</h2>
             <p className="mt-1 text-12 text-ink-500">
@@ -509,7 +582,7 @@ export default function RegionalDashboard() {
           </div>
         </section>
 
-        <section className="min-w-0 rounded-panel border border-line bg-surface col-span-2 md:col-span-2 lg:col-span-1">
+        <section className="min-w-0 rounded-panel border border-line bg-surface md:col-span-2 xl:col-span-2">
           <div className="border-b border-line px-5 py-4">
             <h2 className="font-serif text-18 font-semibold text-ink">
               Security Deposits
@@ -528,21 +601,21 @@ export default function RegionalDashboard() {
               />
             </div>
           ) : (
-            <Table density="dense">
+            <Table density="dense" className="table-fixed sm:table-auto">
               <TableHeader>
                 <TableRow>
                   <TableHead>Institution</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                  <TableHead className="text-right">Due</TableHead>
+                  <TableHead className="w-[92px] text-right sm:w-auto">Status</TableHead>
+                  <TableHead className="w-[78px] text-right sm:w-auto">Due</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(dashboard?.security_deposits_pending ?? []).map((d) => (
                   <TableRow key={d.application_id}>
                     <TableCell className="text-ink">
-                      <div className="flex items-center gap-2">
-                        <IndianRupee className="size-3.5 text-ink-500" />
-                        <span className="truncate text-13 font-medium">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <IndianRupee className="size-3.5 shrink-0 text-ink-500" />
+                        <span className="min-w-0 break-words text-13 font-medium">
                           {d.institution_name}
                         </span>
                       </div>
@@ -563,7 +636,7 @@ export default function RegionalDashboard() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="text-13 font-medium text-ink">
+                      <span className="block text-12 font-medium leading-tight text-ink sm:text-13">
                         {formatDate(d.due_on)}
                       </span>
                     </TableCell>

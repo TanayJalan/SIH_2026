@@ -55,6 +55,8 @@ def _pages_for_role(role: Role) -> list[SearchPageItem]:
         pages.append(SearchPageItem(label="Compliance admin", path="/compliance-admin"))
     if role == Role.SUPER_ADMIN:
         pages.append(SearchPageItem(label="Alert rules", path="/alert-rules"))
+    if role == Role.INSTITUTION_ADMIN:
+        pages.append(SearchPageItem(label="Eligibility advisor", path="/eligibility"))
     pages.append(SearchPageItem(label="My profile", path="/profile"))
     return pages
 

@@ -1,7 +1,7 @@
 """Document rejection, replacement and Re-Scrutiny verification tests.
 
-APH 1.4.3 locks a submitted application, 1.8f communicates deficiencies through
-the portal, 1.8g limits Re-Scrutiny to the listed deficiencies and 2.4 gives the
+APH 1.4.3 locks a submitted application, 1.8 communicates deficiencies through
+the portal, 1.8 limits Re-Scrutiny to the listed deficiencies and 2.4 gives the
 institution a chance to comply. These tests exercise the whole API so the review
 policy, the deficiency linkage, the version trail, the guards and the alerts are
 covered together.
@@ -144,7 +144,7 @@ def _reject(
 ) -> Any:
     return client.post(
         f"/applications/{application_id}/documents/{document_id}/reject",
-        json={"reason_code": reason_code, "comment": comment, "apH_clause": "APH 1.8f"},
+        json={"reason_code": reason_code, "comment": comment, "apH_clause": "APH 1.8"},
         headers=headers,
     )
 
@@ -192,12 +192,12 @@ def test_reject_and_reupload_creates_a_version_and_responds_to_the_deficiency(
     body = rejected.json()
     assert body["verification_status"] == "REJECTED"
     assert body["rejection_reason_code"] == "EXPIRED"
-    assert body["apH_clause"] == "APH 1.8f"
+    assert body["apH_clause"] == "APH 1.8"
     assert body["related_deficiency_id"] is not None
     assert body["deficiency_status"] == "OPEN"
     assert body["deficiency_due_date"] is not None
 
-    # Rejecting during Scrutiny communicates the deficiency (APH 1.8f, 2.4).
+    # Rejecting during Scrutiny communicates the deficiency (APH 1.8, 2.4).
     timeline = api_client.get(f"/applications/{application_id}/timeline", headers=admin)
     assert timeline.status_code == 200, timeline.text
     assert timeline.json()["status"] == "DEFICIENCY_COMMUNICATED"
@@ -298,6 +298,48 @@ def test_reupload_is_allowed_in_draft_for_a_pending_document(
     assert "signed_with_dsc" in unsigned.json()["detail"]["errors"]
 
 
+def test_reupload_accepts_a_document_dropped_from_the_checklist(
+    api_client: TestClient,
+    test_data: TestData,
+    workspace_applications: list[uuid.UUID],
+) -> None:
+    """An uploaded document stays replaceable after the checklist changes.
+
+    Demo and legacy rows can exist for a type that the current required-document
+    table no longer lists; the institution must still be able to replace them
+    instead of hitting a dead end in the UI.
+    """
+    application_id, admin = _create_draft_with_data(
+        api_client, test_data, workspace_applications
+    )
+    with SessionLocal() as db:
+        document = Document(
+            application_id=uuid.UUID(application_id),
+            doc_type="DSC_CERTIFICATE",
+            doc_code="DSC_CERTIFICATE",
+            filename="dsc-certificate.pdf",
+            content_type="application/pdf",
+            size_bytes=1,
+            storage_path="demo/dsc-certificate.pdf",
+            uploaded_by=test_data.users["institution_admin_west"].id,
+            verification_status=DocumentVerificationStatus.PENDING,
+        )
+        db.add(document)
+        db.commit()
+        document_id = str(document.id)
+
+    replaced = _reupload(
+        api_client,
+        application_id,
+        document_id,
+        admin,
+        filename="dsc-certificate.pdf",
+    )
+    assert replaced.status_code == 201, replaced.text
+    assert replaced.json()["version"] == 2
+    assert replaced.json()["doc_code"] == "DSC_CERTIFICATE"
+
+
 def test_reupload_is_refused_for_verified_documents_and_locked_cases(
     api_client: TestClient,
     test_data: TestData,
@@ -315,7 +357,7 @@ def test_reupload_is_refused_for_verified_documents_and_locked_cases(
 
     verified = api_client.post(
         f"/applications/{application_id}/documents/{replacement.json()['id']}/verify",
-        json={"comment": "Readable and current.", "apH_clause": "APH 1.8g"},
+        json={"comment": "Readable and current.", "apH_clause": "APH 1.8"},
         headers=scrutiny,
     )
     assert verified.status_code == 200, verified.text
@@ -471,7 +513,7 @@ def test_only_reuploaded_documents_are_listed_for_re_scrutiny(
 
     verified = api_client.post(
         f"/applications/{application_id}/documents/{replaced.json()['id']}/verify",
-        json={"comment": "Current certificate received.", "apH_clause": "APH 1.8g"},
+        json={"comment": "Current certificate received.", "apH_clause": "APH 1.8"},
         headers=scrutiny,
     )
     assert verified.status_code == 200, verified.text
@@ -642,7 +684,7 @@ def test_flagged_and_rejected_mandatory_documents_make_the_checklist_incomplete(
         document.verification_status = DocumentVerificationStatus.REJECTED
         document.rejection_reason_code = "EXPIRED"
         document.rejection_comment = "Expired on 2025-12-31."
-        document.apH_clause = "APH 1.8f"
+        document.apH_clause = "APH 1.8"
         db.commit()
 
     after = api_client.get(
@@ -655,7 +697,7 @@ def test_flagged_and_rejected_mandatory_documents_make_the_checklist_incomplete(
     assert fire_row["uploaded"] is True
     assert fire_row["complete"] is False
     assert fire_row["rejection_reason_code"] == "EXPIRED"
-    assert fire_row["apH_clause"] == "APH 1.8f"
+    assert fire_row["apH_clause"] == "APH 1.8"
 
     checklist = api_client.get(f"/applications/{application_id}/checklist", headers=admin)
     assert checklist.status_code == 200, checklist.text

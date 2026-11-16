@@ -3,6 +3,7 @@ export * from "./DatePicker";
 export * from "./Dialog";
 export * from "./Drawer";
 export * from "./EmptyState";
+export * from "./ErrorState";
 export * from "./Input";
 export * from "./ProgressBar";
 export * from "./RiskBadge";

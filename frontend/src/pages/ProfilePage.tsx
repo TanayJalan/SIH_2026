@@ -68,28 +68,24 @@ export default function ProfilePage() {
           <section className="min-w-0 rounded-panel border border-line bg-surface p-6">
             <h2 className="font-serif text-20 font-semibold text-ink">Institution</h2>
             {user.institution ? (
-              <dl className="mt-4 space-y-3 text-sm">
-                <div>
-                  <dt className="text-12 font-medium text-ink-500">
-                    Name
-                  </dt>
-                  <dd className="mt-1 font-medium text-ink">{user.institution.name}</dd>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 space-y-3 text-sm">
+                <dl>
                   <div>
-                    <dt className="text-12 font-medium text-ink-500">
-                      State
-                    </dt>
+                    <dt className="text-12 font-medium text-ink-500">Name</dt>
+                    <dd className="mt-1 font-medium text-ink">{user.institution.name}</dd>
+                  </div>
+                </dl>
+                <dl className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-12 font-medium text-ink-500">State</dt>
                     <dd className="mt-1 text-ink-700">{user.institution.state}</dd>
                   </div>
                   <div>
-                    <dt className="text-12 font-medium text-ink-500">
-                      Region
-                    </dt>
+                    <dt className="text-12 font-medium text-ink-500">Region</dt>
                     <dd className="mt-1 text-ink-700">{user.institution.region}</dd>
                   </div>
-                </div>
-              </dl>
+                </dl>
+              </div>
             ) : (
               <p className="mt-3 text-13 text-ink-500">
                 This account is not attached to a single institution.

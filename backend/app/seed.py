@@ -459,6 +459,7 @@ def _ensure_institutions(db: Session) -> dict[str, Any]:
     """Upsert the demo institutions and return ``{aicte_id: UUID}``."""
     mapping: dict[str, Any] = {}
     for inst_data in _load_json("institutions.json"):
+        accreditation = inst_data.get("accreditation") or {}
         inst = db.scalar(select(Institution).where(Institution.aicte_id == inst_data["aicte_id"]))
         if inst is None:
             inst = Institution(
@@ -476,20 +477,27 @@ def _ensure_institutions(db: Session) -> dict[str, Any]:
                 is_pwbd=inst_data.get("is_pwbd", False),
                 in_jk_ladakh_ne=inst_data.get("in_jk_ladakh_ne", False),
                 affiliating_body=inst_data.get("affiliating_body"),
+                accreditation=accreditation,
             )
             db.add(inst)
             db.flush()
             logger.info(" seeded institution %s (%s)", inst.name, inst.aicte_id)
-        elif inst.institution_class != inst_data["institution_class"]:
-            # The fee class drives the TER table and the Security Deposit
-            # exemption (APH Table 1.4), so keep the demo row in step with the
-            # seed file instead of leaving a stale class behind.
-            inst.institution_class = inst_data["institution_class"]
-            logger.info(
-                " refreshed %s institution_class -> %s",
-                inst.name,
-                inst_data["institution_class"],
-            )
+        else:
+            if inst.institution_class != inst_data["institution_class"]:
+                # The fee class drives the TER table and the Security Deposit
+                # exemption (APH Table 1.4), so keep the demo row in step with
+                # the seed file instead of leaving a stale class behind.
+                inst.institution_class = inst_data["institution_class"]
+                logger.info(
+                    " refreshed %s institution_class -> %s",
+                    inst.name,
+                    inst_data["institution_class"],
+                )
+            if (inst.accreditation or {}) != accreditation:
+                # The eligibility advisor reads this evidence, so re-seeding an
+                # existing database must pick up the generated profile.
+                inst.accreditation = accreditation
+                logger.info(" refreshed %s accreditation evidence", inst.name)
         mapping[inst_data["aicte_id"]] = inst.id
     return mapping
 
@@ -741,7 +749,7 @@ def _seed_cases(
                 rejection_comment="Certificate expired on 2025-12-31.",
                 verification_notes={"note": "Expired certificate retained for the audit trail."},
                 related_deficiency_id=deficiency.id,
-                apH_clause="APH 1.8f",
+                apH_clause="APH 1.8",
             )
         )
         add_alert(
@@ -752,7 +760,7 @@ def _seed_cases(
             title="Deficiency raised: expired fire safety certificate",
             message=(
                 "The fire safety certificate uploaded with this application has expired. "
-                "Upload a valid certificate before the response deadline (APH 1.8f)."
+                "Upload a valid certificate before the response deadline (APH 1.8)."
             ),
             dedupe_key=f"seed:deficiency:{app1.id}",
         )
@@ -1004,11 +1012,11 @@ def _seed_cases(
             scsc_decision="SHOW_CAUSE",
             scsc_decided_on=today - timedelta(days=8),
             scsc_notes=(
-                "SCSC found the complaint verified and issued a show-cause notice (APH 7.10c)."
+                "SCSC found the complaint verified and issued a show-cause notice (APH 7.10)."
             ),
             show_cause_issued_on=today - timedelta(days=8),
             show_cause_due_on=today + timedelta(days=7),
-            apH_clause="APH 7.10d",
+            apH_clause="APH 7.10",
         )
         db.add(complaint)
         db.flush()
@@ -1020,7 +1028,7 @@ def _seed_cases(
             title="Show-cause notice: complaint of excess admission",
             message=(
                 "The Standing Complaint Scrutiny Committee issued a show-cause notice. "
-                f"Reply by {(today + timedelta(days=7)).isoformat()} (APH 7.10c-d)."
+                f"Reply by {(today + timedelta(days=7)).isoformat()} (APH 7.10)."
             ),
             dedupe_key=f"seed:complaint:{app1.id}",
         )

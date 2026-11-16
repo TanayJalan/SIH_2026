@@ -377,7 +377,7 @@ def list_documents(
 
     ``only_to_recheck`` is the Re-Scrutiny view: it keeps only the latest version
     of each type that a reviewer rejected or that the institution re-uploaded and
-    is waiting for verification (APH 1.8g).
+    is waiting for verification (APH 1.8).
     """
     application = _readable_application(db, current_user, application_id)
     settings: Settings = request.app.state.settings
@@ -585,7 +585,7 @@ def reject_document(
     audit: AuditDep,
     clock: ClockDep,
 ) -> DocumentRead:
-    """Reject one document, link a deficiency and notify the institution (APH 1.8f)."""
+    """Reject one document, link a deficiency and notify the institution (APH 1.8)."""
     application = _readable_application(db, current_user, application_id)
     document = db.scalar(
         select(Document).where(
@@ -637,7 +637,7 @@ def verify_document(
     audit: AuditDep,
     clock: ClockDep,
 ) -> DocumentRead:
-    """Verify a replacement so Re-Scrutiny can close the listed deficiency (APH 1.8g)."""
+    """Verify a replacement so Re-Scrutiny can close the listed deficiency (APH 1.8)."""
     application = _readable_application(db, current_user, application_id)
     document = db.scalar(
         select(Document).where(

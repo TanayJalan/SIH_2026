@@ -1,6 +1,49 @@
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
+/*
+ * Fonts are declared here rather than through @fontsource's prebuilt CSS so
+ * that we can use font-display: optional. Optional avoids a late swap on slow
+ * connections, which otherwise reflows the whole page and dominates CLS. When
+ * a face misses the ~100 ms block window the fallback is used for that page
+ * view, so text paints immediately.
+ */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: optional;
+  font-weight: 400;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: optional;
+  font-weight: 500;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: optional;
+  font-weight: 600;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-display: optional;
+  font-weight: 600;
+  src: url("@fontsource/source-serif-4/files/source-serif-4-latin-600-normal.woff2")
+    format("woff2");
+}
+
 :root {
   color-scheme: light;
 

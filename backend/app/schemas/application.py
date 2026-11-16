@@ -158,7 +158,7 @@ class DocumentRead(BaseModel):
 
     Rejection fields and ``allowed_actions`` drive the reviewer and institution
     UI: only a document the server says may be rejected or replaced shows the
-    corresponding button (APH 1.8f, 2.4).
+    corresponding button (APH 1.8, 2.4).
     """
 
     model_config = ConfigDict(from_attributes=True)

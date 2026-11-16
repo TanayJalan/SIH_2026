@@ -1391,6 +1391,7 @@ def institution_dashboard(
             AcademicCalendarEvent.event_key,
             AcademicCalendarEvent.description,
             AcademicCalendarEvent.date,
+            AcademicCalendarEvent.apH_clause,
         )
         .where(
             AcademicCalendarEvent.academic_year == application.academic_year,
@@ -1407,7 +1408,7 @@ def institution_dashboard(
             label=r.description or r.event_key.value.replace("_", " ").title(),
             due_on=r.date,
             days_left=(r.date - now.date()).days,
-            apH_clause="APH 5",
+            apH_clause=r.apH_clause,
         )
         for r in upcoming_rows
     ]

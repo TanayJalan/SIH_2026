@@ -38,7 +38,7 @@ _DOCUMENTS: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
             "This certificate was issued to a fictional institution for demo purposes.",
             "Certificate number: FIRE/DEMO/2024/017",
             "Valid until: 31 December 2025",
-            "The certificate has expired. The scrutiny officer rejects it under APH 1.8f.",
+            "The certificate has expired. The scrutiny officer rejects it under APH 1.8.",
         ),
     ),
     (

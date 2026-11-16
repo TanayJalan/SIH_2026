@@ -24,6 +24,24 @@ const STAGE_RANK: Record<WorkflowStage, number> = {
   COMPLETED: 7,
 };
 
+/**
+ * States whose stage track carries a statutory clock: the appeal window, the
+ * Security Deposit ladder, or LoA validity. Only these states can produce a
+ * deadlines strip, so the case file reserves room for it while the request is
+ * in flight and renders nothing for the others.
+ */
+const STATUTORY_CLOCK_STATES = new Set<string>([
+  "APPEAL_WINDOW",
+  "SECURITY_DEPOSIT_PENDING",
+  "LOA_ISSUED",
+  "ACTIVE_LOA",
+]);
+
+/** True when ``status`` may show a statutory deadline on the stage track. */
+export function hasStatutoryClock(status: string): boolean {
+  return STATUTORY_CLOCK_STATES.has(status);
+}
+
 const STAGE_LABEL: Record<WorkflowStage, string> = {
   APPLICATION: "Application",
   DOCUMENT_VERIFICATION: "Documents",

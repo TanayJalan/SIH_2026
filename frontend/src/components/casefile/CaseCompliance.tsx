@@ -228,7 +228,7 @@ export default function CaseCompliance({
           Every mandatory requirement is assessed and met.
         </p>
       ) : ordered.length === 0 ? null : (
-        <div className="mt-4 overflow-x-auto rounded-panel border border-line">
+        <div className="mt-4 overflow-x-auto rounded-panel border border-line" tabIndex={0}>
           <table className="w-full min-w-[840px] text-left text-13">
             <caption className="sr-only">Rule-by-rule compliance results</caption>
             <thead>

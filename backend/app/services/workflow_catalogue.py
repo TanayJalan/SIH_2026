@@ -130,7 +130,7 @@ STATE_META: dict[str, dict[str, Any]] = {
         "label": "Standing Appellate Committee",
         "stage": "COMMITTEE_REVIEW",
         "terminal": False,
-        "clause": "APH 1.11c",
+        "clause": "APH 1.11",
     },
     "COUNCIL_FINAL": {
         "label": "Council final decision",
@@ -400,7 +400,7 @@ def _appeal_chain(send_back_state: str = "EVC_CONSTITUTED") -> list[T]:
                 "The SAC may send the case back once; a second send-back is not "
                 "allowed (Annexure-7)."
             ),
-            clause="APH 1.11c",
+            clause="APH 1.11",
             guards=["appeal_loop_available"],
             effects=["send_back"],
         ),
@@ -1224,7 +1224,7 @@ TRACK_C_TRANSITIONS += [
         ["EXECUTIVE_COMMITTEE_MEMBER"],
         label="Decide to grant an EoA",
         description="Existing-institution change approved subject to both checks.",
-        clause="APH 2.6e",
+        clause="APH 2.25",
         guards=[
             "decision_eoa",
             "core_branches_ok",
@@ -1363,10 +1363,10 @@ TRACK_D_TRANSITIONS: list[T] = [
         ["EXECUTIVE_COMMITTEE_MEMBER"],
         label="Decide the year-round change",
         description=(
-            "A failed closure still produces an EoA with zero intake (APH 2.3.3h). "
+            "A failed closure still produces an EoA with zero intake (APH 2.21). "
             "A pending court case or charge sheet blocks the change."
         ),
-        clause="APH 2.3.3h",
+        clause="APH 2.21",
         guards=[
             "decision_eoa",
             "closure_outcome_present",
@@ -1491,7 +1491,7 @@ DEFINITIONS: list[dict[str, Any]] = [
             "Existing institution: automatic self-disclosure Deficiency Report, "
             "optional random EVC, compliance window, EC listing and EoA."
         ),
-        "apH_clause": "APH 2.3.5; 2.25",
+        "apH_clause": "APH 2.5",
         "needs_verification": False,
         "config": {
             "appeal_start_event": "DECISION_UPLOADED",
@@ -1529,7 +1529,7 @@ DEFINITIONS: list[dict[str, Any]] = [
             "Chapter II changes: Track A scrutiny edges, optional EVC, one SHC "
             "compliance hearing, EC listing and EoA/Speaking Order."
         ),
-        "apH_clause": "APH 2.3; 2.23.3",
+        "apH_clause": "APH Table 2.3",
         "needs_verification": False,
         "config": {"appeal_start_event": "DECISION_UPLOADED", "security_deposit": False},
         "states": [
@@ -1567,7 +1567,7 @@ DEFINITIONS: list[dict[str, Any]] = [
             "Closure, bank details, trust name and course changes: scrutiny, EC "
             "listing and decision. A failed closure gives an EoA with zero intake."
         ),
-        "apH_clause": "APH 2.3.3h; 2.3.4",
+        "apH_clause": "APH Table 2.2",
         "needs_verification": False,
         "config": {"appeal_start_event": "DECISION_UPLOADED", "security_deposit": False},
         "states": [

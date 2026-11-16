@@ -142,13 +142,13 @@ export default function CaseFees({
               ) : null}
               {quote.late_submission ? (
                 <span className="font-medium text-breach-strong">
-                  Late submission penalty applies (APH 2.3.3c)
+                  Late submission penalty applies (APH Table 2.1)
                 </span>
               ) : null}
             </p>
 
             {quote.lines.length > 0 ? (
-              <div className="mt-4 overflow-x-auto rounded-panel border border-line">
+              <div className="mt-4 overflow-x-auto rounded-panel border border-line" tabIndex={0}>
                 <table className="w-full min-w-[640px] text-left text-13">
                   <caption className="sr-only">Fee quotation lines</caption>
                   <thead>
@@ -214,7 +214,7 @@ export default function CaseFees({
               No payment or refund has been recorded yet.
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-panel border border-line">
+            <div className="overflow-x-auto rounded-panel border border-line" tabIndex={0}>
               <table className="w-full min-w-[640px] text-left text-13">
                 <caption className="sr-only">Fee transactions</caption>
                 <thead>
@@ -263,7 +263,7 @@ export default function CaseFees({
           <p className="mt-1 text-13 text-ink-500">
             {depositQuery.data.penalty_windows}
           </p>
-          <div className="mt-4 overflow-x-auto rounded-panel border border-line">
+          <div className="mt-4 overflow-x-auto rounded-panel border border-line" tabIndex={0}>
             <table className="w-full min-w-[640px] text-left text-13">
               <caption className="sr-only">Security Deposit per programme</caption>
               <thead>

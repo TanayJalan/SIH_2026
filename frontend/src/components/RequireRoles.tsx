@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { Button } from "./ui";
+import { Button } from "./ui/Button";
 import { useAuth } from "../auth/AuthContext";
 import type { Role } from "../lib/api";
 import { ROLE_LABELS } from "../lib/roles";

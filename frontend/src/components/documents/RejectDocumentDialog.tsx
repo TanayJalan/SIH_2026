@@ -46,7 +46,7 @@ interface RejectDocumentDialogProps {
  * Reviewer rejection of one document.
  *
  * The reason code is copied into the deficiency the institution must answer, so
- * it is required and the comment is mandatory (APH 1.8f, 2.4).
+ * it is required and the comment is mandatory (APH 1.8, 2.4).
  */
 export default function RejectDocumentDialog({
   open,
@@ -59,7 +59,7 @@ export default function RejectDocumentDialog({
   const { toast } = useToast();
   const [reasonCode, setReasonCode] = useState<DocumentRejectionReason>("EXPIRED");
   const [comment, setComment] = useState("");
-  const [apHclause, setApHclause] = useState("APH 1.8f");
+  const [apHclause, setApHclause] = useState("APH 1.8");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -70,7 +70,7 @@ export default function RejectDocumentDialog({
     }
     setReasonCode("EXPIRED");
     setComment("");
-    setApHclause("APH 1.8f");
+    setApHclause("APH 1.8");
     setSubmitting(false);
     setError(null);
     setFieldErrors({});
@@ -96,7 +96,7 @@ export default function RejectDocumentDialog({
         token,
         applicationId,
         document.id,
-        { reasonCode, comment: comment.trim(), apHclause: apHclause.trim() || "APH 1.8f" },
+        { reasonCode, comment: comment.trim(), apHclause: apHclause.trim() || "APH 1.8" },
       );
       onRejected(rejected);
       toast({
@@ -124,7 +124,7 @@ export default function RejectDocumentDialog({
           <DialogTitle>Reject {document.label}</DialogTitle>
           <DialogDescription>
             Version {document.version ?? 1}. The institution is asked to re-upload this
-            document and a deficiency item is opened (APH 1.8f, 2.4).
+            document and a deficiency item is opened (APH 1.8, 2.4).
           </DialogDescription>
         </DialogHeader>
 

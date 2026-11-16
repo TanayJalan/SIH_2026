@@ -582,7 +582,7 @@ def issue_penal_action(
     if penal_action.issued_on is not None:
         raise PenalActionError("The penal action has already been issued.")
     if not speaking_order.strip():
-        raise PenalActionError("A penal action must be supported by a Speaking Order (APH 7.10g).")
+        raise PenalActionError("A penal action must be supported by a Speaking Order (APH 7.10).")
     before = {
         "issued_on": None,
         "fine_paise": penal_action.fine_paise,

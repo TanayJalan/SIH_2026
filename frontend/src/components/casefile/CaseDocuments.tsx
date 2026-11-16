@@ -181,6 +181,7 @@ export default function CaseDocuments({
       queryClient.invalidateQueries({ queryKey: ["document-versions", applicationId] }),
       queryClient.invalidateQueries({ queryKey: ["deficiencies", applicationId] }),
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] }),
+      queryClient.invalidateQueries({ queryKey: ["allowed-actions", applicationId] }),
       queryClient.invalidateQueries({ queryKey: ["workflow-timeline", applicationId] }),
     ]);
   };
@@ -209,12 +210,12 @@ export default function CaseDocuments({
     try {
       await verifyApplicationDocument(token, applicationId, document.id, {
         comment: "Replacement checked against the communicated deficiency.",
-        apHclause: "APH 1.8g",
+        apHclause: "APH 1.8",
       });
       await applyResult();
       toast({
         title: "Document verified",
-        description: `${document.doc_type.replaceAll("_", " ").toLowerCase()} version ${document.version} meets the communicated deficiency (APH 1.8g).`,
+        description: `${document.doc_type.replaceAll("_", " ").toLowerCase()} version ${document.version} meets the communicated deficiency (APH 1.8).`,
         variant: "success",
       });
     } catch (verifyError) {
@@ -246,7 +247,7 @@ export default function CaseDocuments({
           <p className="mt-1 text-13 text-ink-500">
             Every required document, its review status and the full version trail.
             A reviewer can reject a file and the institution replaces exactly that
-            document (APH 1.8f, 1.8g, 2.4).
+            document (APH 1.8, 2.4).
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -289,7 +290,7 @@ export default function CaseDocuments({
           Waiting for the institution to re-upload {waiting.count}{" "}
           {waiting.count === 1 ? "document" : "documents"}
           {waiting.due ? ` (due ${formatDate(waiting.due)}` : " ("}
-          {waiting.due ? ", APH 1.8f / 2.4)" : "APH 1.8f / 2.4)"}
+          {waiting.due ? ", APH 1.8 / 2.4)" : "APH 1.8 / 2.4)"}
         </p>
       ) : null}
 

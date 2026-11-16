@@ -267,6 +267,16 @@ Report filters: `academic_year`, `region`, `state`, `application_type`, `track`.
 | --- | --- | --- | --- |
 | GET | `/search?q=` | Authenticated | Role-scoped search across applications, institutions and permitted pages |
 
+### Eligibility advisor
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| GET | `/eligibility/advisor` | Institution admin | Five route verdicts (Extended EoA 2.1a, FN/OCI 2.9, off-campus 2.11a, working professionals 2.6l, TFW 6.42) with per-criterion values, clauses and next steps |
+
+The endpoint is read-only and writes no audit row. It reads the institution's accreditation
+profile, establishment year and location flags, and returns `PASS`, `FAIL` or `UNKNOWN` (missing
+evidence) per criterion. The reference date comes from the simulated clock.
+
 ### Committees
 
 | Method | Path | Access | Purpose |

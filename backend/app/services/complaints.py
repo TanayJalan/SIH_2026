@@ -3,13 +3,13 @@
 The handbook runs one complaint through five bodies:
 
 * PGRC receives and verifies it (APH 7.10b);
-* SCSC decides on a warning, a show-cause notice or an EVC (APH 7.10c);
-* the EVC report or show-cause reply goes to the SHC (APH 7.10d-e);
-* the SHC recommends, and the EC approves (APH 7.10f);
+* SCSC decides on a warning, a show-cause notice or an EVC (APH 7.10);
+* the EVC report or show-cause reply goes to the SHC (APH 7.10);
+* the SHC recommends, and the EC approves (APH 7.10);
 * the EC decision is published as a Speaking Order with an appeal right
-  (APH 7.10g).
+  (APH 7.10).
 
-Anonymous and pseudonymous complaints stop at intake: APH 7.10h adopts the CVC
+Anonymous and pseudonymous complaints stop at intake: APH 7.10 adopts the CVC
 rule that they shall not be processed.
 
 Every write is recorded through :class:`~app.services.audit.AuditService`; the
@@ -39,12 +39,12 @@ from app.services.audit import AuditService
 #: a handbook date.
 SHOW_CAUSE_RESPONSE_DAYS = 15
 
-ANONYMITY_CLAUSE = "APH 7.10h"
+ANONYMITY_CLAUSE = "APH 7.10"
 ANONYMITY_REASON = (
     "Not processed: as per CVC guidelines, anonymous and pseudonymous "
-    "complaints shall not be processed (APH 7.10h)."
+    "complaints shall not be processed (APH 7.10)."
 )
-"""The CVC rule adopted by APH 7.10h, shown verbatim on a rejected intake."""
+"""The CVC rule adopted by APH 7.10, shown verbatim on a rejected intake."""
 
 SCSC_DECISIONS = {
     "WARNING": "Warning issued to the institution",
@@ -73,12 +73,12 @@ class ComplaintStep:
 
 _STEPS = (
     ComplaintStep("receive", "Complaint received by PGRC", "APH 7.10b"),
-    ComplaintStep("verify", "Verified and placed before SCSC", "APH 7.10c"),
-    ComplaintStep("scsc", "SCSC recommends warning, show-cause or EVC", "APH 7.10c"),
-    ComplaintStep("show_cause", "Show-cause reply recorded", "APH 7.10d"),
-    ComplaintStep("hearing", "Standing Hearing Committee hearing", "APH 7.10d-e"),
-    ComplaintStep("ec", "Executive Committee decision", "APH 7.10f"),
-    ComplaintStep("speaking_order", "Speaking Order on the portal", "APH 7.10g"),
+    ComplaintStep("verify", "Verified and placed before SCSC", "APH 7.10"),
+    ComplaintStep("scsc", "SCSC recommends warning, show-cause or EVC", "APH 7.10"),
+    ComplaintStep("show_cause", "Show-cause reply recorded", "APH 7.10"),
+    ComplaintStep("hearing", "Standing Hearing Committee hearing", "APH 7.10"),
+    ComplaintStep("ec", "Executive Committee decision", "APH 7.10"),
+    ComplaintStep("speaking_order", "Speaking Order on the portal", "APH 7.10"),
 )
 
 
@@ -92,11 +92,11 @@ def lifecycle() -> list[dict[str, str]]:
 def is_pseudonymous(
     *, is_anonymous: bool, complainant_name: str | None, complainant_contact: str | None
 ) -> bool:
-    """Return whether the complaint must be rejected at intake (APH 7.10h).
+    """Return whether the complaint must be rejected at intake (APH 7.10).
 
     A complaint is processed only when it carries both an identity and a
     verifiable contact. A missing name is anonymous; a name without a contact
-    is treated as pseudonymous, mirroring the CVC rule APH 7.10h adopts.
+    is treated as pseudonymous, mirroring the CVC rule APH 7.10 adopts.
     """
     if is_anonymous:
         return True
@@ -157,7 +157,7 @@ def create_complaint(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Record a complaint and immediately reject it if it is anonymous (APH 7.10h).
+    """Record a complaint and immediately reject it if it is anonymous (APH 7.10).
 
     A verified complaint starts at ``PGRC``; an anonymous or pseudonymous one is
     stored at ``RECEIVED`` with ``rejection_reason`` and ``rejection_clause`` so
@@ -205,7 +205,7 @@ def verify_complaint(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Mark the complaint verified and place it before the SCSC (APH 7.10c)."""
+    """Mark the complaint verified and place it before the SCSC (APH 7.10)."""
     _assert_status(complaint, ComplaintStatus.RECEIVED, ComplaintStatus.PGRC)
     if complaint.is_anonymous:
         raise ComplaintError(ANONYMITY_REASON)
@@ -227,12 +227,12 @@ def record_scsc_decision(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Record the SCSC recommendation: WARNING, SHOW_CAUSE or EVC (APH 7.10c)."""
+    """Record the SCSC recommendation: WARNING, SHOW_CAUSE or EVC (APH 7.10)."""
     _assert_status(complaint, ComplaintStatus.SCSC)
     key = decision.strip().upper()
     if key not in SCSC_DECISIONS:
         raise ComplaintError(
-            "SCSC may only issue a WARNING, a SHOW_CAUSE notice or an EVC (APH 7.10c)."
+            "SCSC may only issue a WARNING, a SHOW_CAUSE notice or an EVC (APH 7.10)."
         )
     before = _snapshot(complaint)
     complaint.scsc_decision = key
@@ -244,14 +244,14 @@ def record_scsc_decision(
         complaint.ec_decision = "WARNING"
         complaint.decided_on = decided_on
         complaint.speaking_order = (
-            notes or "Warning issued to the institution after SCSC scrutiny (APH 7.10c)."
+            notes or "Warning issued to the institution after SCSC scrutiny (APH 7.10)."
         )
     elif key == "SHOW_CAUSE":
         complaint.status = ComplaintStatus.SHOW_CAUSE
         complaint.show_cause_issued_on = decided_on
         complaint.show_cause_due_on = decided_on + timedelta(days=SHOW_CAUSE_RESPONSE_DAYS)
     else:
-        # The EVC report is placed before the SHC (APH 7.10d).
+        # The EVC report is placed before the SHC (APH 7.10).
         complaint.status = ComplaintStatus.HEARING
     _log(audit, actor, f"complaint.scsc.{key.lower()}", complaint, before, request)
     return complaint
@@ -267,7 +267,7 @@ def record_show_cause_reply(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Record the institution's reply and refer the file to the SHC (APH 7.10d)."""
+    """Record the institution's reply and refer the file to the SHC (APH 7.10)."""
     _assert_status(complaint, ComplaintStatus.SHOW_CAUSE)
     before = _snapshot(complaint)
     complaint.show_cause_reply = reply
@@ -287,7 +287,7 @@ def record_shc_hearing(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Record the SHC hearing and its findings (APH 7.10d-e)."""
+    """Record the SHC hearing and its findings (APH 7.10)."""
     _assert_status(complaint, ComplaintStatus.HEARING)
     before = _snapshot(complaint)
     complaint.shc_hearing_on = hearing_on
@@ -307,16 +307,16 @@ def record_ec_decision(
     audit: AuditService,
     request: Request | None = None,
 ) -> Complaint:
-    """Record the EC decision and publish it as a Speaking Order (APH 7.10f-g)."""
+    """Record the EC decision and publish it as a Speaking Order (APH 7.10)."""
     _assert_status(complaint, ComplaintStatus.HEARING, ComplaintStatus.DECIDED)
     key = decision.strip().upper()
     if key not in EC_DECISIONS:
         raise ComplaintError(
-            "The EC may record a WARNING, a PENAL_ACTION or CLOSE the complaint (APH 7.10f-g)."
+            "The EC may record a WARNING, a PENAL_ACTION or CLOSE the complaint (APH 7.10)."
         )
     if not speaking_order.strip():
         raise ComplaintError(
-            "The EC decision must be published as a detailed Speaking Order (APH 7.10g)."
+            "The EC decision must be published as a detailed Speaking Order (APH 7.10)."
         )
     before = _snapshot(complaint)
     complaint.ec_decision = key

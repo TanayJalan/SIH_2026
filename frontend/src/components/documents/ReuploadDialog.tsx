@@ -79,7 +79,7 @@ interface ReuploadDialogProps {
  *
  * The dialog mirrors the server's strict contract: a DSC attestation, the
  * signer's name and, for certificates, a current validity date. Per-field
- * errors returned by the API are shown inline (APH 1.4.3, 1.8f, 2.4).
+ * errors returned by the API are shown inline (APH 1.4.3, 1.8, 2.4).
  */
 export default function ReuploadDialog({
   open,
@@ -241,7 +241,7 @@ export default function ReuploadDialog({
               ? `Rejected: ${reasonLabel}. `
               : "Replace this document. "}
             The new file becomes version {nextVersion}. Earlier versions stay
-            available in the version history (APH 1.8f, 2.4).
+            available in the version history (APH 1.8, 2.4).
           </DialogDescription>
         </DialogHeader>
 
